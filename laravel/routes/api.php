@@ -1,0 +1,166 @@
+<?php
+
+use App\Http\Controllers\AlamatController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BarangController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\JenisPajakController;
+use App\Http\Controllers\KategoriBarangController;
+use App\Http\Controllers\KontakController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\PurchaseOrderItemController;
+use App\Http\Controllers\PurchaseOrderReceiptController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PurchaseOrderRevisionController;
+use App\Http\Controllers\PengambilanBarangController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ReportPurchaseOrderController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SettingController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VendorAddressController;
+use App\Http\Controllers\VendorContactController;
+use App\Http\Controllers\VendorController;
+use Illuminate\Support\Facades\Route;
+
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [UserController::class, 'profile']);
+    Route::put('/user', [UserController::class, 'updateProfile']);
+    Route::put('/user/password', [UserController::class, 'changePassword']);
+
+    Route::post('/register', [AuthController::class, 'register']);
+
+    // User management
+    Route::get('/users', [UserController::class, 'index']);
+    Route::put('/users/{user}', [UserController::class, 'update']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy']);
+    Route::put('/users/{user}/roles', [UserController::class, 'syncRoles']);
+    Route::put('/users/{user}/permissions', [UserController::class, 'syncPermissions']);
+
+    // Roles & Permissions
+    Route::get('/roles', [RoleController::class, 'index']);
+    Route::put('/roles/{role}/permissions', [RoleController::class, 'syncPermissions']);
+    Route::get('/permissions', [PermissionController::class, 'index']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    // ——— Master Data ———
+    Route::get('kategori', [KategoriBarangController::class, 'index']);
+    Route::post('kategori', [KategoriBarangController::class, 'store']);
+    Route::get('unit', [UnitController::class, 'index']);
+    Route::post('unit', [UnitController::class, 'store']);
+    Route::get('vendor', [VendorController::class, 'index']);
+    Route::get('vendor/{vendor}', [VendorController::class, 'show']);
+    Route::delete('vendor/{vendor}', [VendorController::class, 'destroy']);
+    Route::post('vendor', [VendorController::class, 'store']);
+    Route::put('vendor/{vendor}', [VendorController::class, 'update']);
+    Route::post('vendor/bulk-delete', [VendorController::class, 'bulkDestroy']);
+    Route::get('vendor/{vendor}/addresses', [VendorAddressController::class, 'index']);
+    Route::post('vendor/{vendor}/addresses', [VendorAddressController::class, 'store']);
+    Route::put('addresses/{address}', [VendorAddressController::class, 'update']);
+    Route::delete('addresses/{address}', [VendorAddressController::class, 'destroy']);
+    Route::get('vendor/{vendor}/contacts', [VendorContactController::class, 'index']);
+    Route::post('vendor/{vendor}/contacts', [VendorContactController::class, 'store']);
+    Route::put('contacts/{contact}', [VendorContactController::class, 'update']);
+    Route::delete('contacts/{contact}', [VendorContactController::class, 'destroy']);
+    Route::post('barang/bulk-delete', [BarangController::class, 'bulkDestroy']);
+    Route::apiResource('barang', BarangController::class);
+    Route::get('alamat', [AlamatController::class, 'index']);
+    Route::get('alamat/{address}', [AlamatController::class, 'show']);
+    Route::post('alamat', [AlamatController::class, 'store']);
+    Route::put('alamat/{address}', [AlamatController::class, 'update']);
+    Route::delete('alamat/{address}', [AlamatController::class, 'destroy']);
+    Route::post('alamat/bulk-delete', [AlamatController::class, 'bulkDestroy']);
+    Route::get('kontak', [KontakController::class, 'index']);
+    Route::get('kontak/{contact}', [KontakController::class, 'show']);
+    Route::post('kontak', [KontakController::class, 'store']);
+    Route::put('kontak/{contact}', [KontakController::class, 'update']);
+    Route::delete('kontak/{contact}', [KontakController::class, 'destroy']);
+    Route::post('kontak/bulk-delete', [KontakController::class, 'bulkDestroy']);
+
+    // ——— Settings ———
+    Route::get('settings/{group}', [SettingController::class, 'show']);
+    Route::put('settings/{group}', [SettingController::class, 'update']);
+    Route::post('settings/upload-logo', [SettingController::class, 'uploadLogo']);
+
+    // ——— Jenis Pajak ———
+    Route::get('jenis-pajak', [JenisPajakController::class, 'index']);
+    Route::post('jenis-pajak', [JenisPajakController::class, 'store']);
+    Route::get('jenis-pajak/{jenisPajak}', [JenisPajakController::class, 'show']);
+    Route::put('jenis-pajak/{jenisPajak}', [JenisPajakController::class, 'update']);
+    Route::delete('jenis-pajak/{jenisPajak}', [JenisPajakController::class, 'destroy']);
+    Route::post('jenis-pajak/bulk-delete', [JenisPajakController::class, 'bulkDestroy']);
+
+    // ——— Client ———
+    Route::get('client', [ClientController::class, 'index']);
+    Route::post('client', [ClientController::class, 'store']);
+    Route::get('client/{client}', [ClientController::class, 'show']);
+    Route::put('client/{client}', [ClientController::class, 'update']);
+    Route::delete('client/{client}', [ClientController::class, 'destroy']);
+    Route::post('client/bulk-delete', [ClientController::class, 'bulkDestroy']);
+
+    // ——— Project ———
+    Route::get('project', [ProjectController::class, 'index']);
+    Route::post('project', [ProjectController::class, 'store']);
+    Route::get('project/{project}', [ProjectController::class, 'show']);
+    Route::put('project/{project}', [ProjectController::class, 'update']);
+    Route::delete('project/{project}', [ProjectController::class, 'destroy']);
+    Route::post('project/bulk-delete', [ProjectController::class, 'bulkDestroy']);
+
+    // ——— Purchase Order ———
+    Route::get('purchase-order', [PurchaseOrderController::class, 'index']);
+    Route::get('purchase-order/stats', [PurchaseOrderController::class, 'stats']);
+    Route::post('purchase-order', [PurchaseOrderController::class, 'store']);
+    Route::get('purchase-order/{purchaseOrder}', [PurchaseOrderController::class, 'show']);
+    Route::put('purchase-order/{purchaseOrder}', [PurchaseOrderController::class, 'update']);
+    Route::delete('purchase-order/{purchaseOrder}', [PurchaseOrderController::class, 'destroy']);
+    Route::post('purchase-order/bulk-delete', [PurchaseOrderController::class, 'bulkDestroy']);
+
+    // ——— PO Workflow ———
+    Route::put('purchase-order/{purchaseOrder}/kirim', [PurchaseOrderController::class, 'kirim']);
+    Route::put('purchase-order/{purchaseOrder}/setujui', [PurchaseOrderController::class, 'setujui']);
+    Route::post('purchase-order/{purchaseOrder}/terima', [PurchaseOrderController::class, 'terima']);
+    Route::put('purchase-order/{purchaseOrder}/batalkan', [PurchaseOrderController::class, 'batalkan']);
+    Route::get('purchase-order/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'pdf']);
+
+    // ——— PO Items ———
+    Route::get('purchase-order/{purchaseOrder}/items', [PurchaseOrderItemController::class, 'index']);
+    Route::post('purchase-order/{purchaseOrder}/items', [PurchaseOrderItemController::class, 'store']);
+    Route::put('purchase-order/{purchaseOrder}/items/{item}', [PurchaseOrderItemController::class, 'update']);
+    Route::delete('purchase-order/{purchaseOrder}/items/{item}', [PurchaseOrderItemController::class, 'destroy']);
+    Route::put('purchase-order/{purchaseOrder}/items/reorder', [PurchaseOrderItemController::class, 'reorder']);
+
+    // ——— PO Receipts ———
+    Route::get('purchase-order/{purchaseOrder}/receipts', [PurchaseOrderReceiptController::class, 'index']);
+    Route::get('purchase-order/{purchaseOrder}/receipts/{receipt}', [PurchaseOrderReceiptController::class, 'show']);
+
+    // ——— PO Revisions ———
+    Route::get('purchase-order/{purchaseOrder}/revisions', [PurchaseOrderRevisionController::class, 'index']);
+    Route::get('purchase-order/{purchaseOrder}/revisions/{revision}', [PurchaseOrderRevisionController::class, 'show']);
+
+    // ——— Pengambilan Barang ———
+    Route::get('pengambilan-barang', [PengambilanBarangController::class, 'index']);
+    Route::post('pengambilan-barang', [PengambilanBarangController::class, 'store']);
+    Route::get('pengambilan-barang/{pengambilanBarang}', [PengambilanBarangController::class, 'show']);
+    Route::delete('pengambilan-barang/{pengambilanBarang}', [PengambilanBarangController::class, 'destroy']);
+    Route::post('pengambilan-barang/bulk-delete', [PengambilanBarangController::class, 'bulkDestroy']);
+
+    // ——— Inventory ———
+    Route::get('inventory/mutasi', [InventoryController::class, 'mutasi']);
+    Route::get('inventory/stok-minimum', [InventoryController::class, 'stokMinimum']);
+    Route::post('inventory/opname', [InventoryController::class, 'opname']);
+    Route::get('inventory/laporan-stok', [InventoryController::class, 'laporanStok']);
+
+    // ——— Reports ———
+    Route::get('reports/purchase-order/summary', [ReportPurchaseOrderController::class, 'summary']);
+    Route::get('reports/purchase-order/per-bulan', [ReportPurchaseOrderController::class, 'perBulan']);
+    Route::get('reports/purchase-order/per-vendor', [ReportPurchaseOrderController::class, 'perVendor']);
+    Route::get('reports/purchase-order/per-hari', [ReportPurchaseOrderController::class, 'perHari']);
+    Route::get('reports/purchase-order/per-status', [ReportPurchaseOrderController::class, 'perStatus']);
+    Route::get('reports/purchase-order/top-items', [ReportPurchaseOrderController::class, 'topItems']);
+});

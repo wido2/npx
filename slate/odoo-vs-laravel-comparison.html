@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Perbandingan Template: Odoo vs Laravel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f0f0; padding: 20px; }
+  .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
+  .panel { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+  .panel-header { padding: 15px 20px; color: white; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .panel-header.odoo { background: #875A7B; }
+  .panel-header.laravel { background: #FF2D20; }
+  .panel-header .badge { background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; font-size: 11px; }
+  .panel-content { padding: 20px; font-size: 11px; }
+
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: 10px; text-transform: uppercase; color: #888; letter-spacing: 1px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
+
+  .feature-list { list-style: none; }
+  .feature-list li { padding: 6px 0; border-bottom: 1px solid #f5f5f5; display: flex; align-items: flex-start; gap: 8px; }
+  .feature-list li:last-child { border-bottom: none; }
+  .check { color: #4caf50; font-weight: bold; }
+  .cross { color: #f44336; }
+  .partial { color: #ff9800; }
+
+  .comparison-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .comparison-table th { background: #f5f5f5; padding: 8px; text-align: left; font-weight: 600; }
+  .comparison-table td { padding: 8px; border-bottom: 1px solid #eee; }
+  .comparison-table tr:hover { background: #fafafa; }
+
+  .structure-tree { font-family: monospace; font-size: 11px; line-height: 1.8; background: #f9f9f9; padding: 15px; border-radius: 6px; }
+  .structure-tree .tag { color: #875A7B; }
+  .structure-tree .attr { color: #1565c0; }
+  .structure-tree .comment { color: #888; }
+
+  .highlight-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 15px; margin: 10px 0; font-size: 11px; }
+  .info-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 10px 15px; margin: 10px 0; font-size: 11px; }
+
+  .full-width { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<div style="text-align: center; margin-bottom: 20px;">
+  <h1 style="font-size: 20px; color: #333;">Perbandingan Template Purchase Order</h1>
+  <p style="font-size: 12px; color: #666; margin-top: 5px;">Odoo QWeb Template vs Laravel Blade Template</p>
+</div>
+
+<div class="comparison">
+  <!-- Odoo Panel -->
+  <div class="panel">
+    <div class="panel-header odoo">
+      <span>Template Odoo</span>
+      <span class="badge">purchase_order_templates.xml</span>
+    </div>
+    <div class="panel-content">
+      <div class="section">
+        <div class="section-title">Struktur Template</div>
+        <div class="structure-tree">
+          <span class="tag">&lt;template id="report_purchaseorder_document"&gt;</span><br>
+          &nbsp;&nbsp;<span class="tag">&lt;t t-call="web.external_layout"&gt;</span> <span class="comment">← Header/footer Odoo</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">t-set="address"</span> → Vendor contact<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">t-if="o.dest_address_id"</span> → Shipping<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="tag">&lt;div class="page"&gt;</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">t-set="layout_document_title"</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag">&lt;table class="o_main_table"&gt;</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">t-foreach="filtered_lines"</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag">&lt;/table&gt;</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag">&lt;div id="total"&gt;</span> → Tax totals<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="tag">&lt;/div&gt;</span><br>
+          &nbsp;&nbsp;<span class="tag">&lt;/t&gt;</span><br>
+          <span class="tag">&lt;/template&gt;</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Fitur Utama</div>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> Multi-language support (partner_id.lang)</li>
+          <li><span class="check">✓</span> Dynamic title berdasarkan state (draft/purchase/cancel)</li>
+          <li><span class="check">✓</span> Section & Subsection lines</li>
+          <li><span class="check">✓</span> Note lines (italic)</li>
+          <li><span class="check">✓</span> Per-section subtotal</li>
+          <li><span class="check">✓</span> UOM conversion display</li>
+          <li><span class="check">✓</span> Tax labels dengan grouping</li>
+          <li><span class="check">✓</span> Portal integration (Connect your software)</li>
+          <li><span class="check">✓</span> Inheritable template (primary=True)</li>
+          <li><span class="cross">✗</span> Tidak ada logo perusahaan custom</li>
+          <li><span class="cross">✗</span> Tidak ada box tanda tangan</li>
+          <li><span class="cross">✗</span> Tidak ada terbilang</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Kolom Tabel Item</div>
+        <table class="comparison-table">
+          <tr><th>Kolom</th><th>Field</th></tr>
+          <tr><td>Description</td><td>line.name</td></tr>
+          <tr><td>Qty</td><td>line.product_qty + UoM</td></tr>
+          <tr><td>Unit Price</td><td>line.price_unit</td></tr>
+          <tr><td>Disc.</td><td>line.discount %</td></tr>
+          <tr><td>Taxes</td><td>line.tax_ids (labels)</td></tr>
+          <tr><td>Amount</td><td>line.price_subtotal</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Laravel Panel -->
+  <div class="panel">
+    <div class="panel-header laravel">
+      <span>Template Laravel (Saat Ini)</span>
+      <span class="badge">purchase-order.blade.php</span>
+    </div>
+    <div class="panel-content">
+      <div class="section">
+        <div class="section-title">Struktur Template</div>
+        <div class="structure-tree">
+          <span class="tag">@extends / @section</span><br>
+          &nbsp;&nbsp;<span class="tag">&lt;style&gt;</span> <span class="comment">← Inline CSS (119 baris)</span><br>
+          &nbsp;&nbsp;<span class="tag">&lt;table class="header-table"&gt;</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;Logo + Company Name<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;Doc Title + PO Code<br>
+          &nbsp;&nbsp;<span class="tag">&lt;hr class="header-divider"&gt;</span><br>
+          &nbsp;&nbsp;<span class="tag">&lt;table class="info-table"&gt;</span> → Vendor & Client<br>
+          &nbsp;&nbsp;<span class="tag">&lt;table class="dates-table"&gt;</span> → Tanggal<br>
+          &nbsp;&nbsp;<span class="tag">&lt;table class="items-table"&gt;</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;@foreach ($po->items as $item)<br>
+          &nbsp;&nbsp;<span class="tag">&lt;table class="totals-table"&gt;</span><br>
+          &nbsp;&nbsp;<span class="tag">&lt;div class="signature-section"&gt;</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;4 Box: Dibuat/Mengetahui/Menyetujui/Penerima<br>
+          &nbsp;&nbsp;<span class="tag">&lt;div class="footer-text"&gt;</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Fitur Utama</div>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> Logo perusahaan (configurable)</li>
+          <li><span class="check">✓</span> Warna primary/secondary (configurable)</li>
+          <li><span class="check">✓</span> Box tanda tangan (4 kolom)</li>
+          <li><span class="check">✓</span> Terbilang (terbilang function)</li>
+          <li><span class="check">✓</span> NPWP display</li>
+          <li><span class="check">✓</span> Alamat kirim & catatan</li>
+          <li><span class="check">✓</span> Custom font family & size</li>
+          <li><span class="check">✓</span> Kode barang toggle</li>
+          <li><span class="partial">△</span> Single language (Indonesian only)</li>
+          <li><span class="cross">✗</span> Tidak ada section/subsection lines</li>
+          <li><span class="cross">✗</span> Tidak ada note lines</li>
+          <li><span class="cross">✗</span> Tidak ada per-section subtotal</li>
+          <li><span class="cross">✗</span> Tidak ada UOM conversion</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Kolom Tabel Item (Terbaru)</div>
+        <table class="comparison-table">
+          <tr><th>Kolom</th><th>Field</th></tr>
+          <tr><td>#</td><td>Nomor urut</td></tr>
+          <tr><td>Produk</td><td>barang.nama + barang.kode</td></tr>
+          <tr><td>Qty</td><td>item.jumlah</td></tr>
+          <tr><td>Harga Satuan</td><td>item.harga_satuan</td></tr>
+          <tr><td>Diskon</td><td>item.diskon</td></tr>
+          <tr><td>Pajak</td><td>item.nilai_pajak</td></tr>
+          <tr><td>Total</td><td>item.total_setelah_pajak</td></tr>
+        </table>
+        <div class="highlight-box" style="margin-top: 10px;">
+          <strong>Keterangan telah dihapus</strong> sesuai permintaan sebelumnya
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full Width Comparison -->
+  <div class="panel full-width">
+    <div class="panel-header" style="background: linear-gradient(135deg, #875A7B 0%, #FF2D20 100%);">
+      <span>Analisis Perbedaan & Rekomendasi</span>
+    </div>
+    <div class="panel-content">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Aspek</th>
+            <th style="width: 35%;">Odoo Template</th>
+            <th style="width: 35%;">Laravel Template</th>
+            <th style="width: 5%;">Gap</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Rendering Engine</strong></td>
+            <td>QWeb (XML-based, Python backend)</td>
+            <td>Blade (PHP-based, DomPDF)</td>
+            <td><span class="partial">△</span></td>
+          </tr>
+          <tr>
+            <td><strong>Layout System</strong></td>
+            <td>Inherits dari web.external_layout (header/footer otomatis)</td>
+            <td>Self-contained, semua styling inline</td>
+            <td><span class="partial">△</span></td>
+          </tr>
+          <tr>
+            <td><strong>Dynamic Title</strong></td>
+            <td>Berubah sesuai state: RFQ / PO / Cancelled</td>
+            <td>Fixed "PURCHASE ORDER" dari settings</td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+          <tr>
+            <td><strong>Line Types</strong></td>
+            <td>Produk, Section, Subsection, Note</td>
+            <td>Hanya produk biasa</td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+          <tr>
+            <td><strong>Subtotal per Section</strong></td>
+            <td>Otomatis dihitung per section</td>
+            <td>Tidak ada</td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+          <tr>
+            <td><strong>Multi-UOM</strong></td>
+            <td>Tampilkan konversi UOM jika berbeda</td>
+            <td>Hanya tampilkan jumlah</td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+          <tr>
+            <td><strong>Tax Display</strong></td>
+            <td>Grouped tax totals (dari account module)</td>
+            <td>Simple: Total Pajak saja</td>
+            <td><span class="partial">△</span></td>
+          </tr>
+          <tr>
+            <td><strong>Signature Box</strong></td>
+            <td>Tidak ada</td>
+            <td>4 box: Dibuat/Mengetahui/Menyetujui/Penerima</td>
+            <td><span class="check">✓</span> Laravel unggul</td>
+          </tr>
+          <tr>
+            <td><strong>Terbilang</strong></td>
+            <td>Tidak ada</td>
+            <td>Ada (terbilang function)</td>
+            <td><span class="check">✓</span> Laravel unggul</td>
+          </tr>
+          <tr>
+            <td><strong>Customization UI</strong></td>
+            <td>Via Odoo Studio atau code</td>
+            <td>Settings form (warna, font, logo, toggle)</td>
+            <td><span class="check">✓</span> Laravel unggul</td>
+          </tr>
+          <tr>
+            <td><strong>Portal Integration</strong></td>
+            <td>Ada "Connect your software" link</td>
+            <td>Tidak ada</td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box" style="margin-top: 20px;">
+        <strong>Kesimpulan:</strong> Template Odoo lebih fleksibel untuk multi-line types dan integrasi ERP, 
+        tetapi template Laravel sudah memiliki fitur yang lebih relevan untuk dokumen PO Indonesia 
+        (tanda tangan, terbilang, NPWP, customisasi via UI). Untuk meniru struktur Odoo, 
+        perlu ditambahkan: dynamic title berdasarkan state, section/subsection lines, per-section subtotal, dan multi-UOM display.
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
