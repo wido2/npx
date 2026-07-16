@@ -12,11 +12,14 @@ class PengambilanBarang extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $table = 'pengambilan_barang';
+
     protected $fillable = [
         'kode',
         'tanggal_pengambilan',
         'client_id',
         'project_id',
+        'karyawan_id',
         'keterangan',
         'created_by',
     ];
@@ -41,6 +44,11 @@ class PengambilanBarang extends Model
     public function dibuatOleh(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function karyawan(): BelongsTo
+    {
+        return $this->belongsTo(Karyawan::class, 'karyawan_id');
     }
 
     public function items(): HasMany

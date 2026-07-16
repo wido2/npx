@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { useAuth } from "@/lib/auth-context"
 import { toast } from "sonner"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -37,6 +38,8 @@ const statusLabels: Record<string, string> = {
 }
 
 export function ReportCards() {
+  const { can } = useAuth()
+  if (!can("widget.report_cards")) return null
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState<POSummary | null>(null)
   const [perBulan, setPerBulan] = useState<PerBulanItem[]>([])
@@ -148,7 +151,7 @@ export function ReportCards() {
           <CardContent className="p-0">
             {perBulan.length > 0 ? (
               <div className="h-80 w-full px-1">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                   <AreaChart data={perBulan} margin={{ top: 20, right: 20, bottom: 60, left: 80 }}>
                     <defs>
                       <linearGradient id="nilaiGradient" x1="0" y1="0" x2="0" y2="1">

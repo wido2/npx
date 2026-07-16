@@ -55,6 +55,13 @@ interface POData {
   reset_periode: string
 }
 
+interface PBData {
+  format_kode: string
+  urutan_terakhir: number
+  tahun_bulan_terakhir: string
+  reset_periode: string
+}
+
 interface PDFData {
   warna_primary: string
   warna_secondary: string
@@ -90,6 +97,9 @@ export function SettingsForm() {
   const [po, setPO] = useState<POData>({
     format_kode: "", urutan_terakhir: 0, tahun_bulan_terakhir: "", reset_periode: "bulanan",
   })
+  const [pb, setPB] = useState<PBData>({
+    format_kode: "", urutan_terakhir: 0, tahun_bulan_terakhir: "", reset_periode: "bulanan",
+  })
   const [pdf, setPdf] = useState<PDFData>({
     warna_primary: "#7c7bad",
     warna_secondary: "#2c3e50",
@@ -108,10 +118,11 @@ export function SettingsForm() {
   const loadSettings = useCallback(async () => {
     setLoading(true)
     try {
-      const [generalRes, poRes, pdfRes] = await Promise.all([
+      const [generalRes, poRes, pdfRes, pbRes] = await Promise.all([
         fetchSetting("general"),
         fetchSetting("purchase_order"),
         fetchSetting("pdf_report"),
+        fetchSetting("pengambilan_barang"),
       ])
       const g = generalRes.data as Record<string, unknown>
       const p = poRes.data as Record<string, unknown>
@@ -136,6 +147,13 @@ export function SettingsForm() {
         urutan_terakhir: (p.urutan_terakhir as number) ?? 0,
         tahun_bulan_terakhir: (p.tahun_bulan_terakhir as string) ?? "",
         reset_periode: (p.reset_periode as string) ?? "bulanan",
+      })
+      const pbData = pbRes.data as Record<string, unknown>
+      setPB({
+        format_kode: (pbData.format_kode as string) ?? "",
+        urutan_terakhir: (pbData.urutan_terakhir as number) ?? 0,
+        tahun_bulan_terakhir: (pbData.tahun_bulan_terakhir as string) ?? "",
+        reset_periode: (pbData.reset_periode as string) ?? "bulanan",
       })
       setPdf({
         warna_primary: (pdfData.warna_primary as string) ?? "#7c7bad",
@@ -217,6 +235,19 @@ export function SettingsForm() {
     }
   }
 
+  async function handleSavePB(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await updateSetting("pengambilan_barang", pb as unknown as Record<string, unknown>)
+      toast.success("PB settings saved")
+    } catch {
+      toast.error("Failed to save PB settings")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function handleSavePDF(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
@@ -256,6 +287,7 @@ export function SettingsForm() {
         <TabsTrigger value="general">General</TabsTrigger>
         <TabsTrigger value="alamat">Alamat</TabsTrigger>
         <TabsTrigger value="purchase_order">Purchase Order</TabsTrigger>
+        <TabsTrigger value="pengambilan_barang">PB - Pengambilan Barang</TabsTrigger>
         <TabsTrigger value="export_pdf">Export PDF</TabsTrigger>
       </TabsList>
 
@@ -306,12 +338,12 @@ export function SettingsForm() {
                 <Field>
                   <FieldLabel htmlFor="logo">Logo</FieldLabel>
                   <FieldContent>
-                    <div className="flex items-center gap-3">
-                      <Input id="logo" type="file" accept="image/*" onChange={handleLogoUpload} className="flex-1" />
-                      {general.logo && (
-                        <img src={storageUrl(general.logo)} alt="Logo" className="h-10 w-10 rounded object-cover" />
-                      )}
-                    </div>
+                    {general.logo && (
+                      <div className="mb-3">
+                        <img src={storageUrl(general.logo)} alt="Logo" className="h-24 w-auto rounded border object-contain" />
+                      </div>
+                    )}
+                    <Input id="logo" type="file" accept="image/*" onChange={handleLogoUpload} />
                     <FieldDescription>Upload logo perusahaan (format: JPG, PNG)</FieldDescription>
                   </FieldContent>
                 </Field>
@@ -498,6 +530,66 @@ export function SettingsForm() {
                 <Button type="submit" disabled={saving}>
                   <SaveIcon />
                   {saving ? "Saving..." : "Save PO Settings"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="pengambilan_barang" className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>PB - Pengambilan Barang Settings</CardTitle>
+            <CardDescription>PB code format and numbering</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSavePB} className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field>
+                  <FieldLabel htmlFor="pb_format_kode">Format Kode</FieldLabel>
+                  <FieldContent>
+                    <Input id="pb_format_kode" value={pb.format_kode} onChange={(e) => setPB((p) => ({ ...p, format_kode: e.target.value }))} />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="pb_urutan_terakhir">Urutan Terakhir</FieldLabel>
+                  <FieldContent>
+                    <Input id="pb_urutan_terakhir" type="number" value={pb.urutan_terakhir} onChange={(e) => setPB((p) => ({ ...p, urutan_terakhir: parseInt(e.target.value) || 0 }))} />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="pb_reset_periode">Reset nomor pada bulan</FieldLabel>
+                  <FieldContent>
+                    <Select value={pb.reset_periode} onValueChange={(v) => setPB((p) => ({ ...p, reset_periode: v ?? "bulanan" }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="tidak_pernah">Tidak pernah</SelectItem>
+                        <SelectItem value="bulanan">Bulanan</SelectItem>
+                        <SelectItem value="1">Januari</SelectItem>
+                        <SelectItem value="2">Februari</SelectItem>
+                        <SelectItem value="3">Maret</SelectItem>
+                        <SelectItem value="4">April</SelectItem>
+                        <SelectItem value="5">Mei</SelectItem>
+                        <SelectItem value="6">Juni</SelectItem>
+                        <SelectItem value="7">Juli</SelectItem>
+                        <SelectItem value="8">Agustus</SelectItem>
+                        <SelectItem value="9">September</SelectItem>
+                        <SelectItem value="10">Oktober</SelectItem>
+                        <SelectItem value="11">November</SelectItem>
+                        <SelectItem value="12">Desember</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FieldContent>
+                </Field>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="submit" disabled={saving}>
+                  <SaveIcon />
+                  {saving ? "Saving..." : "Save PB Settings"}
                 </Button>
               </div>
             </form>

@@ -94,18 +94,18 @@ GET    /api/inventory/laporan-stok
 
 ---
 
-## 3. Frontend — Halaman
+## 3. Frontend — Halaman ✅
 
-| File | Konten |
-|---|---|
-| `app/pengambilan-barang/page.tsx` | Daftar PB (tabel dengan pencarian, sorting) |
-| `app/pengambilan-barang/create/page.tsx` | Form wizard (Header → Items → Review) |
-| `app/pengambilan-barang/[id]/page.tsx` | Detail PB |
-| `components/pengambilan-barang-table.tsx` | Tabel daftar (Kode, Tanggal, Client, Project, Total Item) |
-| `components/pengambilan-barang-wizard.tsx` | Wizard 3 step (Header, Items, Review) |
-| `components/pengambilan-barang-detail.tsx` | Detail PB |
-| `lib/pengambilan-barang-api.ts` | API layer PB |
-| `lib/inventory-api.ts` | API layer inventory (mutasi, stok minimum, opname, laporan) |
+| File | Konten | Status |
+|---|---|---|
+| `app/pengambilan-barang/page.tsx` | Daftar PB (tabel dengan pencarian, sorting) | ✅ |
+| `app/pengambilan-barang/create/page.tsx` | Form wizard (Header → Items → Review) | ✅ |
+| `app/pengambilan-barang/[id]/page.tsx` | Detail PB | ✅ |
+| `components/pengambilan-barang-table.tsx` | Tabel daftar (Kode, Tanggal, Client, Project, Total Item) | ✅ |
+| `components/pengambilan-barang-wizard.tsx` | Wizard 3 step (Header, Items, Review) | ✅ |
+| `components/pengambilan-barang-detail.tsx` | Detail PB | ✅ |
+| `lib/pengambilan-barang-api.ts` | API layer PB | ✅ |
+| `lib/inventory-api.ts` | API layer inventory (mutasi, stok minimum, opname, laporan) | ✅ |
 
 ### Form wizard fields
 Step 1 — Header:
@@ -124,32 +124,32 @@ Step 3 — Review (ringkasan + submit)
 
 ---
 
-## 4. UI — Settings Tab Baru
+## 4. UI — Settings Tab Baru ✅
 
-**`settings-form.tsx`** — tambah tab **"PB - Pengambilan Barang"**
+**`settings-form.tsx`** — tambah tab **"PB - Pengambilan Barang"** ✅
 
 Group `pengambilan_barang` dengan fields:
-- `format_kode` — text (default `PB-{Y}-{M}-{seq}`)
-- `reset_periode` — select (Tidak pernah / Bulanan / Jan–Des)
+- `format_kode` — text (default `PB-{Y}-{M}-{seq}`) ✅
+- `reset_periode` — select (Tidak pernah / Bulanan / Jan–Des) ✅
 
 ---
 
-## 5. UI — Navigasi
+## 5. UI — Navigasi ✅
 
-- Desktop: item menu ditambahkan di **top bar** (Transaksi → "Pengambilan Barang")
-- Mobile: item menu ditambahkan di **hamburger menu**
+- Desktop: item menu ditambahkan di **top bar** (Transaksi → "Pengambilan Barang") ✅
+- Mobile: item menu ditambahkan di **hamburger menu** ✅
 
-| Tempat | Item |
-|---|---|
-| `top-menu.tsx` (Transaksi) | "Pengambilan Barang" → `/pengambilan-barang` |
-| Komponen hamburger menu | "Pengambilan Barang" → `/pengambilan-barang` |
+| Tempat | Item | Status |
+|---|---|---|
+| `top-menu.tsx` (Transaksi) | "Pengambilan Barang" → `/pengambilan-barang` | ✅ |
+| `site-header.tsx` (hamburger sheet) | "Pengambilan Barang" → `/pengambilan-barang` | ✅ |
 
 ---
 
-## 6. UI — Indikator Stok Minimum
+## 6. UI — Indikator Stok Minimum ✅
 
-- `barang-table.tsx` — jika `stok ≤ stok_minimum` → teks merah + icon warning
-- Wizard PB — validasi `jumlah ≤ stok` sebelum submit
+- `barang-table.tsx` — jika `stok ≤ stok_minimum` → teks merah + icon warning ✅
+- Wizard PB — validasi `jumlah ≤ stok` sebelum submit ✅
 
 ---
 
@@ -172,18 +172,52 @@ Group `pengambilan_barang` dengan fields:
 | 12 | `app/Http/Controllers/PurchaseOrderController.php` | Modifikasi | ✅ |
 | 13 | `routes/api.php` | Update | ✅ |
 
-### Frontend (Next.js) — 12 file
-| # | File | Aksi |
+### Frontend (Next.js) — 12 file ✅
+| # | File | Aksi | Status |
+|---|---|---|---|
+| 1 | `lib/pengambilan-barang-api.ts` | Baru | ✅ |
+| 2 | `lib/inventory-api.ts` | Baru | ✅ |
+| 3 | `components/pengambilan-barang-table.tsx` | Baru | ✅ |
+| 4 | `components/pengambilan-barang-wizard.tsx` | Baru | ✅ |
+| 5 | `components/pengambilan-barang-detail.tsx` | Baru | ✅ |
+| 6 | `app/pengambilan-barang/page.tsx` | Baru | ✅ |
+| 7 | `app/pengambilan-barang/create/page.tsx` | Baru | ✅ |
+| 8 | `app/pengambilan-barang/[id]/page.tsx` | Baru | ✅ |
+| 9 | `components/settings-form.tsx` | Update — tab "PB" | ✅ |
+| 10 | `components/site-header.tsx` | Update — hamburger sheet | ✅ |
+| 11 | `components/top-menu.tsx` | Update — menu item | ✅ |
+| 12 | `components/barang-table.tsx` | Update — indikator stok minimum | ✅ |
+
+---
+
+## 8. Role Manager / Permissions ✅
+
+### Permission baru (Seeder)
+| Permission | Guard |
+|---|---|
+| `pb.create` | web |
+| `pb.view_own` | web |
+| `pb.view_all` | web |
+| `pb.delete` | web |
+| `inventory.view` | web |
+| `inventory.opname` | web |
+
+### Permission checks backend
+| Controller | Method | Permission |
 |---|---|---|
-| 1 | `lib/pengambilan-barang-api.ts` | Baru |
-| 2 | `lib/inventory-api.ts` | Baru |
-| 3 | `components/pengambilan-barang-table.tsx` | Baru |
-| 4 | `components/pengambilan-barang-wizard.tsx` | Baru |
-| 5 | `components/pengambilan-barang-detail.tsx` | Baru |
-| 6 | `app/pengambilan-barang/page.tsx` | Baru |
-| 7 | `app/pengambilan-barang/create/page.tsx` | Baru |
-| 8 | `app/pengambilan-barang/[id]/page.tsx` | Baru |
-| 9 | `components/settings-form.tsx` | Update — tab "PB" |
-| 10 | Komponen hamburger menu (mobile) | Update — nav item |
-| 11 | `components/top-menu.tsx` | Update — menu item |
-| 12 | `components/barang-table.tsx` | Update — indikator stok minimum |
+| `PengambilanBarangController` | `index` | `pb.view_all` (jika tidak punya → lihat milik sendiri) |
+| `PengambilanBarangController` | `store` | `pb.create` |
+| `PengambilanBarangController` | `show` | `pb.view_all` atau `created_by` sendiri |
+| `PengambilanBarangController` | `destroy` | `pb.delete` |
+| `PengambilanBarangController` | `bulkDestroy` | `pb.delete` |
+| `InventoryController` | `mutasi` | `inventory.view` |
+| `InventoryController` | `stokMinimum` | `inventory.view` |
+| `InventoryController` | `opname` | `inventory.opname` |
+| `InventoryController` | `laporanStok` | `inventory.view` |
+
+### Frontend — `can()` checks
+| Komponen | Guard |
+|---|---|
+| `pengambilan-barang-table.tsx` | Tombol New PB → `pb.create`; Delete → `pb.delete` |
+| `pengambilan-barang-detail.tsx` | Tombol Delete → `pb.delete` |
+| `pengambilan-barang-wizard.tsx` | Redirect jika tidak punya `pb.create` |

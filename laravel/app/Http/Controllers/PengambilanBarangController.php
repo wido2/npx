@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\PengambilanBarang;
+use App\Models\Setting;
 use App\Services\KodePBService;
 use App\Services\StokService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +28,7 @@ class PengambilanBarangController extends Controller
         $query = PengambilanBarang::with([
             'client:id,kode,nama',
             'project:id,kode,nama',
+            'karyawan:id,nama',
         ]);
 
         if (!$request->user()->can('pb.view_all')) {
@@ -59,10 +62,15 @@ class PengambilanBarangController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (!$request->user()->can('pb.create')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $validated = $request->validate([
             'tanggal_pengambilan' => 'required|date',
             'client_id' => 'nullable|exists:clients,id',
             'project_id' => 'nullable|exists:projects,id',
+            'karyawan_id' => 'nullable|exists:karyawans,id',
             'keterangan' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.barang_id' => 'required|exists:barangs,id',
@@ -80,6 +88,7 @@ class PengambilanBarangController extends Controller
                 'tanggal_pengambilan' => $validated['tanggal_pengambilan'],
                 'client_id' => $validated['client_id'] ?? null,
                 'project_id' => $validated['project_id'] ?? null,
+                'karyawan_id' => $validated['karyawan_id'] ?? null,
                 'keterangan' => $validated['keterangan'] ?? null,
                 'created_by' => $request->user()->id,
             ]);
@@ -107,6 +116,7 @@ class PengambilanBarangController extends Controller
                 $pb->load([
                     'client:id,kode,nama',
                     'project:id,kode,nama',
+                    'karyawan:id,nama',
                     'items.barang:id,kode,nama',
                 ]),
                 201
@@ -114,11 +124,16 @@ class PengambilanBarangController extends Controller
         });
     }
 
-    public function show(PengambilanBarang $pengambilanBarang): JsonResponse
+    public function show(Request $request, PengambilanBarang $pengambilanBarang): JsonResponse
     {
+        if (!$request->user()->can('pb.view_all') && $pengambilanBarang->created_by !== $request->user()->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $pb = $pengambilanBarang->load([
             'client',
             'project',
+            'karyawan',
             'items.barang',
             'dibuatOleh',
         ]);
@@ -131,6 +146,10 @@ class PengambilanBarangController extends Controller
 
     public function destroy(Request $request, PengambilanBarang $pengambilanBarang): JsonResponse
     {
+        if (!$request->user()->can('pb.delete')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $pengambilanBarang->delete();
 
         return response()->json(['message' => 'Pengambilan barang deleted']);
@@ -138,6 +157,10 @@ class PengambilanBarangController extends Controller
 
     public function bulkDestroy(Request $request): JsonResponse
     {
+        if (!$request->user()->can('pb.delete')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $validated = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:pengambilan_barang,id',
@@ -146,5 +169,44 @@ class PengambilanBarangController extends Controller
         $count = PengambilanBarang::whereIn('id', $validated['ids'])->delete();
 
         return response()->json(['message' => $count . ' pengambilan barang deleted']);
+    }
+
+    public function pdf(PengambilanBarang $pengambilanBarang): \Illuminate\Http\Response
+    {
+        $pb = $pengambilanBarang->load([
+            'client',
+            'project',
+            'karyawan',
+            'items.barang.unit',
+            'dibuatOleh',
+        ]);
+
+        $generalSetting = Setting::where('group', 'general')->first();
+        $dataSetting = $generalSetting ? $generalSetting->data : [];
+
+        $pdf = Pdf::loadView('pdf.pengambilan-barang', [
+            'pb' => $pb,
+            'setting' => $dataSetting,
+        ]);
+
+        $fontPath = '/usr/share/fonts/wps-fonts';
+        if (is_dir($fontPath)) {
+            $fontMetrics = $pdf->getDomPDF()->getFontMetrics();
+            $fontMetrics->registerFont(
+                ['family' => 'Segoe UI', 'style' => 'normal', 'weight' => 'normal'],
+                $fontPath . '/segoeui.ttf'
+            );
+            $fontMetrics->registerFont(
+                ['family' => 'Segoe UI', 'style' => 'normal', 'weight' => 'bold'],
+                $fontPath . '/segoeuib.ttf'
+            );
+            $fontMetrics->registerFont(
+                ['family' => 'Segoe UI', 'style' => 'italic', 'weight' => 'normal'],
+                $fontPath . '/segoeuii.ttf'
+            );
+        }
+
+        $filename = ($pb->kode ?? 'PB-DRAFT') . '.pdf';
+        return $pdf->stream($filename);
     }
 }

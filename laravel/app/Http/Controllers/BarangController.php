@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
+use App\Services\HargaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BarangController extends Controller
 {
+    public function __construct(
+        protected HargaService $hargaService,
+    ) {}
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->integer('per_page', 10);
@@ -69,9 +73,22 @@ class BarangController extends Controller
             'aktif' => 'boolean',
         ]);
 
+        $hargaBaru = (float) $validated['harga_beli'];
+
+        if ((float) $barang->harga_beli !== $hargaBaru) {
+            $this->hargaService->rekam(
+                $barang,
+                $hargaBaru,
+                Barang::class,
+                $barang->id,
+                'Update manual',
+                $request->user()->id,
+            );
+        }
+
         $barang->update($validated);
 
-        return response()->json($barang->load(['kategori', 'unit']));
+        return response()->json($barang->fresh()->load(['kategori', 'unit']));
     }
 
     public function destroy(Barang $barang): JsonResponse
@@ -79,6 +96,57 @@ class BarangController extends Controller
         $barang->delete();
 
         return response()->json(['message' => 'Barang deleted']);
+    }
+
+    public function hargaHistory(Barang $barang, Request $request): JsonResponse
+    {
+        return response()->json(
+            $barang->riwayatHargas()
+                ->with('dibuatOleh:id,name')
+                ->orderBy('created_at', 'desc')
+                ->paginate($request->integer('per_page', 10))
+        );
+    }
+
+    public function bulkUpdateHarga(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|exists:barangs,id',
+            'items.*.harga_beli' => 'required|numeric|min:0',
+        ]);
+
+        $updated = 0;
+        $errors = [];
+
+        foreach ($validated['items'] as $item) {
+            try {
+                $barang = Barang::findOrFail($item['id']);
+                $hargaBaru = (float) $item['harga_beli'];
+
+                if ((float) $barang->harga_beli !== $hargaBaru) {
+                    $this->hargaService->rekam(
+                        $barang,
+                        $hargaBaru,
+                        Barang::class,
+                        $barang->id,
+                        'Update harga massal',
+                        $request->user()->id,
+                    );
+                }
+
+                $barang->update(['harga_beli' => $hargaBaru]);
+                $updated++;
+            } catch (\Exception $e) {
+                $errors[] = ['id' => $item['id'], 'message' => $e->getMessage()];
+            }
+        }
+
+        return response()->json([
+            'message' => "{$updated} barang berhasil diupdate",
+            'updated' => $updated,
+            'errors' => $errors,
+        ]);
     }
 
     public function bulkDestroy(Request $request): JsonResponse

@@ -30,6 +30,7 @@ import {
   FolderKanbanIcon,
   FileTextIcon,
   BarChart3Icon,
+  PackageOpenIcon,
 } from "lucide-react"
 
 const data = {
@@ -50,6 +51,12 @@ const data = {
       url: "/purchase-order",
       icon: <FileTextIcon />,
       description: "Kelola PO",
+    },
+    {
+      title: "Pengambilan Barang",
+      url: "/pengambilan-barang",
+      icon: <PackageOpenIcon />,
+      description: "Goods issue",
     },
     {
       title: "Barang",

@@ -13,8 +13,10 @@ use App\Http\Controllers\PurchaseOrderItemController;
 use App\Http\Controllers\PurchaseOrderReceiptController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PurchaseOrderRevisionController;
+use App\Http\Controllers\KaryawanController;
 use App\Http\Controllers\PengambilanBarangController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ReportBarangController;
 use App\Http\Controllers\ReportPurchaseOrderController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
@@ -68,8 +70,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('vendor/{vendor}/contacts', [VendorContactController::class, 'store']);
     Route::put('contacts/{contact}', [VendorContactController::class, 'update']);
     Route::delete('contacts/{contact}', [VendorContactController::class, 'destroy']);
+    Route::post('barang/bulk-update-harga', [BarangController::class, 'bulkUpdateHarga']);
     Route::post('barang/bulk-delete', [BarangController::class, 'bulkDestroy']);
+    Route::get('barang/{barang}/harga-history', [BarangController::class, 'hargaHistory']);
     Route::apiResource('barang', BarangController::class);
+    Route::apiResource('karyawan', KaryawanController::class);
     Route::get('alamat', [AlamatController::class, 'index']);
     Route::get('alamat/{address}', [AlamatController::class, 'show']);
     Route::post('alamat', [AlamatController::class, 'store']);
@@ -149,6 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('pengambilan-barang/{pengambilanBarang}', [PengambilanBarangController::class, 'show']);
     Route::delete('pengambilan-barang/{pengambilanBarang}', [PengambilanBarangController::class, 'destroy']);
     Route::post('pengambilan-barang/bulk-delete', [PengambilanBarangController::class, 'bulkDestroy']);
+    Route::get('pengambilan-barang/{pengambilanBarang}/pdf', [PengambilanBarangController::class, 'pdf']);
 
     // ——— Inventory ———
     Route::get('inventory/mutasi', [InventoryController::class, 'mutasi']);
@@ -163,4 +169,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('reports/purchase-order/per-hari', [ReportPurchaseOrderController::class, 'perHari']);
     Route::get('reports/purchase-order/per-status', [ReportPurchaseOrderController::class, 'perStatus']);
     Route::get('reports/purchase-order/top-items', [ReportPurchaseOrderController::class, 'topItems']);
+
+    Route::get('reports/barang/summary', [ReportBarangController::class, 'summary']);
+    Route::get('reports/barang/per-kategori', [ReportBarangController::class, 'perKategori']);
+    Route::get('reports/barang/per-status', [ReportBarangController::class, 'perStatus']);
+    Route::get('reports/barang/stok-terendah', [ReportBarangController::class, 'stokTerendah']);
+    Route::get('reports/barang/top-items-nilai', [ReportBarangController::class, 'topItemsByNilai']);
 });

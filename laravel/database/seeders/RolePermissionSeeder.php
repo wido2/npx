@@ -25,6 +25,13 @@ class RolePermissionSeeder extends Seeder
             'master.project.create', 'master.project.view', 'master.project.edit', 'master.project.delete',
             'master.unit.view', 'master.unit.create', 'master.unit.edit', 'master.unit.delete',
             'master.kategori.view', 'master.kategori.create', 'master.kategori.edit', 'master.kategori.delete',
+            'master.karyawan.view', 'master.karyawan.create', 'master.karyawan.edit', 'master.karyawan.delete',
+
+            // PB - Pengambilan Barang
+            'pb.create', 'pb.view_own', 'pb.view_all', 'pb.delete',
+
+            // Inventory
+            'inventory.view', 'inventory.opname',
 
             // Settings
             'settings.view', 'settings.update',
@@ -34,6 +41,13 @@ class RolePermissionSeeder extends Seeder
 
             // Reports
             'reports.view',
+
+            // Widget
+            'widget.section_cards', 'widget.chart_area_interactive', 'widget.data_table',
+            'widget.report_cards', 'widget.inventory_laporan', 'widget.barang_history',
+            'widget.barang_overview',
+            'widget.po_overview',
+            'widget.barang_report_cards',
         ];
 
         foreach ($permissions as $perm) {
@@ -55,18 +69,31 @@ class RolePermissionSeeder extends Seeder
             'master.unit.view', 'master.unit.create', 'master.unit.edit', 'master.unit.delete',
             'master.kategori.view', 'master.kategori.create', 'master.kategori.edit', 'master.kategori.delete',
 
+            'pb.create', 'pb.view_own', 'pb.view_all', 'pb.delete',
+            'inventory.view', 'inventory.opname',
             'settings.view', 'settings.update',
             'users.view', 'users.manage',
 
             'reports.view',
+
+            'widget.section_cards', 'widget.chart_area_interactive', 'widget.data_table',
+            'widget.report_cards', 'widget.inventory_laporan', 'widget.barang_history',
+            'widget.barang_overview',
         ]);
 
         $user = Role::findOrCreate('user', 'web');
         $user->syncPermissions([
             'po.create', 'po.view_own', 'po.edit', 'po.submit',
+            'pb.create', 'pb.view_own', 'pb.delete',
+            'inventory.view',
             'master.vendor.view', 'master.barang.view', 'master.client.view', 'master.project.view',
             'master.unit.view', 'master.kategori.view',
+            'master.karyawan.view', 'master.karyawan.create', 'master.karyawan.edit', 'master.karyawan.delete',
             'reports.view',
+
+            'widget.section_cards', 'widget.chart_area_interactive', 'widget.data_table',
+            'widget.report_cards', 'widget.inventory_laporan', 'widget.barang_history',
+            'widget.barang_overview',
         ]);
 
         $admin = User::where('email', 'admin@gmail.com')->first();

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 
+import { useAuth } from "@/lib/auth-context"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Card,
@@ -54,6 +55,8 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function ChartAreaInteractive() {
+  const { can } = useAuth()
+  if (!can("widget.chart_area_interactive")) return null
   const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState("90d")
   const [chartData, setChartData] = React.useState<ChartDataPoint[]>([])

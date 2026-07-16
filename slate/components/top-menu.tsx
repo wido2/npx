@@ -12,6 +12,9 @@ import {
   FileTextIcon,
   BarChart3Icon,
   Settings2Icon,
+  PackageOpenIcon,
+  WarehouseIcon,
+  UserRoundIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -46,6 +49,7 @@ const groups: MenuGroup[] = [
     items: [
       { href: "/barang", label: "Barang", icon: PackageIcon },
       { href: "/vendor", label: "Vendor", icon: Building2Icon },
+      { href: "/karyawan", label: "Karyawan", icon: UserRoundIcon },
     ],
   },
   {
@@ -63,6 +67,14 @@ const groups: MenuGroup[] = [
     icon: FileTextIcon,
     items: [
       { href: "/purchase-order", label: "Purchase Order", icon: FileTextIcon },
+      { href: "/pengambilan-barang", label: "Pengambilan Barang", icon: PackageOpenIcon },
+    ],
+  },
+  {
+    label: "Inventory",
+    icon: WarehouseIcon,
+    items: [
+      { href: "/inventory", label: "Inventory", icon: WarehouseIcon },
     ],
   },
   {

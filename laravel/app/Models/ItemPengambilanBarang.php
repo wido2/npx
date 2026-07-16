@@ -11,6 +11,8 @@ class ItemPengambilanBarang extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $table = 'item_pengambilan_barang';
+
     protected $fillable = [
         'pengambilan_barang_id',
         'barang_id',

@@ -1,6 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import {
   flexRender,
   getCoreRowModel,
@@ -36,6 +38,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet"
+import {
   Table,
   TableBody,
   TableCell,
@@ -56,9 +65,12 @@ import {
 } from "@/components/ui/alert-dialog"
 import { AddBarangSheet } from "@/components/add-barang-sheet"
 import {
-  fetchBarangs, deleteBarang, bulkDeleteBarangs, type Barang
+  fetchBarangs, deleteBarang, bulkDeleteBarangs, fetchBarangHargaHistory,
+  type Barang, type RiwayatHarga,
 } from "@/lib/barang-api"
+import { fetchMutasi, type MutasiStok } from "@/lib/inventory-api"
 import {
+  AlertTriangleIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -66,13 +78,18 @@ import {
   ChevronsRightIcon,
   Columns3Icon,
   EllipsisVerticalIcon,
+  ExternalLinkIcon,
+  LoaderIcon,
   PencilIcon,
   PlusIcon,
   SearchIcon,
   Trash2Icon,
 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export function BarangTable() {
+  const router = useRouter()
+  const { can } = useAuth()
   const [data, setData] = useState<Barang[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -91,6 +108,38 @@ export function BarangTable() {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<Barang | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Harga sheet
+  const [hargaSheetOpen, setHargaSheetOpen] = useState(false)
+  const [hargaSheetBarang, setHargaSheetBarang] = useState<Barang | null>(null)
+  const [hargaHistory, setHargaHistory] = useState<RiwayatHarga[]>([])
+  const [hargaHistoryLoading, setHargaHistoryLoading] = useState(false)
+
+  // Stok sheet
+  const [stokSheetOpen, setStokSheetOpen] = useState(false)
+  const [stokSheetBarang, setStokSheetBarang] = useState<Barang | null>(null)
+  const [mutasiHistory, setMutasiHistory] = useState<MutasiStok[]>([])
+  const [mutasiHistoryLoading, setMutasiHistoryLoading] = useState(false)
+
+  function openHargaSheet(barang: Barang) {
+    setHargaSheetBarang(barang)
+    setHargaSheetOpen(true)
+    setHargaHistoryLoading(true)
+    fetchBarangHargaHistory(barang.id, { per_page: 5 })
+      .then((res) => setHargaHistory(res.data))
+      .catch(() => toast.error("Gagal memuat riwayat harga"))
+      .finally(() => setHargaHistoryLoading(false))
+  }
+
+  function openStokSheet(barang: Barang) {
+    setStokSheetBarang(barang)
+    setStokSheetOpen(true)
+    setMutasiHistoryLoading(true)
+    fetchMutasi({ barang_id: barang.id, per_page: 5 })
+      .then((res) => setMutasiHistory(res.data))
+      .catch(() => toast.error("Gagal memuat riwayat stok"))
+      .finally(() => setMutasiHistoryLoading(false))
+  }
 
   async function handleDelete(barang: Barang) {
     setDeleting(true)
@@ -201,18 +250,42 @@ export function BarangTable() {
       {
         accessorKey: "harga_beli",
         header: "Harga Beli",
-        cell: ({ row }) =>
-          row.original.harga_beli != null
-            ? `Rp${new Intl.NumberFormat("id-ID", {
-                style: "decimal",
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              }).format(Math.round(row.original.harga_beli))}`
-            : "-",
+        cell: ({ row }) => {
+          const r = row.original
+          return (
+            <button
+              type="button"
+              className="cursor-pointer underline-offset-2 hover:underline hover:text-primary"
+              onClick={(e) => { e.stopPropagation(); openHargaSheet(r) }}
+            >
+              {r.harga_beli != null
+                ? `Rp${new Intl.NumberFormat("id-ID", {
+                    style: "decimal",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  }).format(Math.round(r.harga_beli))}`
+                : "-"}
+            </button>
+          )
+        },
       },
       {
         accessorKey: "stok",
         header: "Stok",
+        cell: ({ row }) => {
+          const r = row.original
+          const isLow = r.stok_minimum > 0 && r.stok <= r.stok_minimum
+          return (
+            <button
+              type="button"
+              className={cn("cursor-pointer underline-offset-2 hover:underline hover:text-primary", isLow ? "flex items-center gap-1 text-destructive font-medium" : "")}
+              onClick={(e) => { e.stopPropagation(); openStokSheet(r) }}
+            >
+              {isLow && <AlertTriangleIcon className="size-4" />}
+              {r.stok}
+            </button>
+          )
+        },
       },
       {
         accessorKey: "stok_minimum",
@@ -236,26 +309,30 @@ export function BarangTable() {
                 <span className="sr-only">Open menu</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-32">
-                <DropdownMenuItem
-                  onClick={() => {
-                    setEditItem(row.original)
-                    setSheetOpen(true)
-                  }}
-                >
-                  <PencilIcon />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => {
-                    setDeletingItem(row.original)
-                    setDeleteDialogOpen(true)
-                  }}
-                >
-                  <Trash2Icon />
-                  Delete
-                </DropdownMenuItem>
+                {can("master.barang.edit") && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setEditItem(row.original)
+                      setSheetOpen(true)
+                    }}
+                  >
+                    <PencilIcon />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {can("master.barang.edit") && can("master.barang.delete") && <DropdownMenuSeparator />}
+                {can("master.barang.delete") && (
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => {
+                      setDeletingItem(row.original)
+                      setDeleteDialogOpen(true)
+                    }}
+                  >
+                    <Trash2Icon />
+                    Delete
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -300,7 +377,7 @@ export function BarangTable() {
             }}
             className="h-8 w-full max-w-sm pl-8"
           />
-          {selectedCount > 0 && (
+          {selectedCount > 0 && can("master.barang.delete") && (
             <Button
               variant="destructive"
               size="sm"
@@ -345,18 +422,20 @@ export function BarangTable() {
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8"
-            onClick={() => {
-              setEditItem(null)
-              setSheetOpen(true)
-            }}
-          >
-            <PlusIcon />
-            <span className="hidden lg:inline">Add Barang</span>
-          </Button>
+          {can("master.barang.create") && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => {
+                setEditItem(null)
+                setSheetOpen(true)
+              }}
+            >
+              <PlusIcon />
+              <span className="hidden lg:inline">Add Barang</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -514,6 +593,108 @@ export function BarangTable() {
           </div>
         </div>
       </div>
+
+      {/* Harga Sheet */}
+      <Sheet open={hargaSheetOpen} onOpenChange={setHargaSheetOpen}>
+        <SheetContent side="right">
+          <SheetHeader>
+            <SheetTitle>Riwayat Harga</SheetTitle>
+            <SheetDescription>{hargaSheetBarang?.kode} — {hargaSheetBarang?.nama}</SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 space-y-3 p-6 pt-4 overflow-y-auto">
+            {hargaHistoryLoading ? (
+              <div className="flex items-center justify-center py-10"><LoaderIcon className="size-5 animate-spin text-muted-foreground" /></div>
+            ) : hargaHistory.length === 0 ? (
+              <p className="text-center text-muted-foreground py-10">Belum ada riwayat harga</p>
+            ) : (
+              hargaHistory.map((h) => (
+                <div key={h.id} className="rounded-lg border p-3 space-y-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(new Date(h.created_at))}</span>
+                    <span>{h.keterangan || "-"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-red-600">Rp {h.harga_beli_lama.toLocaleString("id-ID")}</span>
+                    <span className="text-muted-foreground">→</span>
+                    <span className="text-emerald-600 font-medium">Rp {h.harga_beli_baru.toLocaleString("id-ID")}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {h.dibuat_oleh?.name || "-"}
+                  </div>
+                </div>
+              ))
+            )}
+            {hargaSheetBarang && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => { setHargaSheetOpen(false); router.push(`/barang/${hargaSheetBarang.id}/harga`) }}
+              >
+                <ExternalLinkIcon className="size-4" />
+                Lihat Selengkapnya
+              </Button>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Stok Sheet */}
+      <Sheet open={stokSheetOpen} onOpenChange={setStokSheetOpen}>
+        <SheetContent side="right">
+          <SheetHeader>
+            <SheetTitle>Riwayat Stok</SheetTitle>
+            <SheetDescription>{stokSheetBarang?.kode} — {stokSheetBarang?.nama}</SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 space-y-3 p-6 pt-4 overflow-y-auto">
+            {mutasiHistoryLoading ? (
+              <div className="flex items-center justify-center py-10"><LoaderIcon className="size-5 animate-spin text-muted-foreground" /></div>
+            ) : mutasiHistory.length === 0 ? (
+              <p className="text-center text-muted-foreground py-10">Belum ada riwayat stok</p>
+            ) : (
+              mutasiHistory.map((m) => {
+                const tipeColor: Record<string, string> = {
+                  masuk: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950",
+                  keluar: "text-red-600 bg-red-50 dark:bg-red-950",
+                  opname: "text-blue-600 bg-blue-50 dark:bg-blue-950",
+                }
+                const tipeLabel: Record<string, string> = {
+                  masuk: "Masuk", keluar: "Keluar", opname: "Opname",
+                }
+                return (
+                  <div key={m.id} className="rounded-lg border p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        {new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(new Date(m.created_at))}
+                      </span>
+                      <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", tipeColor[m.tipe] || "")}>
+                        {tipeLabel[m.tipe] || m.tipe}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Stok: <span className="tabular-nums">{m.stok_sebelum}</span></span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className="tabular-nums font-medium">{m.stok_sesudah}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {m.jumlah > 0 ? "+" : ""}{m.jumlah} | {m.keterangan || "-"}
+                    </div>
+                  </div>
+                )
+              })
+            )}
+            {stokSheetBarang && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => { setStokSheetOpen(false); router.push(`/inventory/barang/${stokSheetBarang.id}`) }}
+              >
+                <ExternalLinkIcon className="size-4" />
+                Lihat Selengkapnya
+              </Button>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent size="sm">

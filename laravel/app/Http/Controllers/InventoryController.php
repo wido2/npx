@@ -16,12 +16,16 @@ class InventoryController extends Controller
 
     public function mutasi(Request $request): JsonResponse
     {
+        if (!$request->user()->can('inventory.view')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $validated = $request->validate([
             'barang_id' => 'nullable|exists:barangs,id',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
-        $query = MutasiStok::with(['barang:id,kode,nama', 'dibuatOleh:id,name']);
+        $query = MutasiStok::with(['barang:id,kode,nama,unit_id', 'barang.unit:id,singkatan', 'dibuatOleh:id,name']);
 
         if (!empty($validated['barang_id'])) {
             $query->where('barang_id', $validated['barang_id']);
@@ -32,8 +36,12 @@ class InventoryController extends Controller
         return response()->json($query->paginate($validated['per_page'] ?? 50));
     }
 
-    public function stokMinimum(): JsonResponse
+    public function stokMinimum(Request $request): JsonResponse
     {
+        if (!$request->user()->can('inventory.view')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $barang = Barang::where('aktif', true)
             ->whereColumn('stok', '<=', 'stok_minimum')
             ->get(['id', 'kode', 'nama', 'stok', 'stok_minimum']);
@@ -43,6 +51,10 @@ class InventoryController extends Controller
 
     public function opname(Request $request): JsonResponse
     {
+        if (!$request->user()->can('inventory.opname')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $validated = $request->validate([
             'barang_id' => 'required|exists:barangs,id',
             'stok_baru' => 'required|integer|min:0',
@@ -63,6 +75,10 @@ class InventoryController extends Controller
 
     public function laporanStok(Request $request): JsonResponse
     {
+        if (!$request->user()->can('inventory.view')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $search = $request->input('search', '');
         $kategoriId = $request->input('kategori_id', '');
 

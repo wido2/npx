@@ -17,7 +17,6 @@ import {
 import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -70,7 +69,7 @@ import {
   SearchIcon,
   Trash2Icon,
 } from "lucide-react"
-import { fetchPurchaseOrders, deletePurchaseOrder, bulkDeletePurchaseOrders, fetchPurchaseOrderStats, type PurchaseOrder, type POStats } from "@/lib/purchase-order-api"
+import { fetchPurchaseOrders, deletePurchaseOrder, bulkDeletePurchaseOrders, type PurchaseOrder } from "@/lib/purchase-order-api"
 
 const currency = (val: number) =>
   `Rp${new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(val))}`
@@ -107,39 +106,6 @@ export function PurchaseOrderTable() {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<PurchaseOrder | null>(null)
   const [deleting, setDeleting] = useState(false)
-  const [stats, setStats] = useState<POStats | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    fetchPurchaseOrderStats()
-      .then((res) => { if (!cancelled) setStats(res) })
-      .catch(() => { if (!cancelled) setStats(null) })
-    return () => { cancelled = true }
-  }, [])
-
-  useEffect(() => {
-    if (!stats && data.length) {
-      const draft = data.filter((d) => d.status === "draft")
-      const dikirim = data.filter((d) => d.status === "dikirim")
-      const disetujui = data.filter((d) => d.status === "disetujui")
-      const diterima = data.filter((d) => d.status === "diterima")
-      const diterima_sebagian = data.filter((d) => d.status === "diterima_sebagian")
-      const dibatalkan = data.filter((d) => d.status === "dibatalkan")
-      const sumTotal = (arr: typeof data) => arr.reduce((s, p) => s + p.total, 0)
-      setStats({
-        total_bulan_ini: data.length,
-        total_nilai_bulan_ini: sumTotal(data),
-        total_disetujui_bulan_ini: disetujui.length,
-        total_nilai_disetujui_bulan_ini: sumTotal(disetujui),
-        draft: draft.length, draft_nilai: sumTotal(draft),
-        dikirim: dikirim.length, dikirim_nilai: sumTotal(dikirim),
-        disetujui: disetujui.length, disetujui_nilai: sumTotal(disetujui),
-        diterima: diterima.length, diterima_nilai: sumTotal(diterima),
-        diterima_sebagian: diterima_sebagian.length, diterima_sebagian_nilai: sumTotal(diterima_sebagian),
-        dibatalkan: dibatalkan.length, dibatalkan_nilai: sumTotal(dibatalkan),
-      })
-    }
-  }, [stats, data])
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -308,45 +274,7 @@ export function PurchaseOrderTable() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="grid grid-cols-5 gap-3">
-        <Card size="sm" className="cursor-pointer transition-colors hover:bg-accent/50" onClick={() => { setSorting([]); setStatusFilter("disetujui"); setDateFrom(""); setDateTo(""); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}>
-          <CardContent className="flex flex-col gap-0.5 px-3 py-2.5">
-            <span className="text-xs text-muted-foreground">Disetujui</span>
-            <span className="text-xl font-bold text-blue-600">{stats?.total_disetujui_bulan_ini ?? 0}</span>
-            <span className="text-xs text-muted-foreground">{currency(stats?.total_nilai_disetujui_bulan_ini ?? 0)}</span>
-          </CardContent>
-        </Card>
-        <Card size="sm" className="cursor-pointer transition-colors hover:bg-accent/50" onClick={() => { setSorting([]); setStatusFilter("diterima"); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}>
-          <CardContent className="flex flex-col gap-0.5 px-3 py-2.5">
-            <span className="text-xs text-muted-foreground">Selesai</span>
-            <span className="text-xl font-bold text-green-600">{stats?.diterima ?? 0}</span>
-            <span className="text-xs text-muted-foreground">{stats?.diterima_sebagian ?? 0} sebagian</span>
-          </CardContent>
-        </Card>
-        <Card size="sm" className="cursor-pointer transition-colors hover:bg-accent/50" onClick={() => { setSorting([]); setStatusFilter("draft"); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}>
-          <CardContent className="flex flex-col gap-0.5 px-3 py-2.5">
-            <span className="text-xs text-muted-foreground">Pengajuan</span>
-            <span className="text-xl font-bold text-yellow-600">{stats?.draft ?? 0}</span>
-            <span className="text-xs text-muted-foreground">Nilai: {currency(stats?.draft_nilai ?? 0)}</span>
-          </CardContent>
-        </Card>
-        <Card size="sm" className="cursor-pointer transition-colors hover:bg-accent/50" onClick={() => { setSorting([]); setStatusFilter("dikirim"); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}>
-          <CardContent className="flex flex-col gap-0.5 px-3 py-2.5">
-            <span className="text-xs text-muted-foreground">Menunggu Approval</span>
-            <span className="text-xl font-bold text-orange-600">{(stats?.dikirim ?? 0) + (stats?.disetujui ?? 0)}</span>
-            <span className="text-xs text-muted-foreground">Nilai: {currency((stats?.dikirim_nilai ?? 0) + (stats?.disetujui_nilai ?? 0))}</span>
-          </CardContent>
-        </Card>
-        <Card size="sm" className="cursor-pointer transition-colors hover:bg-accent/50" onClick={() => { setSorting([]); setStatusFilter("dibatalkan"); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}>
-          <CardContent className="flex flex-col gap-0.5 px-3 py-2.5">
-            <span className="text-xs text-muted-foreground">Dibatalkan</span>
-            <span className="text-xl font-bold text-red-600">{stats?.dibatalkan ?? 0}</span>
-            <span className="text-xs text-muted-foreground">Nilai: {currency(stats?.dibatalkan_nilai ?? 0)}</span>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex flex-1 items-center gap-2">
           <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search kode or vendor..." value={search} onChange={(e) => { setSorting([]); setSearch(e.target.value); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }} className="h-8 w-full max-w-sm pl-8" />

@@ -44,14 +44,6 @@ interface PaginatedResponse {
   total: number
 }
 
-interface KategoriResponse {
-  data: Kategori[]
-}
-
-interface UnitResponse {
-  data: Unit[]
-}
-
 function authHeaders(): Record<string, string> {
   const token = getToken()
   return {
@@ -87,8 +79,15 @@ export async function fetchCategories(): Promise<Kategori[]> {
     headers: authHeaders(),
   })
   if (!res.ok) throw new Error(`Failed to fetch categories (${res.status})`)
-  const json: KategoriResponse = await res.json()
-  return json.data
+  return res.json()
+}
+
+export async function fetchBarang(id: string): Promise<Barang> {
+  const res = await authFetch(`${API_BASE}/barang/${id}`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch barang (${res.status})`)
+  return res.json()
 }
 
 export async function createCategory(nama: string): Promise<Kategori> {
@@ -106,8 +105,7 @@ export async function fetchUnits(): Promise<Unit[]> {
     headers: authHeaders(),
   })
   if (!res.ok) throw new Error(`Failed to fetch units (${res.status})`)
-  const json: UnitResponse = await res.json()
-  return json.data
+  return res.json()
 }
 
 export async function createUnit(nama: string, singkatan: string): Promise<Unit> {
@@ -173,6 +171,16 @@ export async function deleteBarang(id: string): Promise<void> {
   if (!res.ok) throw new Error("Failed to delete barang")
 }
 
+export async function bulkUpdateHarga(items: { id: string; harga_beli: number }[]): Promise<{ message: string; updated: number; errors: { id: string; message: string }[] }> {
+  const res = await authFetch(`${API_BASE}/barang/bulk-update-harga`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ items }),
+  })
+  if (!res.ok) throw new Error(`Failed to bulk update harga (${res.status})`)
+  return res.json()
+}
+
 export async function bulkDeleteBarangs(ids: string[]): Promise<void> {
   const res = await authFetch(`${API_BASE}/barang/bulk-delete`, {
     method: "POST",
@@ -180,4 +188,78 @@ export async function bulkDeleteBarangs(ids: string[]): Promise<void> {
     body: JSON.stringify({ ids }),
   })
   if (!res.ok) throw new Error(`Failed to bulk delete barangs (${res.status})`)
+}
+
+export interface RiwayatHarga {
+  id: string
+  barang_id: string
+  harga_beli_lama: number
+  harga_beli_baru: number
+  referensi_type: string | null
+  referensi_id: string | null
+  keterangan: string | null
+  created_by: string | null
+  created_at: string
+  dibuat_oleh?: { id: string; name: string }
+}
+
+interface RiwayatHargaResponse {
+  data: RiwayatHarga[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+}
+
+export interface BarangSummary {
+  total: number
+  stok_normal: number
+  stok_menipis: number
+  stok_kosong: number
+  total_nilai_stok: number
+}
+
+export async function fetchBarangSummary(): Promise<BarangSummary> {
+  const res = await authFetch(`${API_BASE}/barang?per_page=1`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch barang summary (${res.status})`)
+  const json = await res.json()
+  const total: number = json.total || 0
+
+  let stok_normal = 0
+  let stok_menipis = 0
+  let stok_kosong = 0
+  let total_nilai_stok = 0
+
+  const allRes = await authFetch(`${API_BASE}/barang?per_page=${total || 1}`, {
+    headers: authHeaders(),
+  })
+  if (allRes.ok) {
+    const allJson = await allRes.json()
+    const items: Barang[] = allJson.data || []
+    for (const b of items) {
+      if (b.stok === 0) stok_kosong++
+      else if (b.stok_minimum > 0 && b.stok <= b.stok_minimum) stok_menipis++
+      else stok_normal++
+      if (b.harga_beli != null) total_nilai_stok += b.stok * b.harga_beli
+    }
+  }
+
+  return { total, stok_normal, stok_menipis, stok_kosong, total_nilai_stok }
+}
+
+export async function fetchBarangHargaHistory(
+  id: string,
+  params?: { page?: number; per_page?: number }
+): Promise<RiwayatHargaResponse> {
+  const searchParams = new URLSearchParams()
+  if (params?.page) searchParams.set("page", String(params.page))
+  if (params?.per_page) searchParams.set("per_page", String(params.per_page))
+
+  const res = await authFetch(`${API_BASE}/barang/${id}/harga-history?${searchParams}`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch harga history (${res.status})`)
+  return res.json()
 }

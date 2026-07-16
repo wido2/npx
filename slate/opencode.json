@@ -9,6 +9,15 @@
         "mcp"
       ],
       "enabled": true
+    },
+    "laravel-boost": {
+      "type": "local",
+      "command": [
+        "php",
+        "../laravel/artisan",
+        "boost:mcp"
+      ],
+      "enabled": true
     }
   }
 }

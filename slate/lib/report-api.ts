@@ -97,3 +97,82 @@ export async function fetchPOTopItems(sortBy?: "total_dipesan" | "total_nilai"):
   if (!res.ok) throw new Error(`Failed to fetch top items (${res.status})`)
   return res.json()
 }
+
+// ——— Barang Reports ———
+
+export interface BarangSummary {
+  total_barang: number
+  total_nilai_stok: number
+  stok_normal: number
+  stok_menipis: number
+  stok_kosong: number
+}
+
+export interface PerKategoriItem {
+  kategori_id: string
+  kategori_nama: string
+  total_barang: number
+  total_nilai_stok: number
+}
+
+export interface PerStatusItemBarang {
+  status: string
+  total: number
+}
+
+export interface StokTerendahItem {
+  barang_id: string
+  barang_nama: string
+  barang_kode: string
+  stok: number
+  stok_minimum: number
+  unit_nama: string
+}
+
+export interface TopBarItemByNilai {
+  barang_id: string
+  barang_nama: string
+  barang_kode: string
+  total_nilai: number
+  stok: number
+}
+
+export async function fetchBarangSummaryReport(): Promise<BarangSummary> {
+  const res = await authFetch(`${API_BASE}/reports/barang/summary`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch barang summary (${res.status})`)
+  return res.json()
+}
+
+export async function fetchBarangPerKategori(): Promise<PerKategoriItem[]> {
+  const res = await authFetch(`${API_BASE}/reports/barang/per-kategori`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch barang per kategori (${res.status})`)
+  return res.json()
+}
+
+export async function fetchBarangPerStatus(): Promise<PerStatusItemBarang[]> {
+  const res = await authFetch(`${API_BASE}/reports/barang/per-status`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch barang per status (${res.status})`)
+  return res.json()
+}
+
+export async function fetchBarangStokTerendah(): Promise<StokTerendahItem[]> {
+  const res = await authFetch(`${API_BASE}/reports/barang/stok-terendah`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch stok terendah (${res.status})`)
+  return res.json()
+}
+
+export async function fetchBarangTopItemsByNilai(): Promise<TopBarItemByNilai[]> {
+  const res = await authFetch(`${API_BASE}/reports/barang/top-items-nilai`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch top items by nilai (${res.status})`)
+  return res.json()
+}

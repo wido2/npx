@@ -11,6 +11,8 @@ class MutasiStok extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $table = 'mutasi_stok';
+
     public $timestamps = false;
 
     protected $fillable = [

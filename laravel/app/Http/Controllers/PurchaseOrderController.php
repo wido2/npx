@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\Setting;
+use App\Services\HargaService;
 use App\Services\KodePOService;
 use App\Services\PurchaseOrderService;
 use App\Services\StokService;
@@ -19,6 +20,7 @@ class PurchaseOrderController extends Controller
         protected KodePOService $kodePOService,
         protected PurchaseOrderService $poService,
         protected StokService $stokService,
+        protected HargaService $hargaService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -338,6 +340,15 @@ class PurchaseOrderController extends Controller
                     $purchaseOrder->id,
                     null,
                     $request->user()->id
+                );
+
+                $this->hargaService->rekam(
+                    $poItem->barang,
+                    (float) $poItem->harga_satuan,
+                    PurchaseOrderItem::class,
+                    $poItem->id,
+                    "Dari PO {$purchaseOrder->kode}",
+                    $request->user()->id,
                 );
             }
 
