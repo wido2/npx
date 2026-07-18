@@ -47,6 +47,30 @@ class RoleController extends Controller
         ], 201);
     }
 
+    public function update(Request $request, Role $role): JsonResponse
+    {
+        if (!$request->user()->can('users.manage')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        if (in_array($role->name, ['super_admin', 'manager', 'user'], true)) {
+            return response()->json(['message' => 'Role bawaan tidak dapat diubah namanya.'], 422);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+        ]);
+
+        $role->update(['name' => $validated['name']]);
+
+        return response()->json([
+            'id' => $role->id,
+            'name' => $role->name,
+            'guard_name' => $role->guard_name,
+            'permissions' => $role->permissions->pluck('name'),
+        ]);
+    }
+
     public function syncPermissions(Request $request, Role $role): JsonResponse
     {
         if (!$request->user()->can('users.manage')) {
@@ -54,7 +78,7 @@ class RoleController extends Controller
         }
 
         $request->validate([
-            'permissions' => 'required|array',
+            'permissions' => 'present|array',
             'permissions.*' => 'string|exists:permissions,name',
         ]);
 
@@ -65,5 +89,20 @@ class RoleController extends Controller
             'name' => $role->name,
             'permissions' => $role->permissions->pluck('name'),
         ]);
+    }
+
+    public function destroy(Request $request, Role $role): JsonResponse
+    {
+        if (!$request->user()->can('users.manage')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        if (in_array($role->name, ['super_admin', 'manager', 'user'], true)) {
+            return response()->json(['message' => 'Role bawaan tidak dapat dihapus.'], 422);
+        }
+
+        $role->delete();
+
+        return response()->json(['message' => 'Role deleted']);
     }
 }

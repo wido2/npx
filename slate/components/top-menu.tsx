@@ -16,6 +16,7 @@ import {
   PackageOpenIcon,
   WarehouseIcon,
   UserRoundIcon,
+  ShieldIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -97,6 +98,8 @@ const groups: MenuGroup[] = [
     permission: "settings.view",
     items: [
       { href: "/jenis-pajak", label: "Jenis Pajak", icon: PercentIcon },
+      { href: "/settings/users", label: "User Manager", icon: UsersIcon, permission: "users.view" },
+      { href: "/settings/roles", label: "Role Manager", icon: ShieldIcon, permission: "users.manage" },
       { href: "/settings", label: "Settings", icon: Settings2Icon, permission: "settings.view" },
     ],
   },

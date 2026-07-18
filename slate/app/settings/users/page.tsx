@@ -41,7 +41,6 @@ import {
 } from "@/lib/user-admin-api"
 import { useAuth } from "@/lib/auth-context"
 import { getToken } from "@/lib/api"
-import { RoleManagerSheet } from "@/components/role-manager-sheet"
 import {
   LoaderIcon,
   Trash2Icon,
@@ -266,6 +265,7 @@ function CreateUserDialog({ open, onClose }: { open: boolean; onClose: () => voi
 
 export default function UsersPage() {
   const { can } = useAuth()
+  const router = useRouter()
   const [users, setUsers] = useState<ManagedUser[]>([])
   const [loading, setLoading] = useState(true)
   const [editingUserId, setEditingUserId] = useState<string | null>(null)
@@ -274,8 +274,6 @@ export default function UsersPage() {
 
   const [roles, setRoles] = useState<RoleInfo[]>([])
   const [rolesLoading, setRolesLoading] = useState(true)
-  const [roleSheetOpen, setRoleSheetOpen] = useState(false)
-  const [editingRole, setEditingRole] = useState<RoleInfo | null>(null)
   const [deleteRoleTarget, setDeleteRoleTarget] = useState<RoleInfo | null>(null)
 
   const load = useCallback(async () => {
@@ -418,7 +416,7 @@ export default function UsersPage() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Role Manager</h2>
             {can("users.manage") && (
-              <Button onClick={() => { setEditingRole(null); setRoleSheetOpen(true) }}>
+              <Button onClick={() => router.push("/settings/roles/create")}>
                 <PlusIcon className="mr-2 size-4" />
                 Create Role
               </Button>
@@ -456,7 +454,7 @@ export default function UsersPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => { setEditingRole(role); setRoleSheetOpen(true) }}
+                        onClick={() => router.push(`/settings/roles/${role.id}/edit`)}
                       >
                         Edit
                       </Button>
@@ -508,13 +506,6 @@ export default function UsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <RoleManagerSheet
-        open={roleSheetOpen}
-        onOpenChange={setRoleSheetOpen}
-        onSuccess={loadRoles}
-        editItem={editingRole}
-      />
 
       <AlertDialog open={!!deleteRoleTarget} onOpenChange={() => setDeleteRoleTarget(null)}>
         <AlertDialogContent>

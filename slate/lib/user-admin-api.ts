@@ -108,17 +108,24 @@ export async function fetchPermissions(): Promise<PermissionsGrouped> {
   return res.json()
 }
 
-export async function createRole(name: string): Promise<RoleInfo> {
+export async function createRole(name: string, permissions: string[] = []): Promise<RoleInfo> {
   const res = await authFetch(`${API_BASE}/roles`, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, permissions }),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Failed to create role" }))
     throw new Error(err.message)
   }
   return res.json()
+}
+
+export async function fetchRole(roleId: number): Promise<RoleInfo> {
+  const roles = await fetchRoles()
+  const role = roles.find((r) => r.id === roleId)
+  if (!role) throw new Error("Role not found")
+  return role
 }
 
 export async function updateRole(roleId: number, name: string): Promise<RoleInfo> {
