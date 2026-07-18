@@ -40,6 +40,7 @@ import {
   type PermissionsGrouped,
 } from "@/lib/user-admin-api"
 import { useAuth } from "@/lib/auth-context"
+import { getToken } from "@/lib/api"
 import { RoleManagerSheet } from "@/components/role-manager-sheet"
 import {
   LoaderIcon,
@@ -195,11 +196,13 @@ function CreateUserDialog({ open, onClose }: { open: boolean; onClose: () => voi
   async function handleCreate() {
     setLoading(true)
     try {
+      const token = getToken()
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ name, email, password, role }),
       })
