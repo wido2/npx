@@ -42,6 +42,16 @@ class RolePermissionSeeder extends Seeder
             // Reports
             'reports.view',
 
+            // Notifications
+            'notification.po_submitted',
+            'notification.po_approved',
+            'notification.po_received',
+            'notification.po_overdue',
+            'notification.pb_created',
+            'notification.stock_minimum',
+            'notification.stock_opname',
+            'notification.vendor_price_changed',
+
             // Widget
             'widget.section_cards', 'widget.chart_area_interactive', 'widget.data_table',
             'widget.report_cards', 'widget.inventory_laporan', 'widget.barang_history',
@@ -75,6 +85,15 @@ class RolePermissionSeeder extends Seeder
             'users.view', 'users.manage',
 
             'reports.view',
+
+            'notification.po_submitted',
+            'notification.po_approved',
+            'notification.po_received',
+            'notification.po_overdue',
+            'notification.pb_created',
+            'notification.stock_minimum',
+            'notification.stock_opname',
+            'notification.vendor_price_changed',
 
             'widget.section_cards', 'widget.chart_area_interactive', 'widget.data_table',
             'widget.report_cards', 'widget.inventory_laporan', 'widget.barang_history',

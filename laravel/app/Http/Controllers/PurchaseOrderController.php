@@ -9,7 +9,9 @@ use App\Models\RiwayatHargaSupplier;
 use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\POApproved;
+use App\Notifications\POOverdue;
 use App\Notifications\POReceived;
+use App\Notifications\POSubmitted;
 use App\Notifications\VendorPriceChanged;
 use App\Services\HargaService;
 use App\Services\KodePOService;
@@ -275,6 +277,11 @@ class PurchaseOrderController extends Controller
 
         $this->poService->simpanRevisi($purchaseOrder, ['status']);
 
+        $purchaseOrder->load('vendor');
+
+        $recipients = User::permission('notification.po_submitted')->get();
+        Notification::send($recipients, new POSubmitted($purchaseOrder, $request->user()->name));
+
         return response()->json($purchaseOrder->fresh()->load([
             'vendor:id,kode,nama',
             'items.barang:id,kode,nama',
@@ -307,8 +314,10 @@ class PurchaseOrderController extends Controller
         if ($purchaseOrder->dibuat_oleh && $purchaseOrder->dibuat_oleh !== $request->user()->id) {
             $recipients->push($purchaseOrder->dibuatOleh);
         }
-        $managers = User::role('manager')->where('id', '!=', $purchaseOrder->dibuat_oleh ?? '')->get();
-        $recipients = $recipients->merge($managers)->unique('id');
+        $notifUsers = User::permission('notification.po_approved')
+            ->where('id', '!=', $purchaseOrder->dibuat_oleh ?? '')
+            ->get();
+        $recipients = $recipients->merge($notifUsers)->unique('id');
         Notification::send($recipients, new POApproved($purchaseOrder, $request->user()->name));
 
         return response()->json($purchaseOrder->fresh());
@@ -397,8 +406,10 @@ class PurchaseOrderController extends Controller
         if ($purchaseOrder->dibuat_oleh && $purchaseOrder->dibuat_oleh !== $request->user()->id) {
             $recipients->push($purchaseOrder->dibuatOleh);
         }
-        $managers = User::role('manager')->where('id', '!=', $purchaseOrder->dibuat_oleh ?? '')->get();
-        $recipients = $recipients->merge($managers)->unique('id');
+        $notifUsers = User::permission('notification.po_received')
+            ->where('id', '!=', $purchaseOrder->dibuat_oleh ?? '')
+            ->get();
+        $recipients = $recipients->merge($notifUsers)->unique('id');
         Notification::send($recipients, new POReceived($purchaseOrder, $request->user()->name));
 
         return response()->json($purchaseOrder->fresh()->load([
@@ -557,11 +568,7 @@ class PurchaseOrderController extends Controller
         }
 
         if (!empty($changedPrices)) {
-            $userIds = User::permission('master.barang.update_harga')
-                ->orWhereHas('roles', fn($q) => $q->where('name', 'manager'))
-                ->pluck('id');
-
-            $users = User::whereIn('id', $userIds)->get();
+            $users = User::permission('notification.vendor_price_changed')->get();
 
             foreach ($changedPrices as $change) {
                 Notification::send($users, new VendorPriceChanged(

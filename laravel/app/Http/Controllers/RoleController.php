@@ -24,6 +24,29 @@ class RoleController extends Controller
         return response()->json($roles);
     }
 
+    public function store(Request $request): JsonResponse
+    {
+        if (!$request->user()->can('users.manage')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string|exists:permissions,name',
+        ]);
+
+        $role = Role::findOrCreate($validated['name'], 'web');
+        $role->syncPermissions($validated['permissions'] ?? []);
+
+        return response()->json([
+            'id' => $role->id,
+            'name' => $role->name,
+            'guard_name' => $role->guard_name,
+            'permissions' => $role->permissions->pluck('name'),
+        ], 201);
+    }
+
     public function syncPermissions(Request $request, Role $role): JsonResponse
     {
         if (!$request->user()->can('users.manage')) {

@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\MutasiStok;
+use App\Models\User;
+use App\Notifications\StockOpname;
 use App\Services\StokService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 
 class InventoryController extends Controller
 {
@@ -62,6 +65,7 @@ class InventoryController extends Controller
         ]);
 
         $barang = Barang::findOrFail($validated['barang_id']);
+        $stokSebelum = $barang->stok;
 
         $mutasi = $this->stokService->opname(
             $barang,
@@ -69,6 +73,15 @@ class InventoryController extends Controller
             $validated['keterangan'] ?? null,
             $request->user()->id
         );
+
+        $opnameUsers = User::permission('notification.stock_opname')->get();
+        Notification::send($opnameUsers, new StockOpname(
+            $barang,
+            $stokSebelum,
+            $validated['stok_baru'],
+            $request->user()->name,
+            $validated['keterangan'] ?? null,
+        ));
 
         return response()->json($mutasi->load('barang:id,kode,nama'));
     }

@@ -30,6 +30,7 @@ class PermissionController extends Controller
             'po' => 'Purchase Order',
             'master' => 'Master Data',
             'inventory' => 'Inventory',
+            'notification' => 'Notifikasi',
             'widget' => 'Widget',
             'karyawan' => 'Karyawan',
         ];

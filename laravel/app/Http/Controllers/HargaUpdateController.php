@@ -129,14 +129,8 @@ class HargaUpdateController extends Controller
 
             $hargaUpdate->load(['dibuatOleh', 'vendor:id,kode,nama', 'riwayat.barang']);
 
-            // Notify users about price changes
-            $userIds = User::permission('master.barang.update_harga')
-                ->orWhereHas('roles', fn($q) => $q->where('name', 'manager'))
-                ->pluck('id');
-
-            $users = User::whereIn('id', $userIds)
-                ->where('id', '!=', $user->id)
-                ->get();
+            // Notify about price changes
+            $users = User::permission('notification.vendor_price_changed')->get();
 
             $vendor = $hargaUpdate->vendor;
             $vendorNama = $vendor?->nama ?? 'Unknown';

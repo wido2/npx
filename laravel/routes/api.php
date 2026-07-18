@@ -49,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Roles & Permissions
     Route::get('/roles', [RoleController::class, 'index']);
+    Route::post('/roles', [RoleController::class, 'store']);
     Route::put('/roles/{role}/permissions', [RoleController::class, 'syncPermissions']);
     Route::get('/permissions', [PermissionController::class, 'index']);
 });

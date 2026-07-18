@@ -453,7 +453,7 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                     <FieldLabel htmlFor="barang_id">Barang</FieldLabel>
                     <FieldContent>
                       <Combobox
-                        options={barangs.map((b) => ({ value: b.id, label: `${b.kode} - ${b.nama}` }))}
+                        options={barangs.map((b) => ({ value: b.id, label: `${b.kode} - ${b.nama} (Stok: ${b.stok} ${b.unit?.singkatan || ''})` }))}
                         value={itemBarangId}
                         onValueChange={(v) => {
                           setItemBarangId(v)

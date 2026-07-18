@@ -123,11 +123,9 @@ class PengambilanBarangController extends Controller
                 'items.barang',
             ]);
 
-            // Notify managers about PB creation
-            $managers = User::permission('pb.view_all')
-                ->where('id', '!=', $request->user()->id)
-                ->get();
-            Notification::send($managers, new PBCreated($pb, $request->user()->name));
+            // Notify about PB creation
+            $pbUsers = User::permission('notification.pb_created')->get();
+            Notification::send($pbUsers, new PBCreated($pb, $request->user()->name));
 
             // Check stock minimum for each item taken
             $lowStockItems = $pb->items->filter(fn($item) =>
@@ -136,9 +134,9 @@ class PengambilanBarangController extends Controller
             );
 
             if ($lowStockItems->isNotEmpty()) {
-                $inventoryUsers = User::permission('inventory.view')->get();
+                $stockUsers = User::permission('notification.stock_minimum')->get();
                 foreach ($lowStockItems as $item) {
-                    Notification::send($inventoryUsers, new StockMinimum($item->barang));
+                    Notification::send($stockUsers, new StockMinimum($item->barang));
                 }
             }
 

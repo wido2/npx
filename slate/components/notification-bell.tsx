@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Bell, CheckCircle, InboxIcon, AlertTriangle, Tag, CheckCheck } from "lucide-react"
+import { Bell, CheckCircle, InboxIcon, AlertTriangle, Tag, CheckCheck, Send, Clock, ClipboardCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useNotifications } from "@/lib/notification-context"
@@ -16,10 +16,16 @@ function NotificationIcon({ type }: { type: string }) {
       return <CheckCircle className={cn(className, "text-green-500")} />
     case "po_received":
       return <CheckCircle className={cn(className, "text-blue-500")} />
+    case "po_submitted":
+      return <Send className={cn(className, "text-yellow-500")} />
+    case "po_overdue":
+      return <Clock className={cn(className, "text-red-600")} />
     case "pb_created":
       return <InboxIcon className={cn(className, "text-orange-500")} />
     case "stock_minimum":
       return <AlertTriangle className={cn(className, "text-red-500")} />
+    case "stock_opname":
+      return <ClipboardCheck className={cn(className, "text-blue-500")} />
     case "vendor_price_changed":
       return <Tag className={cn(className, "text-purple-500")} />
     default:
@@ -57,17 +63,17 @@ export function NotificationBell() {
       <Button
         variant="ghost"
         size="icon"
-        className="relative shrink-0"
+        className="shrink-0"
         onClick={() => setOpen(!open)}
         aria-label="Notifications"
       >
         <Bell className="size-5" />
-        {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        )}
       </Button>
+      {unreadCount > 0 && (
+        <span className="absolute -right-1 -top-1 flex size-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-0.5 text-[10px] font-bold text-white">
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
+      )}
 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-96 rounded-lg border bg-popover text-popover-foreground shadow-lg">
