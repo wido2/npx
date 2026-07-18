@@ -180,9 +180,17 @@ function CreateUserDialog({ open, onClose }: { open: boolean; onClose: () => voi
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [role, setRole] = useState("user")
+  const [role, setRole] = useState("")
+  const [roleOptions, setRoleOptions] = useState<RoleInfo[]>([])
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (open) {
+      setRole("")
+      fetchRoles().then(setRoleOptions).catch(() => {})
+    }
+  }, [open])
 
   async function handleCreate() {
     setLoading(true)
@@ -235,15 +243,16 @@ function CreateUserDialog({ open, onClose }: { open: boolean; onClose: () => voi
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >
-              <option value="user">User</option>
-              <option value="manager">Manager</option>
-              <option value="super_admin">Super Admin</option>
+              <option value="" disabled>Pilih role...</option>
+              {roleOptions.map((r) => (
+                <option key={r.id} value={r.name}>{r.name}</option>
+              ))}
             </select>
           </Field>
         </FieldGroup>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction disabled={loading} onClick={handleCreate}>
+          <AlertDialogAction disabled={loading || !role} onClick={handleCreate}>
             {loading ? "Creating..." : "Create"}
           </AlertDialogAction>
         </AlertDialogFooter>
