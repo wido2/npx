@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
+use App\Models\RiwayatHargaSupplier;
 use App\Services\HargaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -100,12 +101,35 @@ class BarangController extends Controller
 
     public function hargaHistory(Barang $barang, Request $request): JsonResponse
     {
-        return response()->json(
-            $barang->riwayatHargas()
-                ->with('dibuatOleh:id,name')
-                ->orderBy('created_at', 'desc')
-                ->paginate($request->integer('per_page', 10))
-        );
+        $perPage = $request->integer('per_page', 10);
+        $page = $request->integer('page', 1);
+
+        $riwayat = $barang->riwayatHargas()
+            ->with('dibuatOleh:id,name')
+            ->where(function ($q) {
+                $q->whereNull('referensi_type')
+                  ->orWhere('referensi_type', '!=', 'App\Models\PurchaseOrderItem');
+            })
+            ->get()
+            ->map(fn($r) => [...$r->toArray(), 'vendor' => null]);
+
+        $supplier = RiwayatHargaSupplier::where('barang_id', $barang->id)
+            ->with(['vendor:id,kode,nama', 'dibuatOleh:id,name'])
+            ->get()
+            ->map(fn($r) => [...$r->toArray(), 'vendor' => $r->vendor ? ['id' => $r->vendor->id, 'kode' => $r->vendor->kode, 'nama' => $r->vendor->nama] : null]);
+
+        $merged = $riwayat->concat($supplier)->sortByDesc('created_at')->values();
+
+        $total = $merged->count();
+        $paginated = $merged->slice(($page - 1) * $perPage, $perPage)->values();
+
+        return response()->json([
+            'data' => $paginated,
+            'total' => $total,
+            'per_page' => $perPage,
+            'current_page' => $page,
+            'last_page' => (int) ceil($total / $perPage),
+        ]);
     }
 
     public function bulkUpdateHarga(Request $request): JsonResponse

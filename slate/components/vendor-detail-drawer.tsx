@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import {
   MapPinIcon, PhoneIcon, MailIcon, UserIcon, StarIcon,
-  PencilIcon, Trash2Icon, PlusIcon,
+  PencilIcon, Trash2Icon, PlusIcon, PackageIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -52,6 +52,8 @@ import {
   type VendorContact,
 } from "@/lib/vendor-contact-api"
 import { type Vendor } from "@/lib/vendor-api"
+import { fetchHargaSuppliers, type HargaSupplier } from "@/lib/barang-api"
+import { formatCurrency } from "@/lib/utils"
 
 interface VendorDetailDrawerProps {
   vendor: Vendor | null
@@ -389,14 +391,32 @@ export function VendorDetailDrawer({ vendor, open, onOpenChange }: VendorDetailD
     }
   }
 
+  // Barang list
+  const [hargaSuppliers, setHargaSuppliers] = useState<HargaSupplier[]>([])
+  const [loadingBarang, setLoadingBarang] = useState(false)
+
+  const loadHargaSuppliers = useCallback(async () => {
+    if (!vendor) return
+    setLoadingBarang(true)
+    try {
+      const res = await fetchHargaSuppliers({ vendor_id: vendor.id, per_page: 200 })
+      setHargaSuppliers(res.data)
+    } catch {
+      toast.error("Gagal memuat daftar barang")
+    } finally {
+      setLoadingBarang(false)
+    }
+  }, [vendor])
+
   useEffect(() => {
     if (open && vendor) {
       loadAddresses()
       loadContacts()
+      loadHargaSuppliers()
       resetAddressForm()
       resetContactForm()
     }
-  }, [open, vendor, loadAddresses, loadContacts])
+  }, [open, vendor, loadAddresses, loadContacts, loadHargaSuppliers])
 
   if (!vendor) return null
 
@@ -431,6 +451,10 @@ export function VendorDetailDrawer({ vendor, open, onOpenChange }: VendorDetailD
 
         <Tabs defaultValue="alamat" className="flex flex-1 flex-col px-4">
           <TabsList className="w-full">
+            <TabsTrigger value="barang" className="flex-1 gap-1.5">
+              <PackageIcon className="size-3.5" />
+              Barang
+            </TabsTrigger>
             <TabsTrigger value="alamat" className="flex-1 gap-1.5">
               <MapPinIcon className="size-3.5" />
               Alamat
@@ -440,6 +464,33 @@ export function VendorDetailDrawer({ vendor, open, onOpenChange }: VendorDetailD
               Kontak
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="barang" className="flex-1 overflow-y-auto pb-4 pt-2">
+            {loadingBarang ? (
+              <p className="py-8 text-center text-xs text-muted-foreground">Loading...</p>
+            ) : hargaSuppliers.length === 0 ? (
+              <p className="py-8 text-center text-xs text-muted-foreground">Tidak ada barang untuk vendor ini.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {hargaSuppliers.map((hs) => (
+                  <div key={hs.id} className="rounded-lg border p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium">{hs.barang?.nama || "-"}</p>
+                        <p className="text-xs text-muted-foreground">{hs.barang?.kode || ""}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-medium tabular-nums">{formatCurrency(hs.harga_beli)}</p>
+                        {hs.keterangan && (
+                          <p className="text-xs text-muted-foreground">{hs.keterangan}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="alamat" className="flex-1 overflow-y-auto pb-4 pt-2">
             {showAddressForm ? (

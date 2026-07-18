@@ -37,6 +37,13 @@ class SettingSeeder extends Seeder
             'reset_periode' => 'bulanan',
         ]]);
 
+        Setting::firstOrCreate(['group' => 'harga_update'], ['data' => [
+            'format_kode' => 'HU-{Y}-{M}-{seq}',
+            'urutan_terakhir' => 0,
+            'tahun_bulan_terakhir' => '',
+            'reset_periode' => 'bulanan',
+        ]]);
+
         Setting::firstOrCreate(['group' => 'pdf_report'], ['data' => [
                 'warna_primary' => '#7c7bad',
                 'warna_secondary' => '#2c3e50',

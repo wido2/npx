@@ -22,6 +22,7 @@ class PermissionController extends Controller
             'submit' => 'Submit', 'approve' => 'Approve', 'receive' => 'Receive',
             'cancel' => 'Cancel', 'manage' => 'Manage', 'update' => 'Update',
             'opname' => 'Opname',
+            'update_harga' => 'Update Harga',
         ];
 
         $groupLabelMap = [

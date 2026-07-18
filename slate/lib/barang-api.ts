@@ -34,6 +34,12 @@ export interface Barang {
   kategori?: Kategori
   unit?: Unit
   vendor?: { id: string; kode: string; nama: string }
+  latest_po_price?: {
+    harga: number
+    po_number: string
+    po_date: string
+    po_status: string
+  } | null
 }
 
 interface PaginatedResponse {
@@ -201,6 +207,7 @@ export interface RiwayatHarga {
   created_by: string | null
   created_at: string
   dibuat_oleh?: { id: string; name: string }
+  vendor?: { id: string; kode: string; nama: string } | null
 }
 
 interface RiwayatHargaResponse {
@@ -247,6 +254,104 @@ export async function fetchBarangSummary(): Promise<BarangSummary> {
   }
 
   return { total, stok_normal, stok_menipis, stok_kosong, total_nilai_stok }
+}
+
+export interface HargaSupplier {
+  id: string
+  barang_id: string
+  vendor_id: string
+  harga_beli: number
+  mata_uang: string
+  keterangan: string | null
+  created_at: string
+  updated_at: string
+  barang?: { id: string; kode: string; nama: string }
+  vendor?: { id: string; kode: string; nama: string }
+}
+
+export async function fetchHargaSuppliers(params?: {
+  barang_id?: string
+  vendor_id?: string
+  per_page?: number
+}): Promise<{ data: HargaSupplier[]; current_page: number; last_page: number; total: number }> {
+  const searchParams = new URLSearchParams()
+  if (params?.barang_id) searchParams.set("barang_id", params.barang_id)
+  if (params?.vendor_id) searchParams.set("vendor_id", params.vendor_id)
+  if (params?.per_page) searchParams.set("per_page", String(params.per_page))
+
+  const res = await authFetch(`${API_BASE}/harga-supplier?${searchParams}`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch harga suppliers (${res.status})`)
+  return res.json()
+}
+
+export async function createHargaSupplier(data: {
+  barang_id: string
+  vendor_id: string
+  harga_beli: number
+  mata_uang?: string
+  keterangan?: string
+}): Promise<HargaSupplier> {
+  const res = await authFetch(`${API_BASE}/harga-supplier`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error(`Failed to create harga supplier (${res.status})`)
+  return res.json()
+}
+
+export async function updateHargaSupplier(id: string, data: {
+  harga_beli: number
+  mata_uang?: string
+  keterangan?: string
+}): Promise<HargaSupplier> {
+  const res = await authFetch(`${API_BASE}/harga-supplier/${id}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error(`Failed to update harga supplier (${res.status})`)
+  return res.json()
+}
+
+export async function deleteHargaSupplier(id: string): Promise<void> {
+  const res = await authFetch(`${API_BASE}/harga-supplier/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to delete harga supplier (${res.status})`)
+}
+
+export interface RiwayatHargaSupplier {
+  id: string
+  harga_supplier_id: string
+  barang_id: string
+  vendor_id: string
+  harga_beli_lama: number
+  harga_beli_baru: number
+  referensi_type: string | null
+  referensi_id: string | null
+  keterangan: string | null
+  created_by: string | null
+  created_at: string
+  dibuat_oleh?: { id: string; name: string }
+}
+
+export async function fetchHargaSupplierHistory(
+  id: string,
+  params?: { page?: number; per_page?: number }
+): Promise<{ data: RiwayatHargaSupplier[]; current_page: number; last_page: number; per_page: number; total: number }> {
+  const searchParams = new URLSearchParams()
+  if (params?.page) searchParams.set("page", String(params.page))
+  if (params?.per_page) searchParams.set("per_page", String(params.per_page))
+
+  const res = await authFetch(`${API_BASE}/harga-supplier/${id}/history?${searchParams}`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch harga supplier history (${res.status})`)
+  return res.json()
 }
 
 export async function fetchBarangHargaHistory(

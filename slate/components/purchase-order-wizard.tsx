@@ -31,7 +31,7 @@ import { createPOItem } from "@/lib/purchase-order-item-api"
 import { fetchVendors, type Vendor } from "@/lib/vendor-api"
 import { fetchClients, type Client } from "@/lib/client-api"
 import { fetchProjects, type Project } from "@/lib/project-api"
-import { fetchBarangs, type Barang } from "@/lib/barang-api"
+import { fetchBarangs, fetchHargaSuppliers, type Barang, type HargaSupplier } from "@/lib/barang-api"
 import { fetchJenisPajak, type JenisPajak } from "@/lib/jenis-pajak-api"
 import { fetchSetting } from "@/lib/settings-api"
 import {
@@ -73,6 +73,7 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
   const [projects, setProjects] = useState<Project[]>([])
   const [barangs, setBarangs] = useState<Barang[]>([])
   const [pajaks, setPajaks] = useState<JenisPajak[]>([])
+  const [vendorPrices, setVendorPrices] = useState<HargaSupplier[]>([])
   const [alamatList, setAlamatList] = useState<{ id: string; label: string; alamat: string; kota: string; provinsi: string }[]>([])
 
   // Step 1: Header
@@ -122,6 +123,11 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
     try {
       const po = await fetchPurchaseOrder(poId)
       setVendorId(po.vendor_id)
+      if (po.vendor_id) {
+        fetchHargaSuppliers({ vendor_id: po.vendor_id, per_page: 500 })
+          .then((res) => setVendorPrices(res.data))
+          .catch(() => {})
+      }
       setClientId(po.client_id || "")
       setProjectId(po.project_id || "")
       setTanggalPo(po.tanggal_po.split("T")[0])
@@ -329,7 +335,19 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                       <Combobox
                         options={vendors.map((v) => ({ value: v.id, label: `${v.kode} - ${v.nama}` }))}
                         value={vendorId}
-                        onValueChange={(v) => setVendorId(v)}
+                        onValueChange={async (v) => {
+                          setVendorId(v)
+                          if (v) {
+                            try {
+                              const res = await fetchHargaSuppliers({ vendor_id: v, per_page: 500 })
+                              setVendorPrices(res.data)
+                            } catch {
+                              setVendorPrices([])
+                            }
+                          } else {
+                            setVendorPrices([])
+                          }
+                        }}
                         placeholder="Pilih vendor..."
                         searchPlaceholder="Cari vendor..."
                       />
@@ -440,7 +458,9 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                         onValueChange={(v) => {
                           setItemBarangId(v)
                           const b = barangs.find((bar) => bar.id === v)
-                          if (b && b.harga_beli) setItemHarga(Math.round(Number(b.harga_beli)).toString())
+                          const hp = vendorPrices.find((p) => p.barang_id === v)
+                          const harga = hp?.harga_beli ?? b?.harga_beli
+                          if (harga) setItemHarga(Math.round(Number(harga)).toString())
                         }}
                         placeholder="Pilih barang..."
                         searchPlaceholder="Cari barang..."

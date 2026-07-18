@@ -64,6 +64,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { AddBarangSheet } from "@/components/add-barang-sheet"
+
 import {
   fetchBarangs, deleteBarang, bulkDeleteBarangs, fetchBarangHargaHistory,
   type Barang, type RiwayatHarga,
@@ -71,6 +72,7 @@ import {
 import { fetchMutasi, type MutasiStok } from "@/lib/inventory-api"
 import {
   AlertTriangleIcon,
+  BanknoteIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -79,13 +81,14 @@ import {
   Columns3Icon,
   EllipsisVerticalIcon,
   ExternalLinkIcon,
+  EyeIcon,
   LoaderIcon,
   PencilIcon,
   PlusIcon,
   SearchIcon,
   Trash2Icon,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 
 export function BarangTable() {
   const router = useRouter()
@@ -120,6 +123,8 @@ export function BarangTable() {
   const [stokSheetBarang, setStokSheetBarang] = useState<Barang | null>(null)
   const [mutasiHistory, setMutasiHistory] = useState<MutasiStok[]>([])
   const [mutasiHistoryLoading, setMutasiHistoryLoading] = useState(false)
+
+
 
   function openHargaSheet(barang: Barang) {
     setHargaSheetBarang(barang)
@@ -309,19 +314,25 @@ export function BarangTable() {
                 <span className="sr-only">Open menu</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-32">
-                {can("master.barang.edit") && (
                   <DropdownMenuItem
-                    onClick={() => {
-                      setEditItem(row.original)
-                      setSheetOpen(true)
-                    }}
+                    onClick={() => router.push(`/barang/${row.original.id}`)}
                   >
-                    <PencilIcon />
-                    Edit
+                    <EyeIcon />
+                    Detail
                   </DropdownMenuItem>
-                )}
-                {can("master.barang.edit") && can("master.barang.delete") && <DropdownMenuSeparator />}
-                {can("master.barang.delete") && (
+                  {can("master.barang.edit") && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setEditItem(row.original)
+                        setSheetOpen(true)
+                      }}
+                    >
+                      <PencilIcon />
+                      Edit
+                    </DropdownMenuItem>
+                  )}
+                  {can("master.barang.edit") && can("master.barang.delete") && <DropdownMenuSeparator />}
+                  {can("master.barang.delete") && (
                   <DropdownMenuItem
                     variant="destructive"
                     onClick={() => {
@@ -422,6 +433,17 @@ export function BarangTable() {
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          {can("master.barang.update_harga") && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => router.push("/barang/harga/update")}
+            >
+              <BanknoteIcon />
+              <span className="hidden lg:inline">Update Harga</span>
+            </Button>
+          )}
           {can("master.barang.create") && (
             <Button
               variant="outline"
@@ -487,6 +509,8 @@ export function BarangTable() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/barang/${row.original.id}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -607,22 +631,31 @@ export function BarangTable() {
             ) : hargaHistory.length === 0 ? (
               <p className="text-center text-muted-foreground py-10">Belum ada riwayat harga</p>
             ) : (
-              hargaHistory.map((h) => (
-                <div key={h.id} className="rounded-lg border p-3 space-y-1">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(new Date(h.created_at))}</span>
-                    <span>{h.keterangan || "-"}</span>
+              hargaHistory.map((h) => {
+                const sumberLabel: Record<string, string> = {
+                  "App\\Models\\Barang": "Manual",
+                  "App\\Models\\PurchaseOrderItem": "PO",
+                  "App\\Models\\HargaUpdate": "HU",
+                }
+                const tipe = h.referensi_type ? (sumberLabel[h.referensi_type] || h.referensi_type.split("\\").pop() || "-") : "-"
+                return (
+                  <div key={h.id} className="rounded-lg border p-3 space-y-1">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(new Date(h.created_at))}</span>
+                      <span className="font-medium text-foreground">{tipe}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-red-600 tabular-nums">{formatCurrency(h.harga_beli_lama)}</span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className="text-emerald-600 font-medium tabular-nums">{formatCurrency(h.harga_beli_baru)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{h.dibuat_oleh?.name || "-"}</span>
+                      {h.keterangan && <span>{h.keterangan}</span>}
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-red-600">Rp {h.harga_beli_lama.toLocaleString("id-ID")}</span>
-                    <span className="text-muted-foreground">→</span>
-                    <span className="text-emerald-600 font-medium">Rp {h.harga_beli_baru.toLocaleString("id-ID")}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {h.dibuat_oleh?.name || "-"}
-                  </div>
-                </div>
-              ))
+                )
+              })
             )}
             {hargaSheetBarang && (
               <Button

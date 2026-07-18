@@ -29,7 +29,7 @@ class PurchaseOrderItemController extends Controller
 
         $validated = $request->validate([
             'display_type' => 'nullable|in:section,note',
-            'keterangan' => 'required|string',
+            'keterangan' => 'nullable|string',
             'barang_id' => 'required_if:display_type,null|nullable|exists:barangs,id',
             'jumlah' => 'required_if:display_type,null|nullable|integer|min:1',
             'harga_satuan' => 'required_if:display_type,null|nullable|numeric|min:0',
@@ -39,6 +39,7 @@ class PurchaseOrderItemController extends Controller
         ]);
 
         $validated['purchase_order_id'] = $purchaseOrder->id;
+        $validated['display_type'] ??= null;
 
         // Set urutan: if not provided, append to end
         if (!isset($validated['urutan'])) {
@@ -81,7 +82,7 @@ class PurchaseOrderItemController extends Controller
 
         $validated = $request->validate([
             'display_type' => 'nullable|in:section,note',
-            'keterangan' => 'required|string',
+            'keterangan' => 'nullable|string',
             'barang_id' => 'required_if:display_type,null|nullable|exists:barangs,id',
             'jumlah' => 'required_if:display_type,null|nullable|integer|min:1',
             'harga_satuan' => 'required_if:display_type,null|nullable|numeric|min:0',

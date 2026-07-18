@@ -133,8 +133,17 @@ export interface TopBarItemByNilai {
   barang_id: string
   barang_nama: string
   barang_kode: string
-  total_nilai: number
+  nilai_stok: number
+  harga_beli: number
   stok: number
+}
+
+export interface TopByPengambilanItem {
+  barang_id: string
+  barang_kode: string
+  barang_nama: string
+  total_pengambilan: number
+  total_jumlah: number
 }
 
 export async function fetchBarangSummaryReport(): Promise<BarangSummary> {
@@ -174,5 +183,13 @@ export async function fetchBarangTopItemsByNilai(): Promise<TopBarItemByNilai[]>
     headers: authHeaders(),
   })
   if (!res.ok) throw new Error(`Failed to fetch top items by nilai (${res.status})`)
+  return res.json()
+}
+
+export async function fetchBarangTopByPengambilan(): Promise<TopByPengambilanItem[]> {
+  const res = await authFetch(`${API_BASE}/reports/barang/top-by-pengambilan`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch top by pengambilan (${res.status})`)
   return res.json()
 }

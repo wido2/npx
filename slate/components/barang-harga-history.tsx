@@ -31,14 +31,21 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
   ArrowLeftIcon,
-  DollarSignIcon,
+  BanknoteIcon,
   TrendingUpIcon,
   TrendingDownIcon,
+  Columns3Icon,
 } from "lucide-react"
 import {
   flexRender,
@@ -47,11 +54,12 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency, formatCurrencyDiff } from "@/lib/utils"
 
 const sumberLabel: Record<string, string> = {
   "App\\Models\\Barang": "Manual",
   "App\\Models\\PurchaseOrderItem": "PO",
+  "App\\Models\\HargaUpdate": "HU",
 }
 
 function sumberSingkat(tipe: string | null): string {
@@ -59,13 +67,14 @@ function sumberSingkat(tipe: string | null): string {
   return sumberLabel[tipe] || tipe.split("\\").pop() || tipe
 }
 
-export function BarangHargaHistory({ barangId }: { barangId: string }) {
+export function BarangHargaHistory({ barangId, compact }: { barangId: string; compact?: boolean }) {
   const router = useRouter()
 
   const [barang, setBarang] = useState<Barang | null>(null)
   const [data, setData] = useState<RiwayatHarga[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [columnVisibility, setColumnVisibility] = useState({})
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 20,
@@ -101,6 +110,11 @@ export function BarangHargaHistory({ barangId }: { barangId: string }) {
 
   const columns: ColumnDef<RiwayatHarga>[] = useMemo(() => [
     {
+      id: "vendor",
+      header: "Vendor",
+      cell: ({ row }) => row.original.vendor?.nama || "-",
+    },
+    {
       accessorKey: "created_at",
       header: "Tanggal",
       cell: ({ row }) => {
@@ -113,7 +127,7 @@ export function BarangHargaHistory({ barangId }: { barangId: string }) {
       header: "Harga Lama",
       cell: ({ row }) => (
         <span className="tabular-nums text-red-600">
-          Rp {row.original.harga_beli_lama.toLocaleString("id-ID")}
+          {formatCurrency(row.original.harga_beli_lama)}
         </span>
       ),
     },
@@ -122,7 +136,7 @@ export function BarangHargaHistory({ barangId }: { barangId: string }) {
       header: "Harga Baru",
       cell: ({ row }) => (
         <span className="tabular-nums text-emerald-600 font-medium">
-          Rp {row.original.harga_beli_baru.toLocaleString("id-ID")}
+          {formatCurrency(row.original.harga_beli_baru)}
         </span>
       ),
     },
@@ -134,7 +148,7 @@ export function BarangHargaHistory({ barangId }: { barangId: string }) {
         const naik = selisih >= 0
         return (
           <span className={cn("tabular-nums font-medium", naik ? "text-emerald-600" : "text-red-600")}>
-            {naik ? "+" : ""}Rp {selisih.toLocaleString("id-ID")}
+            {formatCurrencyDiff(selisih)}
             {naik ? <TrendingUpIcon className="ml-1 inline size-3" /> : <TrendingDownIcon className="ml-1 inline size-3" />}
           </span>
         )
@@ -161,8 +175,9 @@ export function BarangHargaHistory({ barangId }: { barangId: string }) {
 
   const table = useReactTable({
     data, columns,
-    state: { pagination },
+    state: { pagination, columnVisibility },
     onPaginationChange: setPagination,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     manualPagination: true,
@@ -171,51 +186,74 @@ export function BarangHargaHistory({ barangId }: { barangId: string }) {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/barang")}>
-          <ArrowLeftIcon className="size-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">{barang?.nama || "Loading..."}</h1>
-          {barang && (
-            <p className="text-sm text-muted-foreground">
-              {barang.kode}
-              {barang.kategori && <span> &middot; {barang.kategori.nama}</span>}
-              {barang.unit && <span> &middot; {barang.unit.singkatan}</span>}
-            </p>
-          )}
-        </div>
-      </div>
+      {!compact && (
+        <>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => router.push("/barang")}>
+              <ArrowLeftIcon className="size-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">{barang?.nama || "Loading..."}</h1>
+              {barang && (
+                <p className="text-sm text-muted-foreground">
+                  {barang.kode}
+                  {barang.kategori && <span> &middot; {barang.kategori.nama}</span>}
+                  {barang.unit && <span> &middot; {barang.unit.singkatan}</span>}
+                </p>
+              )}
+            </div>
+          </div>
 
-      {barang && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Harga Beli Saat Ini</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <DollarSignIcon className="size-5 text-muted-foreground" />
-                <span className="text-2xl font-bold tabular-nums">
-                  Rp {(barang.harga_beli ?? 0).toLocaleString("id-ID")}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Perubahan</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <span className="text-2xl font-bold tabular-nums">{total}</span>
-              <span className="ml-1 text-sm text-muted-foreground">kali</span>
-            </CardContent>
-          </Card>
-        </div>
+          {barang && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Harga Beli Saat Ini</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <BanknoteIcon className="size-5 text-muted-foreground" />
+                    <span className="text-2xl font-bold tabular-nums">
+                      {formatCurrency(barang.harga_beli)}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Perubahan</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <span className="text-2xl font-bold tabular-nums">{total}</span>
+                  <span className="ml-1 text-sm text-muted-foreground">kali</span>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </>
       )}
 
       <div>
-        <h2 className="text-lg font-semibold mb-4">Riwayat Harga</h2>
+        {!compact && <h2 className="text-lg font-semibold mb-4">Riwayat Harga</h2>}
+        <div className="flex items-center justify-end mb-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-md border bg-background px-3 py-1 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground cursor-pointer">
+              <Columns3Icon className="size-4" />
+              Columns
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table.getAllColumns().filter((c) => c.getCanHide()).map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  checked={column.getIsVisible()}
+                  onCheckedChange={(v) => column.toggleVisibility(v)}
+                >
+                  {column.columnDef.header as string}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <div className="overflow-hidden rounded-lg border">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-muted">

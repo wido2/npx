@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
@@ -46,8 +47,20 @@ class Vendor extends Model
         return $this->morphMany(Contact::class, 'contactable');
     }
 
-    public function barangs(): HasMany
+    public function barangs(): BelongsToMany
     {
-        return $this->hasMany(Barang::class, 'vendor_id');
+        return $this->belongsToMany(Barang::class, 'harga_suppliers')
+            ->withPivot(['harga_beli', 'mata_uang', 'keterangan'])
+            ->withTimestamps();
+    }
+
+    public function hargaSuppliers(): HasMany
+    {
+        return $this->hasMany(HargaSupplier::class);
+    }
+
+    public function riwayatHargaSuppliers(): HasMany
+    {
+        return $this->hasMany(RiwayatHargaSupplier::class);
     }
 }

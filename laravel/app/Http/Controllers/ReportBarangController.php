@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
+use App\Models\ItemPengambilanBarang;
 use App\Models\KategoriBarang;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -103,6 +104,26 @@ class ReportBarangController extends Controller
             'harga_beli' => (float) ($item->harga_beli ?? 0),
             'nilai_stok' => (float) ($item->nilai_stok ?? 0),
             'unit' => $item->unit?->singkatan ?? '',
+        ]));
+    }
+
+    public function topByPengambilan(Request $request): JsonResponse
+    {
+        $limit = $request->integer('limit', 10);
+
+        $data = ItemPengambilanBarang::select('barang_id', DB::raw('count(*) as total_pengambilan, sum(jumlah) as total_jumlah'))
+            ->groupBy('barang_id')
+            ->orderByDesc('total_pengambilan')
+            ->limit($limit)
+            ->get()
+            ->load('barang:id,kode,nama,unit_id');
+
+        return response()->json($data->map(fn($item) => [
+            'barang_id' => $item->barang_id,
+            'barang_kode' => $item->barang->kode,
+            'barang_nama' => $item->barang->nama,
+            'total_pengambilan' => (int) $item->total_pengambilan,
+            'total_jumlah' => (float) $item->total_jumlah,
         ]));
     }
 }

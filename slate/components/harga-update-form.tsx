@@ -33,7 +33,7 @@ import {
   SearchIcon,
   SaveIcon,
   LoaderIcon,
-  DollarSignIcon,
+  BanknoteIcon,
   CheckCircle2Icon,
   XCircleIcon,
 } from "lucide-react"
@@ -41,7 +41,7 @@ import {
   fetchBarangs, updateBarang, bulkUpdateHarga,
   type Barang,
 } from "@/lib/barang-api"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 
 export function HargaUpdateForm() {
   const [mode, setMode] = useState("single")
@@ -153,7 +153,7 @@ export function HargaUpdateForm() {
   }
 
   const formatRp = (val: number | null | undefined) =>
-    val != null ? `Rp ${val.toLocaleString("id-ID")}` : "-"
+    formatCurrency(val)
 
   const pageCount = Math.ceil(total / pagination.pageSize)
 
@@ -211,7 +211,7 @@ export function HargaUpdateForm() {
                 <div className="space-y-2">
                   <Label htmlFor="harga_baru">Harga Beli Baru</Label>
                   <div className="relative">
-                    <DollarSignIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <BanknoteIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="harga_baru"
                       type="text"

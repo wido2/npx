@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\PengambilanBarang;
 use App\Models\Setting;
+use App\Models\User;
+use App\Notifications\PBCreated;
+use App\Notifications\StockMinimum;
 use App\Services\KodePBService;
 use App\Services\StokService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class PengambilanBarangController extends Controller
 {
@@ -112,15 +116,33 @@ class PengambilanBarangController extends Controller
                 );
             }
 
-            return response()->json(
-                $pb->load([
-                    'client:id,kode,nama',
-                    'project:id,kode,nama',
-                    'karyawan:id,nama',
-                    'items.barang:id,kode,nama',
-                ]),
-                201
+            $pb->load([
+                'client:id,kode,nama',
+                'project:id,kode,nama',
+                'karyawan:id,nama',
+                'items.barang',
+            ]);
+
+            // Notify managers about PB creation
+            $managers = User::permission('pb.view_all')
+                ->where('id', '!=', $request->user()->id)
+                ->get();
+            Notification::send($managers, new PBCreated($pb, $request->user()->name));
+
+            // Check stock minimum for each item taken
+            $lowStockItems = $pb->items->filter(fn($item) =>
+                $item->barang && $item->barang->stok_minimum > 0
+                && $item->barang->stok <= $item->barang->stok_minimum
             );
+
+            if ($lowStockItems->isNotEmpty()) {
+                $inventoryUsers = User::permission('inventory.view')->get();
+                foreach ($lowStockItems as $item) {
+                    Notification::send($inventoryUsers, new StockMinimum($item->barang));
+                }
+            }
+
+            return response()->json($pb, 201);
         });
     }
 

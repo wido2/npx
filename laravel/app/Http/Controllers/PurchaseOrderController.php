@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HargaSupplier;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use App\Models\RiwayatHargaSupplier;
 use App\Models\Setting;
+use App\Models\User;
+use App\Notifications\POApproved;
+use App\Notifications\POReceived;
+use App\Notifications\VendorPriceChanged;
 use App\Services\HargaService;
 use App\Services\KodePOService;
 use App\Services\PurchaseOrderService;
@@ -13,6 +19,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class PurchaseOrderController extends Controller
 {
@@ -290,7 +297,19 @@ class PurchaseOrderController extends Controller
             'tanggal_disetujui' => now(),
         ]);
 
+        $this->updateHargaSupplierDariPO($purchaseOrder, $request->user()->id);
+
         $this->poService->simpanRevisi($purchaseOrder, ['status', 'disetujui_oleh', 'tanggal_disetujui']);
+
+        $purchaseOrder->load('vendor');
+
+        $recipients = collect();
+        if ($purchaseOrder->dibuat_oleh && $purchaseOrder->dibuat_oleh !== $request->user()->id) {
+            $recipients->push($purchaseOrder->dibuatOleh);
+        }
+        $managers = User::role('manager')->where('id', '!=', $purchaseOrder->dibuat_oleh ?? '')->get();
+        $recipients = $recipients->merge($managers)->unique('id');
+        Notification::send($recipients, new POApproved($purchaseOrder, $request->user()->name));
 
         return response()->json($purchaseOrder->fresh());
     }
@@ -306,7 +325,7 @@ class PurchaseOrderController extends Controller
         }
 
         $validated = $request->validate([
-            'tanggal_terima' => 'required|date',
+            'tanggal_terima' => 'nullable|date',
             'catatan' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.purchase_order_item_id' => 'required|exists:purchase_order_items,id',
@@ -317,7 +336,7 @@ class PurchaseOrderController extends Controller
         DB::transaction(function () use ($purchaseOrder, $validated, $request) {
             $receipt = $purchaseOrder->receipts()->create([
                 'nomor' => 'TRM-' . now()->format('Ymd') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT),
-                'tanggal_terima' => $validated['tanggal_terima'],
+                'tanggal_terima' => $validated['tanggal_terima'] ?? now()->toDateString(),
                 'catatan' => $validated['catatan'] ?? null,
                 'diterima_oleh' => $request->user()->id,
             ]);
@@ -361,6 +380,8 @@ class PurchaseOrderController extends Controller
                     'diterima_oleh' => $request->user()->id,
                     'tanggal_diterima' => now(),
                 ]);
+
+                $this->updateHargaSupplierDariPO($purchaseOrder, $request->user()->id);
             } else {
                 $purchaseOrder->update([
                     'status' => 'diterima_sebagian',
@@ -369,6 +390,16 @@ class PurchaseOrderController extends Controller
                 ]);
             }
         });
+
+        $purchaseOrder->load('vendor');
+
+        $recipients = collect();
+        if ($purchaseOrder->dibuat_oleh && $purchaseOrder->dibuat_oleh !== $request->user()->id) {
+            $recipients->push($purchaseOrder->dibuatOleh);
+        }
+        $managers = User::role('manager')->where('id', '!=', $purchaseOrder->dibuat_oleh ?? '')->get();
+        $recipients = $recipients->merge($managers)->unique('id');
+        Notification::send($recipients, new POReceived($purchaseOrder, $request->user()->name));
 
         return response()->json($purchaseOrder->fresh()->load([
             'receipts.items',
@@ -480,5 +511,67 @@ class PurchaseOrderController extends Controller
 
         $filename = ($po->kode ?? 'PO-DRAFT') . '.pdf';
         return $pdf->stream($filename);
+    }
+
+    private function updateHargaSupplierDariPO(PurchaseOrder $purchaseOrder, string $userId): void
+    {
+        $purchaseOrder->load('items.barang');
+        $vendorNama = $purchaseOrder->vendor?->nama ?? 'Unknown';
+        $changedPrices = [];
+
+        foreach ($purchaseOrder->items as $poItem) {
+            if ($poItem->barang_id === null) continue;
+
+            $hargaSupplier = HargaSupplier::where('vendor_id', $purchaseOrder->vendor_id)
+                ->where('barang_id', $poItem->barang_id)
+                ->first();
+
+            if ($hargaSupplier) {
+                $hargaLama = (float) $hargaSupplier->harga_beli;
+                $hargaBaru = (float) $poItem->harga_satuan;
+
+                if ($hargaLama !== $hargaBaru) {
+                    $hargaSupplier->update(['harga_beli' => $hargaBaru]);
+
+                    RiwayatHargaSupplier::create([
+                        'harga_supplier_id' => $hargaSupplier->id,
+                        'barang_id' => $poItem->barang_id,
+                        'vendor_id' => $purchaseOrder->vendor_id,
+                        'harga_beli_lama' => $hargaLama,
+                        'harga_beli_baru' => $hargaBaru,
+                        'referensi_type' => PurchaseOrder::class,
+                        'referensi_id' => $purchaseOrder->id,
+                        'keterangan' => "Dari PO {$purchaseOrder->kode}",
+                        'created_by' => $userId,
+                        'created_at' => now(),
+                    ]);
+
+                    $changedPrices[] = [
+                        'barang' => $poItem->barang,
+                        'vendor_nama' => $vendorNama,
+                        'harga_lama' => $hargaLama,
+                        'harga_baru' => $hargaBaru,
+                    ];
+                }
+            }
+        }
+
+        if (!empty($changedPrices)) {
+            $userIds = User::permission('master.barang.update_harga')
+                ->orWhereHas('roles', fn($q) => $q->where('name', 'manager'))
+                ->pluck('id');
+
+            $users = User::whereIn('id', $userIds)->get();
+
+            foreach ($changedPrices as $change) {
+                Notification::send($users, new VendorPriceChanged(
+                    $change['barang'],
+                    $change['vendor_nama'],
+                    $change['harga_lama'],
+                    $change['harga_baru'],
+                    "PO {$purchaseOrder->kode}",
+                ));
+            }
+        }
     }
 }

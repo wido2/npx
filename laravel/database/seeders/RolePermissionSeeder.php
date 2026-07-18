@@ -20,7 +20,7 @@ class RolePermissionSeeder extends Seeder
 
             // Master Data
             'master.vendor.create', 'master.vendor.view', 'master.vendor.edit', 'master.vendor.delete',
-            'master.barang.create', 'master.barang.view', 'master.barang.edit', 'master.barang.delete',
+            'master.barang.create', 'master.barang.view', 'master.barang.edit', 'master.barang.delete', 'master.barang.update_harga',
             'master.client.create', 'master.client.view', 'master.client.edit', 'master.client.delete',
             'master.project.create', 'master.project.view', 'master.project.edit', 'master.project.delete',
             'master.unit.view', 'master.unit.create', 'master.unit.edit', 'master.unit.delete',
@@ -63,7 +63,7 @@ class RolePermissionSeeder extends Seeder
             'po.submit', 'po.approve', 'po.receive', 'po.cancel',
 
             'master.vendor.create', 'master.vendor.view', 'master.vendor.edit', 'master.vendor.delete',
-            'master.barang.create', 'master.barang.view', 'master.barang.edit', 'master.barang.delete',
+            'master.barang.create', 'master.barang.view', 'master.barang.edit', 'master.barang.delete', 'master.barang.update_harga',
             'master.client.create', 'master.client.view', 'master.client.edit', 'master.client.delete',
             'master.project.create', 'master.project.view', 'master.project.edit', 'master.project.delete',
             'master.unit.view', 'master.unit.create', 'master.unit.edit', 'master.unit.delete',

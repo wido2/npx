@@ -11,11 +11,13 @@ import {
   useReactTable,
   type ColumnDef,
   type SortingState,
+  type RowSelectionState,
 } from "@tanstack/react-table"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Table,
   TableBody,
@@ -30,7 +32,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { AlertCircleIcon, PackageIcon, SearchIcon } from "lucide-react"
+import { AlertCircleIcon, PackageIcon, SearchIcon, DownloadIcon } from "lucide-react"
 import {
   fetchLaporanStok,
   type BarangLaporanItem,
@@ -49,6 +51,7 @@ export function InventoryLaporanTable() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [sorting, setSorting] = useState<SortingState>([])
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -64,12 +67,33 @@ export function InventoryLaporanTable() {
 
   useEffect(() => { loadData() }, [loadData])
 
+  // Reset selection when data changes
+  useEffect(() => { setRowSelection({}) }, [laporan])
+
   const lowStockCount = useMemo(() => {
     if (!laporan) return 0
     return laporan.data.filter((b) => b.stok_minimum > 0 && b.stok <= b.stok_minimum).length
   }, [laporan])
 
   const columns: ColumnDef<BarangLaporanItem>[] = useMemo(() => [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllRowsSelected()}
+          onCheckedChange={(v) => table.toggleAllRowsSelected(!!v)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(v) => row.toggleSelected(!!v)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+    },
     {
       accessorKey: "kode",
       header: "Kode",
@@ -125,12 +149,43 @@ export function InventoryLaporanTable() {
   const table = useReactTable({
     data: laporan?.data || [],
     columns,
-    state: { sorting },
+    state: { sorting, rowSelection },
+    enableRowSelection: true,
+    getRowId: (row) => row.id,
     onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
   })
+
+  const selectedCount = Object.keys(rowSelection).length
+
+  const selectedData = useMemo(() => {
+    if (!laporan) return []
+    return table.getSelectedRowModel().rows.map((r) => r.original)
+  }, [laporan, rowSelection, table])
+
+  function handleExportSelected() {
+    const rows = selectedData.map((r) => ({
+      Kode: r.kode,
+      Nama: r.nama,
+      Kategori: r.kategori?.nama || "",
+      Stok: r.stok,
+      "Stok Minimum": r.stok_minimum,
+      "Harga Beli": r.harga_beli ?? 0,
+      "Nilai Stok": (r.harga_beli ?? 0) * r.stok,
+    }))
+    const header = Object.keys(rows[0] || {}).join(",")
+    const csv = [header, ...rows.map((r) => Object.values(r).join(","))].join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "laporan-stok.csv"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   if (!can("inventory.view")) {
     return <p className="text-sm text-muted-foreground">Anda tidak memiliki izin untuk melihat inventory.</p>
@@ -186,14 +241,25 @@ export function InventoryLaporanTable() {
 
       {/* Table */}
       <div className="space-y-4">
-        <div className="relative flex items-center gap-2">
-          <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search barang..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value) }}
-            className="h-8 w-full max-w-sm pl-8"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search barang..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value) }}
+              className="h-8 w-full max-w-sm pl-8"
+            />
+          </div>
+          {selectedCount > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
+              <Button variant="outline" size="sm" onClick={handleExportSelected}>
+                <DownloadIcon className="size-4" />
+                Export
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="overflow-hidden rounded-lg border">
@@ -217,7 +283,7 @@ export function InventoryLaporanTable() {
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id} className="cursor-pointer" onClick={() => router.push(`/inventory/barang/${row.original.id}`)}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} onClick={cell.column.id === "select" ? (e) => e.stopPropagation() : undefined}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}

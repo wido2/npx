@@ -9,16 +9,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
-import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts"
 import {
   fetchBarangSummaryReport,
   fetchBarangPerKategori,
-  fetchBarangPerStatus,
+  fetchBarangTopByPengambilan,
   fetchBarangStokTerendah,
   fetchBarangTopItemsByNilai,
   type BarangSummary,
   type PerKategoriItem,
-  type PerStatusItemBarang,
+  type TopByPengambilanItem,
   type StokTerendahItem,
   type TopBarItemByNilai,
 } from "@/lib/report-api"
@@ -27,18 +27,6 @@ import { LoaderIcon, PackageIcon, AlertTriangleIcon, XCircleIcon, CheckCircleIco
 const currency = (val: number) =>
   `Rp${new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(val))}`
 
-const statusColors: Record<string, string> = {
-  normal: "#22c55e",
-  menipis: "#f59e0b",
-  kosong: "#ef4444",
-}
-
-const statusLabels: Record<string, string> = {
-  normal: "Normal",
-  menipis: "Menipis",
-  kosong: "Kosong",
-}
-
 export function BarangReportCards() {
   const { can } = useAuth()
   if (!can("widget.barang_report_cards")) return null
@@ -46,23 +34,23 @@ export function BarangReportCards() {
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState<BarangSummary | null>(null)
   const [perKategori, setPerKategori] = useState<PerKategoriItem[]>([])
-  const [perStatus, setPerStatus] = useState<PerStatusItemBarang[]>([])
+  const [topPengambilan, setTopPengambilan] = useState<TopByPengambilanItem[]>([])
   const [stokTerendah, setStokTerendah] = useState<StokTerendahItem[]>([])
   const [topItemsByNilai, setTopItemsByNilai] = useState<TopBarItemByNilai[]>([])
 
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [s, k, st, se, t] = await Promise.all([
+      const [s, k, tp, se, t] = await Promise.all([
         fetchBarangSummaryReport(),
         fetchBarangPerKategori(),
-        fetchBarangPerStatus(),
+        fetchBarangTopByPengambilan(),
         fetchBarangStokTerendah(),
         fetchBarangTopItemsByNilai(),
       ])
       setSummary(s)
       setPerKategori(k)
-      setPerStatus(st)
+      setTopPengambilan(tp)
       setStokTerendah(se)
       setTopItemsByNilai(t)
     } catch {
@@ -83,7 +71,7 @@ export function BarangReportCards() {
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="per-kategori">Per Kategori</TabsTrigger>
-        <TabsTrigger value="per-status">Per Status</TabsTrigger>
+        <TabsTrigger value="top-pengambilan">Top Barang</TabsTrigger>
         <TabsTrigger value="stok-terendah">Stok Terendah</TabsTrigger>
         <TabsTrigger value="top-nilai">Top Items (Nilai)</TabsTrigger>
       </TabsList>
@@ -142,32 +130,37 @@ export function BarangReportCards() {
       <TabsContent value="per-kategori" className="mt-6">
         <Card>
           <CardHeader><CardTitle>Barang per Kategori</CardTitle></CardHeader>
-          <CardContent className="p-0">
+          <CardContent>
             {perKategori.length > 0 ? (
-              <div className="h-80 w-full px-1">
-                <ResponsiveContainer width="100%" height="100%" minHeight={300}>
-                  <BarChart data={perKategori} margin={{ top: 20, right: 20, bottom: 60, left: 80 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                    <XAxis dataKey="kategori_nama" tickLine={false} axisLine={false} tickMargin={10} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
-                    <YAxis tickLine={false} axisLine={false} tickMargin={10} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} tickFormatter={(v: number) => currency(v)} />
-                    <Tooltip
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload?.length) return null
-                        return (
-                          <div className="rounded-lg border bg-background px-3 py-2 text-sm shadow-lg">
-                            <p className="mb-1 font-medium">{label}</p>
-                            {payload.map((p, i) => (
-                              <p key={i} className="text-muted-foreground">
-                                {p.name === "total_nilai_stok" ? "Total Nilai" : "Total Barang"}: <span className="font-semibold text-foreground">{p.name === "total_nilai_stok" ? currency(p.value as number) : p.value}</span>
-                              </p>
-                            ))}
-                          </div>
-                        )
-                      }}
-                    />
-                    <Bar dataKey="total_barang" fill="var(--primary)" radius={[4, 4, 0, 0]} name="Total Barang" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="flex h-80 items-center justify-center">
+                <PieChart width={450} height={350}>
+                  <Pie
+                    data={perKategori.map((k) => ({ ...k, name: k.kategori_nama }))}
+                    cx={225}
+                    cy={175}
+                    innerRadius={60}
+                    outerRadius={140}
+                    paddingAngle={2}
+                    dataKey="total_barang"
+                    label={({ name, payload }) => `${name || payload?.kategori_nama} (${payload?.total_barang})`}
+                  >
+                    {perKategori.map((entry, i) => (
+                      <Cell key={entry.kategori_id} fill={`hsl(${(i * 360) / perKategori.length}, 70%, 55%)`} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null
+                      const d = payload[0].payload as PerKategoriItem
+                      return (
+                        <div className="rounded-lg border bg-background px-3 py-2 text-sm shadow-lg">
+                          <p className="font-medium">{d.kategori_nama}</p>
+                          <p className="text-muted-foreground">Barang: {d.total_barang}</p>
+                        </div>
+                      )
+                    }}
+                  />
+                </PieChart>
               </div>
             ) : (
               <div className="py-10 text-center text-muted-foreground">No data</div>
@@ -176,33 +169,35 @@ export function BarangReportCards() {
         </Card>
       </TabsContent>
 
-      <TabsContent value="per-status" className="mt-6">
+      <TabsContent value="top-pengambilan" className="mt-6">
         <Card>
-          <CardHeader><CardTitle>Barang per Status Stok</CardTitle></CardHeader>
-          <CardContent>
-            {perStatus.length > 0 ? (
-              <div className="flex h-80 items-center justify-center">
-                <PieChart width={400} height={350}>
-                  <Pie
-                    data={perStatus.map((s) => ({ ...s, name: statusLabels[s.status] || s.status }))}
-                    cx={200}
-                    cy={175}
-                    innerRadius={60}
-                    outerRadius={140}
-                    paddingAngle={2}
-                    dataKey="total"
-                    label
-                  >
-                    {perStatus.map((entry) => (
-                      <Cell key={entry.status} fill={statusColors[entry.status] || "#6b7280"} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </div>
-            ) : (
-              <div className="py-10 text-center text-muted-foreground">No data</div>
-            )}
+          <CardHeader><CardTitle>Top Barang (Pengambilan Terbanyak)</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Barang</TableHead>
+                  <TableHead className="text-right">Frekuensi</TableHead>
+                  <TableHead className="text-right">Total Jumlah</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topPengambilan.length === 0 ? (
+                  <TableRow><TableCell colSpan={3} className="h-24 text-center text-muted-foreground">No data</TableCell></TableRow>
+                ) : (
+                  topPengambilan.map((item) => (
+                    <TableRow key={item.barang_id}>
+                      <TableCell>
+                        <div className="font-medium">{item.barang_nama}</div>
+                        <div className="text-xs text-muted-foreground">{item.barang_kode}</div>
+                      </TableCell>
+                      <TableCell className="text-right">{item.total_pengambilan}x</TableCell>
+                      <TableCell className="text-right font-semibold">{item.total_jumlah}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </TabsContent>
@@ -250,13 +245,14 @@ export function BarangReportCards() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Barang</TableHead>
-                  <TableHead className="text-right">Total Nilai</TableHead>
+                  <TableHead className="text-right">Nilai/Satuan</TableHead>
+                  <TableHead className="text-right">Nilai</TableHead>
                   <TableHead className="text-right">Stok</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {topItemsByNilai.length === 0 ? (
-                  <TableRow><TableCell colSpan={3} className="h-24 text-center text-muted-foreground">No data</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">No data</TableCell></TableRow>
                 ) : (
                   topItemsByNilai.map((item) => (
                     <TableRow key={item.barang_id}>
@@ -264,7 +260,8 @@ export function BarangReportCards() {
                         <div className="font-medium">{item.barang_nama}</div>
                         <div className="text-xs text-muted-foreground">{item.barang_kode}</div>
                       </TableCell>
-                      <TableCell className="text-right font-semibold">{currency(item.total_nilai)}</TableCell>
+                      <TableCell className="text-right">{currency(item.harga_beli)}</TableCell>
+                      <TableCell className="text-right font-semibold">{currency(item.nilai_stok)}</TableCell>
                       <TableCell className="text-right">{item.stok}</TableCell>
                     </TableRow>
                   ))

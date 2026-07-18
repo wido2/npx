@@ -19,12 +19,15 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReportBarangController;
 use App\Http\Controllers\ReportPurchaseOrderController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendorAddressController;
 use App\Http\Controllers\VendorContactController;
 use App\Http\Controllers\VendorController;
+use App\Http\Controllers\HargaSupplierController;
+use App\Http\Controllers\HargaUpdateController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -74,6 +77,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('barang/bulk-delete', [BarangController::class, 'bulkDestroy']);
     Route::get('barang/{barang}/harga-history', [BarangController::class, 'hargaHistory']);
     Route::apiResource('barang', BarangController::class);
+
+    // ——— Harga Update ———
+    Route::get('harga-update', [\App\Http\Controllers\HargaUpdateController::class, 'index']);
+    Route::post('harga-update', [\App\Http\Controllers\HargaUpdateController::class, 'store']);
+    Route::get('harga-update/{hargaUpdate}', [\App\Http\Controllers\HargaUpdateController::class, 'show']);
+
+    // ——— Harga Supplier ———
+    Route::get('harga-supplier', [HargaSupplierController::class, 'index']);
+    Route::post('harga-supplier', [HargaSupplierController::class, 'store']);
+    Route::get('harga-supplier/{hargaSupplier}', [HargaSupplierController::class, 'show']);
+    Route::put('harga-supplier/{hargaSupplier}', [HargaSupplierController::class, 'update']);
+    Route::delete('harga-supplier/{hargaSupplier}', [HargaSupplierController::class, 'destroy']);
+    Route::get('harga-supplier/{hargaSupplier}/history', [HargaSupplierController::class, 'history']);
     Route::apiResource('karyawan', KaryawanController::class);
     Route::get('alamat', [AlamatController::class, 'index']);
     Route::get('alamat/{address}', [AlamatController::class, 'show']);
@@ -87,6 +103,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('kontak/{contact}', [KontakController::class, 'update']);
     Route::delete('kontak/{contact}', [KontakController::class, 'destroy']);
     Route::post('kontak/bulk-delete', [KontakController::class, 'bulkDestroy']);
+
+    // ——— Notifications ———
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
     // ——— Settings ———
     Route::get('settings/{group}', [SettingController::class, 'show']);
@@ -175,4 +197,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('reports/barang/per-status', [ReportBarangController::class, 'perStatus']);
     Route::get('reports/barang/stok-terendah', [ReportBarangController::class, 'stokTerendah']);
     Route::get('reports/barang/top-items-nilai', [ReportBarangController::class, 'topItemsByNilai']);
+    Route::get('reports/barang/top-by-pengambilan', [ReportBarangController::class, 'topByPengambilan']);
 });
