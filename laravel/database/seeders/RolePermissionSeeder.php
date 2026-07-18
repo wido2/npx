@@ -78,6 +78,7 @@ class RolePermissionSeeder extends Seeder
             'master.project.create', 'master.project.view', 'master.project.edit', 'master.project.delete',
             'master.unit.view', 'master.unit.create', 'master.unit.edit', 'master.unit.delete',
             'master.kategori.view', 'master.kategori.create', 'master.kategori.edit', 'master.kategori.delete',
+            'master.karyawan.view', 'master.karyawan.create', 'master.karyawan.edit', 'master.karyawan.delete',
 
             'pb.create', 'pb.view_own', 'pb.view_all', 'pb.delete',
             'inventory.view', 'inventory.opname',
@@ -98,6 +99,8 @@ class RolePermissionSeeder extends Seeder
             'widget.section_cards', 'widget.chart_area_interactive', 'widget.data_table',
             'widget.report_cards', 'widget.inventory_laporan', 'widget.barang_history',
             'widget.barang_overview',
+            'widget.po_overview',
+            'widget.barang_report_cards',
         ]);
 
         $user = Role::findOrCreate('user', 'web');

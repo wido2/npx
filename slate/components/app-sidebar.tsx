@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useAuth } from "@/lib/auth-context"
 
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -51,36 +52,42 @@ const data = {
       url: "/purchase-order",
       icon: <FileTextIcon />,
       description: "Kelola PO",
+      permission: "po.view_all",
     },
     {
       title: "Pengambilan Barang",
       url: "/pengambilan-barang",
       icon: <PackageOpenIcon />,
       description: "Goods issue",
+      permission: "pb.view_all",
     },
     {
       title: "Barang",
       url: "/barang",
       icon: <PackageIcon />,
       description: "Manage your inventory items",
+      permission: "master.barang.view",
     },
     {
       title: "Vendor",
       url: "/vendor",
       icon: <Building2Icon />,
       description: "Kelola vendor",
+      permission: "master.vendor.view",
     },
     {
       title: "Client",
       url: "/client",
       icon: <UsersIcon />,
       description: "Kelola client",
+      permission: "master.client.view",
     },
     {
       title: "Project",
       url: "/project",
       icon: <FolderKanbanIcon />,
       description: "Kelola proyek",
+      permission: "master.project.view",
     },
     {
       title: "Jenis Pajak",
@@ -107,12 +114,14 @@ const data = {
       url: "/reports",
       icon: <BarChart3Icon />,
       description: "Laporan",
+      permission: "reports.view",
     },
     {
       title: "Settings",
       url: "/settings",
       icon: <Settings2Icon />,
       description: "Pengaturan",
+      permission: "settings.view",
     },
     {
       title: "Support",
@@ -131,6 +140,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [companyName, setCompanyName] = React.useState("")
+  const { can } = useAuth()
 
   React.useEffect(() => {
     fetchSetting("general")

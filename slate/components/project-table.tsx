@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import {
   flexRender,
   getCoreRowModel,
@@ -81,6 +82,7 @@ const statusColors: Record<string, "default" | "secondary" | "outline" | "destru
 
 export function ProjectTable() {
   const router = useRouter()
+  const { can } = useAuth()
   const [data, setData] = useState<Project[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -264,9 +266,11 @@ export function ProjectTable() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => router.push("/project/create")}>
-            <PlusIcon /> <span className="hidden lg:inline">Add Project</span>
-          </Button>
+          {can("master.project.create") && (
+            <Button variant="outline" size="sm" className="h-8" onClick={() => router.push("/project/create")}>
+              <PlusIcon /> <span className="hidden lg:inline">Add Project</span>
+            </Button>
+          )}
         </div>
       </div>
 

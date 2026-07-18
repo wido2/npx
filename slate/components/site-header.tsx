@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { fetchSetting } from "@/lib/settings-api"
+import { useAuth } from "@/lib/auth-context"
 import {
   LayoutDashboardIcon,
   PackageIcon,
@@ -35,55 +36,68 @@ interface NavItem {
   href: string
   label: string
   icon: React.ElementType
+  permission?: string
+}
+
+interface NavGroup {
+  label: string
+  permission?: string
+  items: NavItem[]
 }
 
 const navStandalone: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
 ]
 
-const navGroups: { label: string; items: NavItem[] }[] = [
+const navGroups: NavGroup[] = [
   {
     label: "Master",
+    permission: "master.barang.view",
     items: [
-      { href: "/barang", label: "Barang", icon: PackageIcon },
-      { href: "/vendor", label: "Vendor", icon: Building2Icon },
-      { href: "/karyawan", label: "Karyawan", icon: UserRoundIcon },
+      { href: "/barang", label: "Barang", icon: PackageIcon, permission: "master.barang.view" },
+      { href: "/vendor", label: "Vendor", icon: Building2Icon, permission: "master.vendor.view" },
+      { href: "/karyawan", label: "Karyawan", icon: UserRoundIcon, permission: "master.karyawan.view" },
     ],
   },
   {
     label: "Relasi",
+    permission: "master.client.view",
     items: [
-      { href: "/client", label: "Client", icon: UsersIcon },
-      { href: "/project", label: "Project", icon: FolderKanbanIcon },
+      { href: "/client", label: "Client", icon: UsersIcon, permission: "master.client.view" },
+      { href: "/project", label: "Project", icon: FolderKanbanIcon, permission: "master.project.view" },
       { href: "/alamat", label: "Alamat", icon: MapPinIcon },
       { href: "/kontak", label: "Kontak", icon: ContactIcon },
     ],
   },
   {
     label: "Transaksi",
+    permission: "po.view_all",
     items: [
-      { href: "/purchase-order", label: "Purchase Order", icon: FileTextIcon },
-      { href: "/pengambilan-barang", label: "Pengambilan Barang", icon: PackageOpenIcon },
+      { href: "/purchase-order", label: "Purchase Order", icon: FileTextIcon, permission: "po.view_all" },
+      { href: "/pengambilan-barang", label: "Pengambilan Barang", icon: PackageOpenIcon, permission: "pb.view_all" },
     ],
   },
   {
     label: "Inventory",
+    permission: "inventory.view",
     items: [
-      { href: "/inventory", label: "Inventory", icon: WarehouseIcon },
+      { href: "/inventory", label: "Inventory", icon: WarehouseIcon, permission: "inventory.view" },
     ],
   },
   {
     label: "Laporan",
+    permission: "reports.view",
     items: [
-      { href: "/reports", label: "Laporan PO", icon: BarChart3Icon },
+      { href: "/reports", label: "Laporan PO", icon: BarChart3Icon, permission: "reports.view" },
       { href: "/reports/barang", label: "Laporan Barang", icon: PackageIcon },
     ],
   },
   {
     label: "Pengaturan",
+    permission: "settings.view",
     items: [
       { href: "/jenis-pajak", label: "Jenis Pajak", icon: PercentIcon },
-      { href: "/settings", label: "Settings", icon: Settings2Icon },
+      { href: "/settings", label: "Settings", icon: Settings2Icon, permission: "settings.view" },
     ],
   },
 ]
@@ -92,6 +106,7 @@ export function SiteHeader() {
   const [companyName, setCompanyName] = useState("")
   const [sheetOpen, setSheetOpen] = useState(false)
   const pathname = usePathname()
+  const { can } = useAuth()
 
   useEffect(() => {
     fetchSetting("general")
@@ -106,6 +121,22 @@ export function SiteHeader() {
   function hasActiveItem(items: NavItem[]) {
     return items.some((item) => isActive(item.href))
   }
+
+  const filteredStandalone = navStandalone.filter((item) => !item.permission || can(item.permission))
+
+  const filteredGroups = navGroups
+    .filter((group) => !group.permission || can(group.permission))
+    .map((group) => {
+      const filteredItems = group.items.filter((item) => !item.permission || can(item.permission))
+
+      if (group.items.length && (!filteredItems || filteredItems.length === 0)) return null
+
+      return {
+        ...group,
+        items: filteredItems,
+      }
+    })
+    .filter((group): group is NonNullable<typeof group> => group !== null)
 
   return (
     <header className="sticky top-0 z-50 flex w-full items-center border-b bg-background">
@@ -125,7 +156,7 @@ export function SiteHeader() {
               <SheetTitle>{companyName || "Perusahaan"}</SheetTitle>
             </SheetHeader>
             <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-4">
-              {navStandalone.map((item) => {
+              {filteredStandalone.map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.href)
                 return (
@@ -146,7 +177,7 @@ export function SiteHeader() {
                 )
               })}
               <Separator className="my-2" />
-              {navGroups.map((group) => (
+              {filteredGroups.map((group) => (
                 <Collapsible key={group.label} defaultOpen={hasActiveItem(group.items)}>
                   <CollapsibleTrigger
                     className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:bg-muted/50"

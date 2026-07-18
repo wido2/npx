@@ -14,6 +14,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import { toast } from "sonner"
+import { useAuth } from "@/lib/auth-context"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -73,6 +74,7 @@ import {
 } from "lucide-react"
 
 export function VendorTable() {
+  const { can } = useAuth()
   const [data, setData] = useState<Vendor[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -336,18 +338,20 @@ export function VendorTable() {
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8"
-            onClick={() => {
-              setEditItem(null)
-              setSheetOpen(true)
-            }}
-          >
-            <PlusIcon />
-            <span className="hidden lg:inline">Add Vendor</span>
-          </Button>
+          {can("master.vendor.create") && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => {
+                setEditItem(null)
+                setSheetOpen(true)
+              }}
+            >
+              <PlusIcon />
+              <span className="hidden lg:inline">Add Vendor</span>
+            </Button>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useAuth } from "@/lib/auth-context"
 
 import {
   SidebarGroup,
@@ -19,13 +20,18 @@ export function NavSecondary({
     url: string
     icon: React.ReactNode
     description?: string
+    permission?: string
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
+  const { can } = useAuth()
+
+  const filteredItems = items.filter((item) => !item.permission || can(item.permission))
+
   return (
     <SidebarGroup {...props}>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton size="sm" render={<a href={item.url} />}>
                 {item.icon}

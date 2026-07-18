@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import {
   flexRender,
   getCoreRowModel,
@@ -74,6 +75,7 @@ import { fetchClients, deleteClient, bulkDeleteClients, type Client } from "@/li
 
 export function ClientTable() {
   const router = useRouter()
+  const { can } = useAuth()
   const [data, setData] = useState<Client[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -253,9 +255,11 @@ export function ClientTable() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => router.push("/client/create")}>
-            <PlusIcon /> <span className="hidden lg:inline">Add Client</span>
-          </Button>
+          {can("master.client.create") && (
+            <Button variant="outline" size="sm" className="h-8" onClick={() => router.push("/client/create")}>
+              <PlusIcon /> <span className="hidden lg:inline">Add Client</span>
+            </Button>
+          )}
         </div>
       </div>
 

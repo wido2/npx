@@ -357,10 +357,12 @@ export default function UsersPage() {
         <TabsContent value="users" className="mt-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">All Users</h2>
-            <Button onClick={() => setCreating(true)}>
-              <UserPlusIcon className="mr-2 size-4" />
-              Add User
-            </Button>
+            {can("users.manage") && (
+              <Button onClick={() => setCreating(true)}>
+                <UserPlusIcon className="mr-2 size-4" />
+                Add User
+              </Button>
+            )}
           </div>
 
           <Card>
@@ -415,10 +417,12 @@ export default function UsersPage() {
         <TabsContent value="roles" className="mt-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Role Manager</h2>
-            <Button onClick={() => { setEditingRole(null); setRoleSheetOpen(true) }}>
-              <PlusIcon className="mr-2 size-4" />
-              Create Role
-            </Button>
+            {can("users.manage") && (
+              <Button onClick={() => { setEditingRole(null); setRoleSheetOpen(true) }}>
+                <PlusIcon className="mr-2 size-4" />
+                Create Role
+              </Button>
+            )}
           </div>
 
           {rolesLoading ? (

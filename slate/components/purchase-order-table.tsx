@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import {
   flexRender,
   getCoreRowModel,
@@ -90,6 +91,7 @@ const statusLabels: Record<string, string> = {
 
 export function PurchaseOrderTable() {
   const router = useRouter()
+  const { can } = useAuth()
   const [data, setData] = useState<PurchaseOrder[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -312,9 +314,11 @@ export function PurchaseOrderTable() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => router.push("/purchase-order/create")}>
-            <PlusIcon /> <span className="hidden lg:inline">New PO</span>
-          </Button>
+          {can("po.create") && (
+            <Button variant="outline" size="sm" className="h-8" onClick={() => router.push("/purchase-order/create")}>
+              <PlusIcon /> <span className="hidden lg:inline">New PO</span>
+            </Button>
+          )}
         </div>
       </div>
 
