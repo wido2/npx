@@ -557,6 +557,15 @@ class PurchaseOrderController extends Controller
                         'created_at' => now(),
                     ]);
 
+                    $this->hargaService->rekam(
+                        $poItem->barang,
+                        $hargaBaru,
+                        PurchaseOrderItem::class,
+                        $poItem->id,
+                        "Dari PO {$purchaseOrder->kode}",
+                        $userId,
+                    );
+
                     $changedPrices[] = [
                         'barang' => $poItem->barang,
                         'vendor_nama' => $vendorNama,

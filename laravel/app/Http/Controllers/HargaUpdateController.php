@@ -113,6 +113,8 @@ class HargaUpdateController extends Controller
                     ]
                 );
 
+                $barang->update(['harga_beli' => $item['harga_beli']]);
+
                 RiwayatHargaSupplier::create([
                     'harga_supplier_id' => $hargaSupplier->id,
                     'barang_id' => $item['barang_id'],
