@@ -17,6 +17,7 @@ import {
   WarehouseIcon,
   UserRoundIcon,
   ShieldIcon,
+  ClipboardListIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -74,6 +75,7 @@ const groups: MenuGroup[] = [
     items: [
       { href: "/purchase-order", label: "Purchase Order", icon: FileTextIcon, permission: "po.view_all" },
       { href: "/pengambilan-barang", label: "Pengambilan Barang", icon: PackageOpenIcon, permission: "pb.view_all" },
+      { href: "/pengambilan-barang/riwayat", label: "Riwayat Pengambilan Barang", icon: ClipboardListIcon, permission: "pb.view_all" },
     ],
   },
   {

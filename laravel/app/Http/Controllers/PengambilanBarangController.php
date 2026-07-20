@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ItemPengambilanBarang;
 use App\Models\PengambilanBarang;
 use App\Models\Setting;
 use App\Models\User;
@@ -189,6 +190,44 @@ class PengambilanBarangController extends Controller
         $count = PengambilanBarang::whereIn('id', $validated['ids'])->delete();
 
         return response()->json(['message' => $count . ' pengambilan barang deleted']);
+    }
+
+    public function riwayat(Request $request): JsonResponse
+    {
+        $perPage = $request->integer('per_page', 20);
+        $search = $request->input('search', '');
+        $dateFrom = $request->input('date_from', '');
+        $dateTo = $request->input('date_to', '');
+
+        $query = ItemPengambilanBarang::with([
+            'barang:id,kode,nama',
+            'pengambilanBarang.client:id,kode,nama',
+            'pengambilanBarang.project:id,kode,nama',
+            'pengambilanBarang.karyawan:id,nama',
+            'pengambilanBarang.dibuatOleh:id,name',
+        ]);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('barang', fn($b) => $b->where('kode', 'ilike', "%{$search}%")
+                    ->orWhere('nama', 'ilike', "%{$search}%"))
+                  ->orWhereHas('pengambilanBarang', fn($pb) => $pb->where('kode', 'ilike', "%{$search}%"));
+            });
+        }
+
+        if ($dateFrom !== '') {
+            $query->whereHas('pengambilanBarang', fn($pb) => $pb->whereDate('tanggal_pengambilan', '>=', $dateFrom));
+        }
+
+        if ($dateTo !== '') {
+            $query->whereHas('pengambilanBarang', fn($pb) => $pb->whereDate('tanggal_pengambilan', '<=', $dateTo));
+        }
+
+        $sortField = $request->input('sort_field', 'created_at');
+        $sortDir = $request->input('sort_dir', 'desc');
+        $query->orderBy($sortField, $sortDir);
+
+        return response()->json($query->paginate($perPage));
     }
 
     public function pdf(PengambilanBarang $pengambilanBarang): \Illuminate\Http\Response

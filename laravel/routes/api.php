@@ -176,6 +176,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ——— Pengambilan Barang ———
     Route::get('pengambilan-barang', [PengambilanBarangController::class, 'index']);
     Route::post('pengambilan-barang', [PengambilanBarangController::class, 'store']);
+    Route::get('pengambilan-barang/riwayat', [PengambilanBarangController::class, 'riwayat']);
     Route::get('pengambilan-barang/{pengambilanBarang}', [PengambilanBarangController::class, 'show']);
     Route::delete('pengambilan-barang/{pengambilanBarang}', [PengambilanBarangController::class, 'destroy']);
     Route::post('pengambilan-barang/bulk-delete', [PengambilanBarangController::class, 'bulkDestroy']);

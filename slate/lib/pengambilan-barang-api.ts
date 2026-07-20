@@ -13,6 +13,59 @@ export interface ItemPengambilanBarang {
   barang?: { id: string; kode: string; nama: string; stok: number }
 }
 
+export interface RiwayatItemPengambilan {
+  id: string
+  pengambilan_barang_id: string
+  barang_id: string
+  jumlah: number
+  keterangan: string | null
+  created_at: string
+  updated_at: string
+  barang?: { id: string; kode: string; nama: string }
+  pengambilan_barang?: {
+    id: string
+    kode: string
+    tanggal_pengambilan: string
+    client?: { id: string; kode: string; nama: string } | null
+    project?: { id: string; kode: string; nama: string } | null
+    karyawan?: { id: string; nama: string } | null
+    dibuat_oleh?: { id: string; name: string }
+  }
+}
+
+interface RiwayatPaginatedResponse {
+  data: RiwayatItemPengambilan[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+}
+
+export async function fetchRiwayatPengambilan(params?: {
+  page?: number
+  per_page?: number
+  search?: string
+  sort_field?: string
+  sort_dir?: string
+  date_from?: string
+  date_to?: string
+}): Promise<RiwayatPaginatedResponse> {
+  const searchParams = new URLSearchParams()
+  if (params?.page) searchParams.set("page", String(params.page))
+  if (params?.per_page) searchParams.set("per_page", String(params.per_page))
+  if (params?.search) searchParams.set("search", params.search)
+  if (params?.sort_field) searchParams.set("sort_field", params.sort_field)
+  if (params?.sort_dir) searchParams.set("sort_dir", params.sort_dir)
+  if (params?.date_from) searchParams.set("date_from", params.date_from)
+  if (params?.date_to) searchParams.set("date_to", params.date_to)
+
+  const res = await authFetch(`${API_BASE}/pengambilan-barang/riwayat?${searchParams}`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch riwayat pengambilan (${res.status})`)
+  return res.json()
+}
+
 export interface PengambilanBarang {
   id: string
   kode: string
