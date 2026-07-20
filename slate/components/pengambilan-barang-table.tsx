@@ -196,7 +196,7 @@ export function PengambilanBarangTable() {
     {
       id: "total_item",
       header: "Total Item",
-      cell: ({ row }) => row.original.items?.length || "-",
+      cell: ({ row }) => row.original.items_count ?? "-",
     },
     {
       id: "actions",
