@@ -203,11 +203,9 @@ export function BarangDetail({ barangId }: { barangId: string }) {
                         </span>
                         <span>{h.dibuat_oleh?.name || h.created_by?.slice(0, 8) || "-"}</span>
                       </div>
-                      {h.vendor && (
-                        <div className="text-sm font-medium text-foreground">
-                          Vendor: {h.vendor.nama}
-                        </div>
-                      )}
+                      <div className="text-sm font-medium text-foreground">
+                        Vendor: {h.vendor?.nama || "—"}
+                      </div>
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex flex-col">
                           <span className="text-xs text-muted-foreground">Harga Lama</span>
