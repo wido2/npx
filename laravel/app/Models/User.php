@@ -29,6 +29,12 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
+    public function conversations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_user')
+            ->withPivot('last_read_at');
+    }
+
     protected function casts(): array
     {
         return [

@@ -30,6 +30,13 @@ class SettingSeeder extends Seeder
             'tahun_bulan_terakhir' => '',
         ]]);
 
+        Setting::firstOrCreate(['group' => 'pembelian_langsung'], ['data' => [
+            'format_kode' => 'PL-{Y}-{M}-{seq}',
+            'urutan_terakhir' => 0,
+            'tahun_bulan_terakhir' => '',
+            'reset_periode' => 'bulanan',
+        ]]);
+
         Setting::firstOrCreate(['group' => 'pengambilan_barang'], ['data' => [
             'format_kode' => 'PB-{Y}-{M}-{seq}',
             'urutan_terakhir' => 0,

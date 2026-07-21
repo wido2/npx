@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { TopMenu } from "@/components/top-menu"
 import { UserMenu } from "@/components/user-menu"
 import { NotificationBell } from "@/components/notification-bell"
+import { ChatBell } from "@/components/chat-bell"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -30,6 +31,7 @@ import {
   WarehouseIcon,
   UserRoundIcon,
   ChevronDownIcon,
+  ShoppingCartIcon,
 } from "lucide-react"
 
 interface NavItem {
@@ -75,6 +77,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/purchase-order", label: "Purchase Order", icon: FileTextIcon, permission: "po.view_all" },
       { href: "/pengambilan-barang", label: "Pengambilan Barang", icon: PackageOpenIcon, permission: "pb.view_all" },
+      { href: "/pembelian-langsung", label: "Pembelian Langsung", icon: ShoppingCartIcon, permission: "pl.view_all" },
     ],
   },
   {
@@ -226,6 +229,7 @@ export function SiteHeader() {
           <TopMenu />
         </div>
         <div className="ml-auto flex items-center gap-1">
+          <ChatBell />
           <NotificationBell />
           <UserMenu />
         </div>

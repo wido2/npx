@@ -24,9 +24,11 @@ interface KontakSheetProps {
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
   editItem?: Kontak | null
+  contactableType?: string
+  contactableId?: string
 }
 
-export function KontakSheet({ open, onOpenChange, onSuccess, editItem }: KontakSheetProps) {
+export function KontakSheet({ open, onOpenChange, onSuccess, editItem, contactableType, contactableId }: KontakSheetProps) {
   const isEdit = !!editItem
 
   const [nama, setNama] = useState("")
@@ -79,11 +81,16 @@ export function KontakSheet({ open, onOpenChange, onSuccess, editItem }: KontakS
         utama,
         aktif,
       }
+      const fullPayload = {
+        ...payload,
+        contactable_type: editItem?.contactable_type || contactableType || "",
+        contactable_id: editItem?.contactable_id || contactableId || "",
+      }
       if (isEdit && editItem) {
-        await updateKontak(editItem.id, payload)
+        await updateKontak(editItem.id, fullPayload)
         toast.success("Kontak updated")
       } else {
-        await createKontak(payload)
+        await createKontak(fullPayload)
         toast.success("Kontak created")
       }
       resetForm()

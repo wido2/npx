@@ -16,7 +16,6 @@ import {
   UserIcon,
   KeyIcon,
   LogOutIcon,
-  ShieldIcon,
   CogIcon,
 } from "lucide-react"
 
@@ -73,12 +72,6 @@ export function UserMenu() {
             <KeyIcon className="mr-2 h-4 w-4" />
             Change Password
           </DropdownMenuItem>
-          {can("users.view") && (
-            <DropdownMenuItem onClick={() => router.push("/settings/users")}>
-              <ShieldIcon className="mr-2 h-4 w-4" />
-              Manage Users
-            </DropdownMenuItem>
-          )}
           {can("settings.view") && (
             <DropdownMenuItem onClick={() => router.push("/settings")}>
               <CogIcon className="mr-2 h-4 w-4" />

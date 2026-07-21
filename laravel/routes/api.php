@@ -3,6 +3,7 @@
 use App\Http\Controllers\AlamatController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BarangController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\JenisPajakController;
 use App\Http\Controllers\KategoriBarangController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\VendorContactController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\HargaSupplierController;
 use App\Http\Controllers\HargaUpdateController;
+use App\Http\Controllers\PembelianLangsungController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -208,4 +210,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('reports/barang/stok-terendah', [ReportBarangController::class, 'stokTerendah']);
     Route::get('reports/barang/top-items-nilai', [ReportBarangController::class, 'topItemsByNilai']);
     Route::get('reports/barang/top-by-pengambilan', [ReportBarangController::class, 'topByPengambilan']);
+
+    // ——— Pembelian Langsung ———
+    Route::get('pembelian-langsung', [PembelianLangsungController::class, 'index']);
+    Route::post('pembelian-langsung', [PembelianLangsungController::class, 'store']);
+    Route::get('pembelian-langsung/{pembelianLangsung}', [PembelianLangsungController::class, 'show']);
+    Route::put('pembelian-langsung/{pembelianLangsung}', [PembelianLangsungController::class, 'update']);
+    Route::delete('pembelian-langsung/{pembelianLangsung}', [PembelianLangsungController::class, 'destroy']);
+    Route::delete('pembelian-langsung/{pembelianLangsung}/attachments/{attachment}', [PembelianLangsungController::class, 'destroyAttachment']);
+
+    // ——— Chat ———
+    Route::get('conversations', [ChatController::class, 'index']);
+    Route::post('conversations', [ChatController::class, 'store']);
+    Route::get('conversations/{conversation}', [ChatController::class, 'show']);
+    Route::get('conversations/{conversation}/messages', [ChatController::class, 'messages']);
+    Route::post('conversations/{conversation}/messages', [ChatController::class, 'storeMessage']);
+    Route::get('chat/users', [ChatController::class, 'users']);
+    Route::get('chat/unread', [ChatController::class, 'unread']);
 });

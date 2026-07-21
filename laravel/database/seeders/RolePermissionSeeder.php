@@ -29,6 +29,9 @@ class RolePermissionSeeder extends Seeder
             'master.alamat.view', 'master.alamat.create', 'master.alamat.edit', 'master.alamat.delete',
             'master.kontak.view', 'master.kontak.create', 'master.kontak.edit', 'master.kontak.delete',
 
+            // PL - Pembelian Langsung
+            'pl.create', 'pl.view_own', 'pl.view_all', 'pl.edit', 'pl.delete',
+
             // PB - Pengambilan Barang
             'pb.create', 'pb.view_own', 'pb.view_all', 'pb.delete',
 
@@ -88,6 +91,7 @@ class RolePermissionSeeder extends Seeder
             'master.alamat.view', 'master.alamat.create', 'master.alamat.edit', 'master.alamat.delete',
             'master.kontak.view', 'master.kontak.create', 'master.kontak.edit', 'master.kontak.delete',
 
+            'pl.create', 'pl.view_own', 'pl.view_all', 'pl.edit', 'pl.delete',
             'pb.create', 'pb.view_own', 'pb.view_all', 'pb.delete',
             'inventory.view', 'inventory.opname',
             'settings.view', 'settings.update',
@@ -118,6 +122,7 @@ class RolePermissionSeeder extends Seeder
         $user = Role::findOrCreate('user', 'web');
         $user->syncPermissions([
             'po.create', 'po.view_own', 'po.edit', 'po.submit',
+            'pl.create', 'pl.view_own',
             'pb.create', 'pb.view_own', 'pb.delete',
             'inventory.view',
             'master.vendor.view', 'master.barang.view', 'master.client.view', 'master.project.view',

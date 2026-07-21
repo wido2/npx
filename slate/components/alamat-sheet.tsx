@@ -24,9 +24,11 @@ interface AlamatSheetProps {
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
   editItem?: Alamat | null
+  addressableType?: string
+  addressableId?: string
 }
 
-export function AlamatSheet({ open, onOpenChange, onSuccess, editItem }: AlamatSheetProps) {
+export function AlamatSheet({ open, onOpenChange, onSuccess, editItem, addressableType, addressableId }: AlamatSheetProps) {
   const isEdit = !!editItem
 
   const [label, setLabel] = useState("")
@@ -87,11 +89,16 @@ export function AlamatSheet({ open, onOpenChange, onSuccess, editItem }: AlamatS
         utama,
         aktif,
       }
+      const fullPayload = {
+        ...payload,
+        addressable_type: editItem?.addressable_type || addressableType || "",
+        addressable_id: editItem?.addressable_id || addressableId || "",
+      }
       if (isEdit && editItem) {
-        await updateAlamat(editItem.id, payload)
+        await updateAlamat(editItem.id, fullPayload)
         toast.success("Alamat updated")
       } else {
-        await createAlamat(payload)
+        await createAlamat(fullPayload)
         toast.success("Alamat created")
       }
       resetForm()
