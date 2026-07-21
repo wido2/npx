@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Bell, CheckCircle, InboxIcon, AlertTriangle, Tag, CheckCheck, Send, Clock, ClipboardCheck } from "lucide-react"
+import { Bell, CheckCircle, InboxIcon, AlertTriangle, Tag, CheckCheck, Send, Clock, ClipboardCheck, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useNotifications } from "@/lib/notification-context"
@@ -34,7 +34,7 @@ function NotificationIcon({ type }: { type: string }) {
 }
 
 export function NotificationBell() {
-  const { notifications, unreadCount, loading, fetchMore, hasMore, handleMarkAsRead, handleMarkAllAsRead } =
+  const { notifications, unreadCount, loading, fetchMore, hasMore, handleMarkAsRead, handleMarkAllAsRead, handleDeleteNotification } =
     useNotifications()
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -57,6 +57,8 @@ export function NotificationBell() {
       fetchMore()
     }
   }, [loading, hasMore, fetchMore])
+
+  const unreadNotifications = notifications.filter((n) => !n.read_at)
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -95,31 +97,28 @@ export function NotificationBell() {
             onScroll={handleScroll}
             className="max-h-96 overflow-y-auto"
           >
-            {notifications.length === 0 ? (
+            {unreadNotifications.length === 0 ? (
               <div className="flex flex-col items-center gap-2 px-4 py-8 text-sm text-muted-foreground">
                 <Bell className="size-8 opacity-50" />
                 <span>Tidak ada notifikasi</span>
               </div>
             ) : (
               <div className="divide-y">
-                {notifications.map((notification) => {
-                  const isUnread = !notification.read_at
-                  return (
+                {unreadNotifications.map((notification) => (
+                  <div key={notification.id} className="group relative">
                     <Link
-                      key={notification.id}
                       href={notification.data.action_url || "#"}
                       onClick={() => {
-                        if (isUnread) handleMarkAsRead(notification.id)
+                        handleMarkAsRead(notification.id)
                         setOpen(false)
                       }}
                       className={cn(
-                        "flex gap-3 px-4 py-3 text-sm transition-colors hover:bg-muted/50",
-                        isUnread && "bg-muted/30",
+                        "flex gap-3 px-4 py-3 pr-8 text-sm transition-colors hover:bg-muted/50",
                       )}
                     >
                       <NotificationIcon type={notification.data.type} />
                       <div className="flex-1 space-y-1 overflow-hidden">
-                        <p className={cn("text-xs font-medium", isUnread ? "text-foreground" : "text-muted-foreground")}>
+                        <p className="text-xs font-medium text-foreground">
                           {notification.data.title}
                         </p>
                         <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
@@ -132,10 +131,19 @@ export function NotificationBell() {
                           })}
                         </p>
                       </div>
-                      {isUnread && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-blue-500" />}
                     </Link>
-                  )
-                })}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteNotification(notification.id)
+                      }}
+                      className="absolute right-1.5 top-3 rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+                      title="Hapus notifikasi"
+                    >
+                      <X className="size-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -145,6 +153,14 @@ export function NotificationBell() {
               </div>
             )}
           </div>
+
+          <Link
+            href="/notifications"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center border-t px-4 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+          >
+            Lihat Semua Notifikasi
+          </Link>
         </div>
       )}
     </div>

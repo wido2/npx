@@ -10,6 +10,10 @@ class AlamatController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        if (!$request->user()->can('master.alamat.view')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $perPage = $request->integer('per_page', 10);
         $search = $request->input('search', '');
 
@@ -36,13 +40,21 @@ class AlamatController extends Controller
         return response()->json($query->paginate($perPage));
     }
 
-    public function show(Address $address): JsonResponse
+    public function show(Request $request, Address $address): JsonResponse
     {
+        if (!$request->user()->can('master.alamat.view')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         return response()->json($address);
     }
 
     public function store(Request $request): JsonResponse
     {
+        if (!$request->user()->can('master.alamat.create')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $validated = $request->validate([
             'label' => 'required|string|max:255',
             'alamat' => 'required|string',
@@ -53,9 +65,16 @@ class AlamatController extends Controller
             'kode_pos' => 'nullable|string|max:10',
             'utama' => 'boolean',
             'aktif' => 'boolean',
+            'addressable_type' => 'required|string|in:vendor,client',
+            'addressable_id' => 'required|string',
         ]);
 
-        $validated['addressable_type'] = 'App\\Models\\Vendor';
+        $modelMap = [
+            'vendor' => 'App\\Models\\Vendor',
+            'client' => 'App\\Models\\Client',
+        ];
+
+        $validated['addressable_type'] = $modelMap[$validated['addressable_type']];
 
         $address = Address::create($validated);
 
@@ -64,6 +83,10 @@ class AlamatController extends Controller
 
     public function update(Request $request, Address $address): JsonResponse
     {
+        if (!$request->user()->can('master.alamat.edit')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $validated = $request->validate([
             'label' => 'required|string|max:255',
             'alamat' => 'required|string',
@@ -74,15 +97,33 @@ class AlamatController extends Controller
             'kode_pos' => 'nullable|string|max:10',
             'utama' => 'boolean',
             'aktif' => 'boolean',
+            'addressable_type' => 'nullable|string|in:vendor,client',
+            'addressable_id' => 'nullable|string',
         ]);
+
+        $modelMap = [
+            'vendor' => 'App\\Models\\Vendor',
+            'client' => 'App\\Models\\Client',
+        ];
+
+        if ($validated['addressable_type'] ?? false) {
+            $validated['addressable_type'] = $modelMap[$validated['addressable_type']];
+        } else {
+            unset($validated['addressable_type']);
+            unset($validated['addressable_id']);
+        }
 
         $address->update($validated);
 
         return response()->json($address);
     }
 
-    public function destroy(Address $address): JsonResponse
+    public function destroy(Request $request, Address $address): JsonResponse
     {
+        if (!$request->user()->can('master.alamat.delete')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $address->delete();
 
         return response()->json(['message' => 'Alamat deleted']);
@@ -90,6 +131,10 @@ class AlamatController extends Controller
 
     public function bulkDestroy(Request $request): JsonResponse
     {
+        if (!$request->user()->can('master.alamat.delete')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $validated = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:addresses,id',

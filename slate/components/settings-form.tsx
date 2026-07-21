@@ -18,8 +18,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { fetchSetting, updateSetting, uploadLogo } from "@/lib/settings-api"
+import { fetchSetting, updateSetting } from "@/lib/settings-api"
 import { SettingsAddressSheet, type AlamatKirim } from "@/components/settings-address-sheet"
+import { SettingsLogoUpload } from "@/components/settings-logo-upload"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,11 +76,6 @@ interface PDFData {
   tampilkan_ttd: boolean
   tampilkan_footer: boolean
   rahasiakan_client: boolean
-}
-
-function storageUrl(path: string): string {
-  const base = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/api$/, "")
-  return `${base}/storage/${path.replace(/^\//, "")}`
 }
 
 export function SettingsForm() {
@@ -261,18 +257,6 @@ export function SettingsForm() {
     }
   }
 
-  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    try {
-      const result = await uploadLogo(file)
-      setGeneral((prev) => ({ ...prev, logo: result.path }))
-      toast.success("Logo uploaded")
-    } catch {
-      toast.error("Failed to upload logo")
-    }
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -338,13 +322,11 @@ export function SettingsForm() {
                 <Field>
                   <FieldLabel htmlFor="logo">Logo</FieldLabel>
                   <FieldContent>
-                    {general.logo && (
-                      <div className="mb-3">
-                        <img src={storageUrl(general.logo)} alt="Logo" className="h-24 w-auto rounded border object-contain" />
-                      </div>
-                    )}
-                    <Input id="logo" type="file" accept="image/*" onChange={handleLogoUpload} />
-                    <FieldDescription>Upload logo perusahaan (format: JPG, PNG)</FieldDescription>
+                    <SettingsLogoUpload
+                      logoPath={general.logo}
+                      onLogoChange={(path) => setGeneral((prev) => ({ ...prev, logo: path }))}
+                    />
+                    <FieldDescription>Upload logo perusahaan (format: JPG, PNG, GIF, WEBP, SVG. Maks: 3MB)</FieldDescription>
                   </FieldContent>
                 </Field>
               </div>

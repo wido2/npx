@@ -26,6 +26,8 @@ class RolePermissionSeeder extends Seeder
             'master.unit.view', 'master.unit.create', 'master.unit.edit', 'master.unit.delete',
             'master.kategori.view', 'master.kategori.create', 'master.kategori.edit', 'master.kategori.delete',
             'master.karyawan.view', 'master.karyawan.create', 'master.karyawan.edit', 'master.karyawan.delete',
+            'master.alamat.view', 'master.alamat.create', 'master.alamat.edit', 'master.alamat.delete',
+            'master.kontak.view', 'master.kontak.create', 'master.kontak.edit', 'master.kontak.delete',
 
             // PB - Pengambilan Barang
             'pb.create', 'pb.view_own', 'pb.view_all', 'pb.delete',
@@ -58,6 +60,10 @@ class RolePermissionSeeder extends Seeder
             'widget.barang_overview',
             'widget.po_overview',
             'widget.barang_report_cards',
+            'widget.vendor_summary', 'widget.client_summary', 'widget.project_summary', 'widget.karyawan_summary',
+            'widget.po_status_chart', 'widget.barang_kategori_chart',
+            'widget.recent_po', 'widget.recent_pb', 'widget.aging_po', 'widget.top_vendor', 'widget.low_stock',
+            'widget.aktivitas_terbaru',
         ];
 
         foreach ($permissions as $perm) {
@@ -79,6 +85,8 @@ class RolePermissionSeeder extends Seeder
             'master.unit.view', 'master.unit.create', 'master.unit.edit', 'master.unit.delete',
             'master.kategori.view', 'master.kategori.create', 'master.kategori.edit', 'master.kategori.delete',
             'master.karyawan.view', 'master.karyawan.create', 'master.karyawan.edit', 'master.karyawan.delete',
+            'master.alamat.view', 'master.alamat.create', 'master.alamat.edit', 'master.alamat.delete',
+            'master.kontak.view', 'master.kontak.create', 'master.kontak.edit', 'master.kontak.delete',
 
             'pb.create', 'pb.view_own', 'pb.view_all', 'pb.delete',
             'inventory.view', 'inventory.opname',
@@ -101,6 +109,10 @@ class RolePermissionSeeder extends Seeder
             'widget.barang_overview',
             'widget.po_overview',
             'widget.barang_report_cards',
+            'widget.vendor_summary', 'widget.client_summary', 'widget.project_summary', 'widget.karyawan_summary',
+            'widget.po_status_chart', 'widget.barang_kategori_chart',
+            'widget.recent_po', 'widget.recent_pb', 'widget.aging_po', 'widget.top_vendor', 'widget.low_stock',
+            'widget.aktivitas_terbaru',
         ]);
 
         $user = Role::findOrCreate('user', 'web');
@@ -111,11 +123,15 @@ class RolePermissionSeeder extends Seeder
             'master.vendor.view', 'master.barang.view', 'master.client.view', 'master.project.view',
             'master.unit.view', 'master.kategori.view',
             'master.karyawan.view', 'master.karyawan.create', 'master.karyawan.edit', 'master.karyawan.delete',
+            'master.alamat.view', 'master.kontak.view',
             'reports.view',
 
             'widget.section_cards', 'widget.chart_area_interactive', 'widget.data_table',
             'widget.report_cards', 'widget.inventory_laporan', 'widget.barang_history',
             'widget.barang_overview',
+            'widget.vendor_summary', 'widget.client_summary', 'widget.project_summary', 'widget.karyawan_summary',
+            'widget.po_status_chart', 'widget.barang_kategori_chart',
+            'widget.recent_po', 'widget.recent_pb', 'widget.aktivitas_terbaru',
         ]);
 
         $admin = User::where('email', 'admin@gmail.com')->first();

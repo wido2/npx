@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldContent, FieldLabel, FieldGroup } from "@/components/ui/field"
+import { Field, FieldContent, FieldLabel, FieldDescription, FieldGroup } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -130,27 +130,30 @@ export function ClientForm({ clientId }: Props) {
                 <Field>
                   <FieldLabel htmlFor="kode">Kode *</FieldLabel>
                   <FieldContent>
-                    <Input id="kode" value={kode} onChange={(e) => setKode(e.target.value)} required />
+                    <Input id="kode" value={kode} onChange={(e) => setKode(e.target.value)} placeholder="Kode unik client" required />
                   </FieldContent>
+                  <FieldDescription>Kode identifikasi untuk client</FieldDescription>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="nama">Nama *</FieldLabel>
                   <FieldContent>
-                    <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} required />
+                    <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama lengkap client" required />
                   </FieldContent>
+                  <FieldDescription>Nama perusahaan atau perorangan</FieldDescription>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="npwp">NPWP</FieldLabel>
                   <FieldContent>
-                    <Input id="npwp" value={npwp} onChange={(e) => setNpwp(e.target.value)} />
+                    <Input id="npwp" value={npwp} onChange={(e) => setNpwp(e.target.value)} placeholder="XX.XXX.XXX.X-XXX.XXX" />
                   </FieldContent>
+                  <FieldDescription>Nomor Pokok Wajib Pajak (opsional)</FieldDescription>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="tipe">Tipe *</FieldLabel>
                   <FieldContent>
                     <Select value={tipe} onValueChange={(v) => v && setTipe(v)} required>
                       <SelectTrigger id="tipe">
-                        <SelectValue placeholder="Select type..." />
+                        <SelectValue placeholder="Pilih tipe..." />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="perusahaan">Perusahaan</SelectItem>
@@ -158,30 +161,31 @@ export function ClientForm({ clientId }: Props) {
                       </SelectContent>
                     </Select>
                   </FieldContent>
+                  <FieldDescription>Jenis client: perusahaan atau perorangan</FieldDescription>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="email">Email</FieldLabel>
                   <FieldContent>
-                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contoh@email.com" />
                   </FieldContent>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="telepon">Telepon</FieldLabel>
                   <FieldContent>
-                    <Input id="telepon" value={telepon} onChange={(e) => setTelepon(e.target.value)} />
+                    <Input id="telepon" value={telepon} onChange={(e) => setTelepon(e.target.value)} placeholder="Nomor telepon" />
                   </FieldContent>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="website">Website</FieldLabel>
                   <FieldContent>
-                    <Input id="website" value={website} onChange={(e) => setWebsite(e.target.value)} />
+                    <Input id="website" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://contoh.com" />
                   </FieldContent>
                 </Field>
               </div>
               <Field>
                 <FieldLabel htmlFor="keterangan">Keterangan</FieldLabel>
                 <FieldContent>
-                  <Textarea id="keterangan" value={keterangan} onChange={(e) => setKeterangan(e.target.value)} />
+                  <Textarea id="keterangan" value={keterangan} onChange={(e) => setKeterangan(e.target.value)} placeholder="Catatan tambahan tentang client" />
                 </FieldContent>
               </Field>
               <Field>
@@ -191,6 +195,7 @@ export function ClientForm({ clientId }: Props) {
                     <span className="text-xs">Active</span>
                   </label>
                 </FieldContent>
+                <FieldDescription>Nonaktifkan untuk menyembunyikan client</FieldDescription>
               </Field>
             </FieldGroup>
             <div className="flex justify-end gap-2">

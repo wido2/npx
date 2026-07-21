@@ -11,7 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldLabel, FieldContent, FieldGroup } from "@/components/ui/field"
+import { Field, FieldLabel, FieldContent, FieldDescription, FieldGroup } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   createKontak,
@@ -107,31 +107,32 @@ export function KontakSheet({ open, onOpenChange, onSuccess, editItem }: KontakS
             <Field>
               <FieldLabel htmlFor="nama">Nama *</FieldLabel>
               <FieldContent>
-                <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} required />
+                <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama lengkap kontak" required />
               </FieldContent>
+              <FieldDescription>Nama orang yang akan dihubungi</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="jabatan">Jabatan</FieldLabel>
               <FieldContent>
-                <Input id="jabatan" value={jabatan} onChange={(e) => setJabatan(e.target.value)} />
+                <Input id="jabatan" value={jabatan} onChange={(e) => setJabatan(e.target.value)} placeholder="Posisi/jabatan" />
               </FieldContent>
             </Field>
             <Field>
               <FieldLabel htmlFor="telepon">Telepon</FieldLabel>
               <FieldContent>
-                <Input id="telepon" value={telepon} onChange={(e) => setTelepon(e.target.value)} />
+                <Input id="telepon" value={telepon} onChange={(e) => setTelepon(e.target.value)} placeholder="Nomor telepon kantor" />
               </FieldContent>
             </Field>
             <Field>
               <FieldLabel htmlFor="hp">HP</FieldLabel>
               <FieldContent>
-                <Input id="hp" value={hp} onChange={(e) => setHp(e.target.value)} />
+                <Input id="hp" value={hp} onChange={(e) => setHp(e.target.value)} placeholder="Nomor handphone" />
               </FieldContent>
             </Field>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
               <FieldContent>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contoh@email.com" />
               </FieldContent>
             </Field>
             <Field>
@@ -141,6 +142,7 @@ export function KontakSheet({ open, onOpenChange, onSuccess, editItem }: KontakS
                   <span className="text-xs">Utama</span>
                 </label>
               </FieldContent>
+              <FieldDescription>Kontak utama untuk entity ini</FieldDescription>
             </Field>
             <Field>
               <FieldContent>
@@ -149,6 +151,7 @@ export function KontakSheet({ open, onOpenChange, onSuccess, editItem }: KontakS
                   <span className="text-xs">Active</span>
                 </label>
               </FieldContent>
+              <FieldDescription>Nonaktifkan untuk menyembunyikan kontak</FieldDescription>
             </Field>
           </FieldGroup>
           <div className="flex justify-end gap-2 pt-2">

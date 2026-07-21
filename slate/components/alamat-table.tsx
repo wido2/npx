@@ -55,10 +55,11 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import {
   fetchAlamat, deleteAlamat, bulkDeleteAlamat, type Alamat,
 } from "@/lib/alamat-api"
-import { AlamatSheet } from "@/components/alamat-sheet"
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -74,6 +75,8 @@ import {
 } from "lucide-react"
 
 export function AlamatTable() {
+  const { can } = useAuth()
+  const router = useRouter()
   const [data, setData] = useState<Alamat[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -108,8 +111,6 @@ export function AlamatTable() {
     pageIndex: 0,
     pageSize: 10,
   })
-  const [sheetOpen, setSheetOpen] = useState(false)
-  const [editItem, setEditItem] = useState<Alamat | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<Alamat | null>(null)
@@ -203,7 +204,7 @@ export function AlamatTable() {
       },
       {
         accessorKey: "addressable.nama",
-        header: "Vendor",
+        header: "Entity",
         cell: ({ row }) => row.original.addressable?.nama || "-",
       },
       {
@@ -276,26 +277,29 @@ export function AlamatTable() {
                 <span className="sr-only">Open menu</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-32">
-                <DropdownMenuItem
-                  onClick={() => {
-                    setEditItem(row.original)
-                    setSheetOpen(true)
-                  }}
-                >
-                  <PencilIcon />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => {
-                    setDeletingItem(row.original)
-                    setDeleteDialogOpen(true)
-                  }}
-                >
-                  <Trash2Icon />
-                  Delete
-                </DropdownMenuItem>
+                {can("master.alamat.edit") && (
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/alamat/${row.original.id}/edit`)}
+                  >
+                    <PencilIcon />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {can("master.alamat.delete") && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => {
+                        setDeletingItem(row.original)
+                        setDeleteDialogOpen(true)
+                      }}
+                    >
+                      <Trash2Icon />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -340,7 +344,7 @@ export function AlamatTable() {
             }}
             className="h-8 w-full max-w-sm pl-8"
           />
-          {selectedCount > 0 && (
+          {can("master.alamat.delete") && selectedCount > 0 && (
             <Button
               variant="destructive"
               size="sm"
@@ -377,18 +381,17 @@ export function AlamatTable() {
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8"
-            onClick={() => {
-              setEditItem(null)
-              setSheetOpen(true)
-            }}
-          >
-            <PlusIcon />
-            <span className="hidden lg:inline">Add Alamat</span>
-          </Button>
+          {can("master.alamat.create") && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => router.push("/alamat/create")}
+            >
+              <PlusIcon />
+              <span className="hidden lg:inline">Add Alamat</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -610,15 +613,6 @@ export function AlamatTable() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlamatSheet
-        open={sheetOpen}
-        onOpenChange={(open) => {
-          if (!open) setEditItem(null)
-          setSheetOpen(open)
-        }}
-        onSuccess={loadData}
-        editItem={editItem}
-      />
     </div>
   )
 }

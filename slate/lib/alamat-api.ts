@@ -13,6 +13,8 @@ export interface Alamat {
   kode_pos: string | null
   utama: boolean
   aktif: boolean
+  addressable_type: string
+  addressable_id: string
   created_at: string
   updated_at: string
   addressable?: {
@@ -73,6 +75,8 @@ export async function createAlamat(data: {
   kode_pos?: string
   utama?: boolean
   aktif?: boolean
+  addressable_type: string
+  addressable_id: string
 }): Promise<Alamat> {
   const res = await authFetch(`${API_BASE}/alamat`, {
     method: "POST",
@@ -98,6 +102,8 @@ export async function updateAlamat(
     kode_pos: string
     utama: boolean
     aktif: boolean
+    addressable_type: string
+    addressable_id: string
   }>
 ): Promise<Alamat> {
   const res = await authFetch(`${API_BASE}/alamat/${id}`, {

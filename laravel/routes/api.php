@@ -28,6 +28,7 @@ use App\Http\Controllers\VendorContactController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\HargaSupplierController;
 use App\Http\Controllers\HargaUpdateController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -112,6 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy']);
 
     // ——— Settings ———
     Route::get('settings/{group}', [SettingController::class, 'show']);
@@ -183,6 +185,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('pengambilan-barang/{pengambilanBarang}/pdf', [PengambilanBarangController::class, 'pdf']);
 
     // ——— Inventory ———
+    // ——— Dashboard ———
+    Route::get('dashboard/summary', [DashboardController::class, 'summary']);
+    Route::get('dashboard/aging-po', [DashboardController::class, 'agingPO']);
+
     Route::get('inventory/mutasi', [InventoryController::class, 'mutasi']);
     Route::get('inventory/stok-minimum', [InventoryController::class, 'stokMinimum']);
     Route::post('inventory/opname', [InventoryController::class, 'opname']);

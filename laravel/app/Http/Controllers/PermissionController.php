@@ -23,6 +23,18 @@ class PermissionController extends Controller
             'cancel' => 'Cancel', 'manage' => 'Manage', 'update' => 'Update',
             'opname' => 'Opname',
             'update_harga' => 'Update Harga',
+            'vendor_summary' => 'Ringkasan Vendor',
+            'client_summary' => 'Ringkasan Client',
+            'project_summary' => 'Ringkasan Project',
+            'karyawan_summary' => 'Ringkasan Karyawan',
+            'po_status_chart' => 'Chart Status PO',
+            'barang_kategori_chart' => 'Chart Kategori Barang',
+            'recent_po' => 'PO Terbaru',
+            'recent_pb' => 'PB Terbaru',
+            'aging_po' => 'Aging PO',
+            'top_vendor' => 'Top Vendor',
+            'low_stock' => 'Stok Menipis',
+            'aktivitas_terbaru' => 'Aktivitas Terbaru',
         ];
 
         $groupLabelMap = [
@@ -32,7 +44,9 @@ class PermissionController extends Controller
             'inventory' => 'Inventory',
             'notification' => 'Notifikasi',
             'widget' => 'Widget',
-            'karyawan' => 'Karyawan',
+            'users' => 'Users',
+            'settings' => 'Settings',
+            'reports' => 'Reports',
         ];
 
         $grouped = [];

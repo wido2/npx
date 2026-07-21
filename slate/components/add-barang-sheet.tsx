@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldLabel, FieldGroup, FieldContent } from "@/components/ui/field"
+import { Field, FieldLabel, FieldGroup, FieldContent, FieldDescription } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Popover,
@@ -224,19 +224,21 @@ export function AddBarangSheet({ open, onOpenChange, onSuccess, editItem }: AddB
               <Field>
                 <FieldLabel htmlFor="kode">Kode *</FieldLabel>
                 <FieldContent>
-                  <Input id="kode" value={kode} onChange={(e) => setKode(e.target.value)} required />
+                  <Input id="kode" value={kode} onChange={(e) => setKode(e.target.value)} placeholder="Kode unik barang" required />
                 </FieldContent>
+                <FieldDescription>Kode identifikasi untuk barang</FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="nama">Nama *</FieldLabel>
                 <FieldContent>
-                  <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} required />
+                  <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama barang" required />
                 </FieldContent>
+                <FieldDescription>Nama lengkap barang</FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="deskripsi">Deskripsi</FieldLabel>
                 <FieldContent>
-                  <Textarea id="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} />
+                  <Textarea id="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} placeholder="Deskripsi barang" />
                 </FieldContent>
               </Field>
               <Field>
@@ -396,9 +398,11 @@ export function AddBarangSheet({ open, onOpenChange, onSuccess, editItem }: AddB
                     min="0"
                     value={hargaBeli}
                     onChange={(e) => setHargaBeli(e.target.value)}
+                    placeholder="0"
                     required
                   />
                 </FieldContent>
+                <FieldDescription>Harga beli barang per unit</FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="stok">Stok *</FieldLabel>
@@ -409,9 +413,11 @@ export function AddBarangSheet({ open, onOpenChange, onSuccess, editItem }: AddB
                     min="0"
                     value={stok}
                     onChange={(e) => setStok(e.target.value)}
+                    placeholder="0"
                     required
                   />
                 </FieldContent>
+                <FieldDescription>Jumlah stok awal barang</FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="stok_minimum">Stok Minimum</FieldLabel>
@@ -422,13 +428,15 @@ export function AddBarangSheet({ open, onOpenChange, onSuccess, editItem }: AddB
                     min="0"
                     value={stokMinimum}
                     onChange={(e) => setStokMinimum(e.target.value)}
+                    placeholder="0"
                   />
                 </FieldContent>
+                <FieldDescription>Peringatan stok minimum (opsional)</FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="gambar">Gambar URL</FieldLabel>
                 <FieldContent>
-                  <Input id="gambar" value={gambar} onChange={(e) => setGambar(e.target.value)} />
+                  <Input id="gambar" value={gambar} onChange={(e) => setGambar(e.target.value)} placeholder="https://contoh.com/gambar.jpg" />
                 </FieldContent>
               </Field>
               <Field>
@@ -438,6 +446,7 @@ export function AddBarangSheet({ open, onOpenChange, onSuccess, editItem }: AddB
                     <span className="text-xs">Active</span>
                   </label>
                 </FieldContent>
+                <FieldDescription>Nonaktifkan untuk menyembunyikan barang</FieldDescription>
               </Field>
             </FieldGroup>
             <div className="flex justify-end gap-2 pt-2">

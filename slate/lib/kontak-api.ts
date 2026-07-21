@@ -11,6 +11,8 @@ export interface Kontak {
   email: string | null
   utama: boolean
   aktif: boolean
+  contactable_type: string
+  contactable_id: string
   created_at: string
   updated_at: string
   contactable?: {
@@ -69,6 +71,8 @@ export async function createKontak(data: {
   email?: string
   utama?: boolean
   aktif?: boolean
+  contactable_type: string
+  contactable_id: string
 }): Promise<Kontak> {
   const res = await authFetch(`${API_BASE}/kontak`, {
     method: "POST",
@@ -92,6 +96,8 @@ export async function updateKontak(
     email: string
     utama: boolean
     aktif: boolean
+    contactable_type: string
+    contactable_id: string
   }>
 ): Promise<Kontak> {
   const res = await authFetch(`${API_BASE}/kontak/${id}`, {

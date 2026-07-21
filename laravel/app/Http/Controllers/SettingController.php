@@ -9,14 +9,22 @@ use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
-    public function show(string $group): JsonResponse
+    public function show(Request $request, string $group): JsonResponse
     {
+        if (!$request->user()->can('settings.view')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $setting = Setting::where('group', $group)->firstOrFail();
         return response()->json($setting);
     }
 
     public function update(Request $request, string $group): JsonResponse
     {
+        if (!$request->user()->can('settings.update')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $setting = Setting::where('group', $group)->firstOrFail();
 
         $validated = $request->validate([
@@ -30,6 +38,10 @@ class SettingController extends Controller
 
     public function uploadLogo(Request $request): JsonResponse
     {
+        if (!$request->user()->can('settings.update')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $validated = $request->validate([
             'logo' => 'required|image|mimes:png,jpg,jpeg|max:2048',
         ]);

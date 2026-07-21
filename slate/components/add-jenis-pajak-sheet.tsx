@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Field, FieldContent, FieldLabel, FieldGroup } from "@/components/ui/field"
+import { Field, FieldContent, FieldLabel, FieldDescription, FieldGroup } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { createJenisPajak, updateJenisPajak, type JenisPajak } from "@/lib/jenis-pajak-api"
@@ -78,19 +78,21 @@ export function AddJenisPajakSheet({ open, onOpenChange, onSuccess, editItem }: 
             <Field>
               <FieldLabel htmlFor="nama">Nama Pajak *</FieldLabel>
               <FieldContent>
-                <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} required />
+                <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Contoh: PPN 11%, PPh 23" required />
               </FieldContent>
+              <FieldDescription>Nama jenis pajak</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="persentase">Persentase (%) *</FieldLabel>
               <FieldContent>
-                <Input id="persentase" type="number" step="0.01" value={persentase} onChange={(e) => setPersentase(e.target.value)} required />
+                <Input id="persentase" type="number" step="0.01" value={persentase} onChange={(e) => setPersentase(e.target.value)} placeholder="11" required />
               </FieldContent>
+              <FieldDescription>Besaran persentase pajak</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="deskripsi">Deskripsi</FieldLabel>
               <FieldContent>
-                <Textarea id="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} />
+                <Textarea id="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} placeholder="Keterangan tambahan tentang pajak ini" />
               </FieldContent>
             </Field>
             <Field>
@@ -100,6 +102,7 @@ export function AddJenisPajakSheet({ open, onOpenChange, onSuccess, editItem }: 
                   <span className="text-xs">Active</span>
                 </label>
               </FieldContent>
+              <FieldDescription>Nonaktifkan untuk menyembunyikan pajak ini</FieldDescription>
             </Field>
           </FieldGroup>
           <div className="flex justify-end gap-2 pt-2">

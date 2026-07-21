@@ -55,10 +55,11 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import {
   fetchKontak, deleteKontak, bulkDeleteKontak, type Kontak,
 } from "@/lib/kontak-api"
-import { KontakSheet } from "@/components/kontak-sheet"
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -74,6 +75,8 @@ import {
 } from "lucide-react"
 
 export function KontakTable() {
+  const { can } = useAuth()
+  const router = useRouter()
   const [data, setData] = useState<Kontak[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -86,8 +89,6 @@ export function KontakTable() {
     pageIndex: 0,
     pageSize: 10,
   })
-  const [sheetOpen, setSheetOpen] = useState(false)
-  const [editItem, setEditItem] = useState<Kontak | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<Kontak | null>(null)
@@ -181,7 +182,7 @@ export function KontakTable() {
       },
       {
         accessorKey: "contactable.nama",
-        header: "Vendor",
+        header: "Entity",
         cell: ({ row }) => row.original.contactable?.nama || "-",
       },
       {
@@ -244,26 +245,29 @@ export function KontakTable() {
                 <span className="sr-only">Open menu</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-32">
-                <DropdownMenuItem
-                  onClick={() => {
-                    setEditItem(row.original)
-                    setSheetOpen(true)
-                  }}
-                >
-                  <PencilIcon />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => {
-                    setDeletingItem(row.original)
-                    setDeleteDialogOpen(true)
-                  }}
-                >
-                  <Trash2Icon />
-                  Delete
-                </DropdownMenuItem>
+                {can("master.kontak.edit") && (
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/kontak/${row.original.id}/edit`)}
+                  >
+                    <PencilIcon />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {can("master.kontak.delete") && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => {
+                        setDeletingItem(row.original)
+                        setDeleteDialogOpen(true)
+                      }}
+                    >
+                      <Trash2Icon />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -308,7 +312,7 @@ export function KontakTable() {
             }}
             className="h-8 w-full max-w-sm pl-8"
           />
-          {selectedCount > 0 && (
+          {can("master.kontak.delete") && selectedCount > 0 && (
             <Button
               variant="destructive"
               size="sm"
@@ -345,18 +349,17 @@ export function KontakTable() {
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8"
-            onClick={() => {
-              setEditItem(null)
-              setSheetOpen(true)
-            }}
-          >
-            <PlusIcon />
-            <span className="hidden lg:inline">Add Kontak</span>
-          </Button>
+          {can("master.kontak.create") && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => router.push("/kontak/create")}
+            >
+              <PlusIcon />
+              <span className="hidden lg:inline">Add Kontak</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -578,15 +581,6 @@ export function KontakTable() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <KontakSheet
-        open={sheetOpen}
-        onOpenChange={(open) => {
-          if (!open) setEditItem(null)
-          setSheetOpen(open)
-        }}
-        onSuccess={loadData}
-        editItem={editItem}
-      />
     </div>
   )
 }

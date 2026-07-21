@@ -60,6 +60,8 @@ export function RiwayatPengambilanTable() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [sorting, setSorting] = useState<SortingState>([])
   const [pagination, setPagination] = useState({
@@ -76,6 +78,8 @@ export function RiwayatPengambilanTable() {
         page: pagination.pageIndex + 1,
         per_page: pagination.pageSize,
         search,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
         sort_field: sortField,
         sort_dir: sortDir,
       })
@@ -86,7 +90,7 @@ export function RiwayatPengambilanTable() {
     } finally {
       setLoading(false)
     }
-  }, [pagination.pageIndex, pagination.pageSize, search, sorting])
+  }, [pagination.pageIndex, pagination.pageSize, search, sorting, dateFrom, dateTo])
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -183,6 +187,25 @@ export function RiwayatPengambilanTable() {
               setPagination((prev) => ({ ...prev, pageIndex: 0 }))
             }}
             className="h-8 w-full max-w-sm pl-8"
+          />
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => {
+              setDateFrom(e.target.value)
+              setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+            }}
+            className="h-8 w-40"
+          />
+          <span className="text-xs text-muted-foreground">—</span>
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(e) => {
+              setDateTo(e.target.value)
+              setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+            }}
+            className="h-8 w-40"
           />
         </div>
         <div className="flex items-center gap-2">

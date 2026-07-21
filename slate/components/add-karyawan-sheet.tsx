@@ -11,7 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldLabel, FieldContent } from "@/components/ui/field"
+import { Field, FieldLabel, FieldContent, FieldDescription } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { createKaryawan, updateKaryawan, type Karyawan } from "@/lib/karyawan-api"
 
@@ -81,17 +81,19 @@ export function AddKaryawanSheet({ open, onOpenChange, onSuccess, editItem }: Ad
             <FieldContent>
               <Input id="nip" value={nip} onChange={(e) => setNip(e.target.value)} placeholder="Nomor Induk Pegawai" />
             </FieldContent>
+            <FieldDescription>Nomor identitas pegawai (opsional)</FieldDescription>
           </Field>
           <Field>
             <FieldLabel htmlFor="nama">Nama *</FieldLabel>
             <FieldContent>
-              <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama karyawan" required />
+              <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama lengkap karyawan" required />
             </FieldContent>
+            <FieldDescription>Nama lengkap karyawan</FieldDescription>
           </Field>
           <Field>
             <FieldLabel htmlFor="jabatan">Jabatan</FieldLabel>
             <FieldContent>
-              <Input id="jabatan" value={jabatan} onChange={(e) => setJabatan(e.target.value)} placeholder="Jabatan" />
+              <Input id="jabatan" value={jabatan} onChange={(e) => setJabatan(e.target.value)} placeholder="Posisi/jabatan" />
             </FieldContent>
           </Field>
           <Field>
@@ -107,6 +109,7 @@ export function AddKaryawanSheet({ open, onOpenChange, onSuccess, editItem }: Ad
                 Aktif
               </label>
             </FieldContent>
+            <FieldDescription>Nonaktifkan untuk menonaktifkan karyawan</FieldDescription>
           </Field>
           <div className="flex gap-2 justify-end pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Batal</Button>

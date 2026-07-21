@@ -67,3 +67,10 @@ export async function markAllAsRead(): Promise<void> {
     headers: await authHeaders(),
   })
 }
+
+export async function deleteNotification(id: string): Promise<void> {
+  await fetch(`${API_BASE}/notifications/${id}`, {
+    method: "DELETE",
+    headers: await authHeaders(),
+  })
+}

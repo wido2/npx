@@ -65,6 +65,7 @@ import {
   Columns3Icon,
   EllipsisVerticalIcon,
   ExternalLinkIcon,
+  HistoryIcon,
   PlusIcon,
   SearchIcon,
   Trash2Icon,
@@ -276,6 +277,9 @@ export function PengambilanBarangTable() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button variant="outline" size="sm" className="h-8" onClick={() => router.push("/pengambilan-barang/riwayat")}>
+            <HistoryIcon /> <span className="hidden lg:inline">Riwayat</span>
+          </Button>
           {can("pb.create") && (
             <Button variant="outline" size="sm" className="h-8" onClick={() => router.push("/pengambilan-barang/create")}>
               <PlusIcon /> <span className="hidden lg:inline">New PB</span>

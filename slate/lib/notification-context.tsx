@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react"
-import { fetchNotifications, fetchUnreadCount, markAllAsRead, markAsRead, type NotificationItem } from "@/lib/notification-api"
+import { deleteNotification, fetchNotifications, fetchUnreadCount, markAllAsRead, markAsRead, type NotificationItem } from "@/lib/notification-api"
 import { useAuth } from "@/lib/auth-context"
 
 interface NotificationContextValue {
@@ -12,6 +12,7 @@ interface NotificationContextValue {
   hasMore: boolean
   handleMarkAsRead: (id: string) => Promise<void>
   handleMarkAllAsRead: () => Promise<void>
+  handleDeleteNotification: (id: string) => Promise<void>
 }
 
 const NotificationContext = createContext<NotificationContextValue>({
@@ -22,6 +23,7 @@ const NotificationContext = createContext<NotificationContextValue>({
   hasMore: false,
   handleMarkAsRead: async () => {},
   handleMarkAllAsRead: async () => {},
+  handleDeleteNotification: async () => {},
 })
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
@@ -92,6 +94,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setUnreadCount(0)
   }, [])
 
+  const handleDeleteNotification = useCallback(async (id: string) => {
+    await deleteNotification(id)
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
+    setUnreadCount((prev) => Math.max(0, prev - 1))
+  }, [])
+
   return (
     <NotificationContext.Provider
       value={{
@@ -102,6 +110,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         hasMore,
         handleMarkAsRead,
         handleMarkAllAsRead,
+        handleDeleteNotification,
       }}
     >
       {children}

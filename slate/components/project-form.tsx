@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldContent, FieldLabel, FieldGroup } from "@/components/ui/field"
+import { Field, FieldContent, FieldLabel, FieldDescription } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Combobox } from "@/components/ui/combobox"
 import {
   Select,
   SelectContent,
@@ -41,7 +41,6 @@ export function ProjectForm({ projectId }: Props) {
   const [tanggalMulai, setTanggalMulai] = useState("")
   const [tanggalSelesai, setTanggalSelesai] = useState("")
   const [status, setStatus] = useState("aktif")
-  const [aktif, setAktif] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
   const loadRefs = useCallback(async () => {
@@ -71,7 +70,6 @@ export function ProjectForm({ projectId }: Props) {
       setTanggalMulai(project.tanggal_mulai || "")
       setTanggalSelesai(project.tanggal_selesai || "")
       setStatus(project.status)
-      setAktif(project.aktif)
     } catch {
       toast.error("Failed to load project")
       router.push("/project")
@@ -103,7 +101,6 @@ export function ProjectForm({ projectId }: Props) {
         tanggal_mulai: tanggalMulai || undefined,
         tanggal_selesai: tanggalSelesai || undefined,
         status,
-        aktif,
       }
       if (isEdit && projectId) {
         await updateProject(projectId, payload)
@@ -135,113 +132,121 @@ export function ProjectForm({ projectId }: Props) {
           <p className="text-muted-foreground">{isEdit ? "Update project information" : "Create a new project"}</p>
         </div>
       </div>
-      <Card>
-        <CardHeader><CardTitle>Project Information</CardTitle></CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <FieldGroup>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field>
-                  <FieldLabel htmlFor="kode">Kode *</FieldLabel>
-                  <FieldContent>
-                    <Input id="kode" value={kode} onChange={(e) => setKode(e.target.value)} required />
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="nama">Nama *</FieldLabel>
-                  <FieldContent>
-                    <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} required />
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="client_id">Client *</FieldLabel>
-                  <FieldContent>
-                    <Select value={clientId} onValueChange={(v) => v && setClientId(v)} required>
-                      <SelectTrigger id="client_id">
-                        <SelectValue placeholder="Select client..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clients.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{c.kode} - {c.nama}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="unit_id">Unit *</FieldLabel>
-                  <FieldContent>
-                    <Select value={unitId} onValueChange={(v) => v && setUnitId(v)} required>
-                      <SelectTrigger id="unit_id">
-                        <SelectValue placeholder="Select unit..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {units.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>{u.nama}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="status">Status</FieldLabel>
-                  <FieldContent>
-                    <Select value={status} onValueChange={(v) => v && setStatus(v)}>
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Select status..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="aktif">Aktif</SelectItem>
-                        <SelectItem value="selesai">Selesai</SelectItem>
-                        <SelectItem value="ditunda">Ditunda</SelectItem>
-                        <SelectItem value="dibatalkan">Dibatalkan</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="nilai_kontrak">Nilai Kontrak</FieldLabel>
-                  <FieldContent>
-                    <Input id="nilai_kontrak" type="number" step="1" value={nilaiKontrak} onChange={(e) => setNilaiKontrak(e.target.value)} />
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="tanggal_mulai">Tanggal Mulai</FieldLabel>
-                  <FieldContent>
-                    <Input id="tanggal_mulai" type="date" value={tanggalMulai} onChange={(e) => setTanggalMulai(e.target.value)} />
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="tanggal_selesai">Tanggal Selesai</FieldLabel>
-                  <FieldContent>
-                    <Input id="tanggal_selesai" type="date" value={tanggalSelesai} onChange={(e) => setTanggalSelesai(e.target.value)} />
-                  </FieldContent>
-                </Field>
-              </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card>
+          <CardHeader><CardTitle>Informasi Project</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="kode">Kode Project *</FieldLabel>
+                <FieldContent>
+                  <Input id="kode" value={kode} onChange={(e) => setKode(e.target.value)} placeholder="Kode unik project" required />
+                </FieldContent>
+                <FieldDescription>Kode identifikasi untuk project</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="nama">Nama Project *</FieldLabel>
+                <FieldContent>
+                  <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama lengkap project" required />
+                </FieldContent>
+                <FieldDescription>Nama project yang akan dikerjakan</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="client_id">Client *</FieldLabel>
+                <FieldContent>
+                  <Combobox
+                    options={clients.map((c) => ({ value: c.id, label: `${c.kode} - ${c.nama}` }))}
+                    value={clientId}
+                    onValueChange={(v) => setClientId(v)}
+                    placeholder="Pilih client..."
+                    searchPlaceholder="Cari client..."
+                  />
+                </FieldContent>
+                <FieldDescription>Client yang memiliki project ini</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="unit_id">Unit *</FieldLabel>
+                <FieldContent>
+                  <Combobox
+                    options={units.map((u) => ({ value: u.id, label: u.nama }))}
+                    value={unitId}
+                    onValueChange={(v) => setUnitId(v)}
+                    placeholder="Pilih unit..."
+                    searchPlaceholder="Cari unit..."
+                  />
+                </FieldContent>
+                <FieldDescription>Unit divisi yang mengerjakan project</FieldDescription>
+              </Field>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Detail Project</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="status">Status</FieldLabel>
+                <FieldContent>
+                  <Select value={status} onValueChange={(v) => v && setStatus(v)}>
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Pilih status..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="aktif">Aktif</SelectItem>
+                      <SelectItem value="selesai">Selesai</SelectItem>
+                      <SelectItem value="ditunda">Ditunda</SelectItem>
+                      <SelectItem value="dibatalkan">Dibatalkan</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FieldContent>
+                <FieldDescription>Status terkini dari project</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="nilai_kontrak">Nilai Kontrak</FieldLabel>
+                <FieldContent>
+                  <Input id="nilai_kontrak" type="number" step="1" value={nilaiKontrak} onChange={(e) => setNilaiKontrak(e.target.value)} placeholder="0" />
+                </FieldContent>
+                <FieldDescription>Nilai kontrak project dalam Rupiah</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="tanggal_mulai">Tanggal Mulai</FieldLabel>
+                <FieldContent>
+                  <Input id="tanggal_mulai" type="date" value={tanggalMulai} onChange={(e) => setTanggalMulai(e.target.value)} />
+                </FieldContent>
+                <FieldDescription>Tanggal dimulainya project</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="tanggal_selesai">Tanggal Selesai</FieldLabel>
+                <FieldContent>
+                  <Input id="tanggal_selesai" type="date" value={tanggalSelesai} onChange={(e) => setTanggalSelesai(e.target.value)} />
+                </FieldContent>
+                <FieldDescription>Target tanggal selesai project</FieldDescription>
+              </Field>
+            </div>
+            <div className="mt-4">
               <Field>
                 <FieldLabel htmlFor="deskripsi">Deskripsi</FieldLabel>
                 <FieldContent>
-                  <Textarea id="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} />
+                  <Textarea id="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} placeholder="Deskripsi dan ruang lingkup project" />
                 </FieldContent>
+                <FieldDescription>Informasi tambahan tentang project</FieldDescription>
               </Field>
-              <Field>
-                <FieldContent>
-                  <label className="flex items-center gap-2">
-                    <Checkbox checked={aktif} onCheckedChange={(v) => setAktif(!!v)} />
-                    <span className="text-xs">Active</span>
-                  </label>
-                </FieldContent>
-              </Field>
-            </FieldGroup>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => router.push("/project")}>Cancel</Button>
-              <Button type="submit" disabled={submitting}>
-                <SaveIcon /> {submitting ? "Saving..." : "Save"}
-              </Button>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/30 px-6 py-4">
+          <p className="text-sm text-muted-foreground">Pastikan semua data telah diisi dengan benar</p>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" onClick={() => router.push("/project")}>Batal</Button>
+            <Button type="submit" disabled={submitting}>
+              <SaveIcon /> {submitting ? "Menyimpan..." : "Simpan"}
+            </Button>
+          </div>
+        </div>
+      </form>
     </div>
   )
 }

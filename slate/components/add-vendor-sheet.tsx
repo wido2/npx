@@ -11,7 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Field, FieldLabel, FieldContent, FieldGroup } from "@/components/ui/field"
+import { Field, FieldLabel, FieldContent, FieldDescription, FieldGroup } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -106,27 +106,30 @@ export function AddVendorSheet({ open, onOpenChange, onSuccess, editItem }: AddV
             <Field>
               <FieldLabel htmlFor="kode">Kode *</FieldLabel>
               <FieldContent>
-                <Input id="kode" value={kode} onChange={(e) => setKode(e.target.value)} required />
+                <Input id="kode" value={kode} onChange={(e) => setKode(e.target.value)} placeholder="Kode unik vendor" required />
               </FieldContent>
+              <FieldDescription>Kode identifikasi untuk vendor</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="nama">Nama *</FieldLabel>
               <FieldContent>
-                <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} required />
+                <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama lengkap vendor" required />
               </FieldContent>
+              <FieldDescription>Nama perusahaan atau perorangan</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="npwp">NPWP</FieldLabel>
               <FieldContent>
-                <Input id="npwp" value={npwp} onChange={(e) => setNpwp(e.target.value)} />
+                <Input id="npwp" value={npwp} onChange={(e) => setNpwp(e.target.value)} placeholder="XX.XXX.XXX.X-XXX.XXX" />
               </FieldContent>
+              <FieldDescription>Nomor Pokok Wajib Pajak (opsional)</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="tipe">Tipe *</FieldLabel>
               <FieldContent>
                 <Select value={tipe} onValueChange={(v) => v && setTipe(v)} required>
                   <SelectTrigger id="tipe">
-                    <SelectValue placeholder="Select type..." />
+                    <SelectValue placeholder="Pilih tipe..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="supplier">Supplier</SelectItem>
@@ -135,11 +138,12 @@ export function AddVendorSheet({ open, onOpenChange, onSuccess, editItem }: AddV
                   </SelectContent>
                 </Select>
               </FieldContent>
+              <FieldDescription>Jenis vendor: supplier, konsumen, atau keduanya</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="keterangan">Keterangan</FieldLabel>
               <FieldContent>
-                <Textarea id="keterangan" value={keterangan} onChange={(e) => setKeterangan(e.target.value)} />
+                <Textarea id="keterangan" value={keterangan} onChange={(e) => setKeterangan(e.target.value)} placeholder="Catatan tambahan tentang vendor" />
               </FieldContent>
             </Field>
             <Field>
@@ -149,6 +153,7 @@ export function AddVendorSheet({ open, onOpenChange, onSuccess, editItem }: AddV
                   <span className="text-xs">Active</span>
                 </label>
               </FieldContent>
+              <FieldDescription>Nonaktifkan untuk menyembunyikan vendor</FieldDescription>
             </Field>
           </FieldGroup>
           <div className="flex justify-end gap-2 pt-2">
