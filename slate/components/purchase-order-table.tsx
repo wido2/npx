@@ -276,7 +276,7 @@ export function PurchaseOrderTable() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="relative flex flex-1 items-center gap-2">
           <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search kode or vendor..." value={search} onChange={(e) => { setSorting([]); setSearch(e.target.value); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }} className="h-8 w-full max-w-sm pl-8" />
