@@ -167,17 +167,31 @@ export function ProjectTable() {
       ),
       enableSorting: false, enableHiding: false,
     },
+    {
+      id: "client",
+      header: ({ column }) => (
+        <div className="flex flex-col gap-1">
+          <span>Klien</span>
+          <Input
+            placeholder="Cari klien..."
+            value={(column.getFilterValue() as string) ?? ""}
+            onChange={(e) => column.setFilterValue(e.target.value)}
+            className="h-6 text-xs"
+          />
+        </div>
+      ),
+      cell: ({ row }) => row.original.client?.nama || "-",
+      filterFn: (row, _columnId, filterValue: string) => {
+        const nama = row.original.client?.nama || ""
+        return nama.toLowerCase().includes(filterValue.toLowerCase())
+      },
+    },
     { accessorKey: "kode", header: "Kode" },
-    { accessorKey: "nama", header: "Nama" },
+    { accessorKey: "nama", header: "Nama Proyek" },
     {
       accessorKey: "jumlah",
       header: "Jumlah",
       cell: ({ row }) => row.original.jumlah ?? "-",
-    },
-    {
-      accessorKey: "client",
-      header: "Client",
-      cell: ({ row }) => row.original.client?.nama || "-",
     },
     {
       accessorKey: "unit",
