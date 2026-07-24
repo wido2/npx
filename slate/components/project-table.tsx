@@ -87,6 +87,7 @@ export function ProjectTable() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [clientSearch, setClientSearch] = useState("")
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -106,6 +107,7 @@ export function ProjectTable() {
         page: pagination.pageIndex + 1,
         per_page: pagination.pageSize,
         search,
+        client_search: clientSearch || undefined,
         sort_field: sortField,
         sort_dir: sortDir,
       })
@@ -116,7 +118,7 @@ export function ProjectTable() {
     } finally {
       setLoading(false)
     }
-  }, [pagination.pageIndex, pagination.pageSize, search, sorting])
+  }, [pagination.pageIndex, pagination.pageSize, search, clientSearch, sorting])
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -168,23 +170,9 @@ export function ProjectTable() {
       enableSorting: false, enableHiding: false,
     },
     {
-      id: "client",
-      header: ({ column }) => (
-        <div className="flex flex-col gap-1">
-          <span>Klien</span>
-          <Input
-            placeholder="Cari klien..."
-            value={(column.getFilterValue() as string) ?? ""}
-            onChange={(e) => column.setFilterValue(e.target.value)}
-            className="h-6 text-xs"
-          />
-        </div>
-      ),
+      accessorKey: "client",
+      header: "Klien",
       cell: ({ row }) => row.original.client?.nama || "-",
-      filterFn: (row, _columnId, filterValue: string) => {
-        const nama = row.original.client?.nama || ""
-        return nama.toLowerCase().includes(filterValue.toLowerCase())
-      },
     },
     { accessorKey: "kode", header: "Kode" },
     { accessorKey: "nama", header: "Nama Proyek" },
@@ -275,6 +263,12 @@ export function ProjectTable() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <Input
+            placeholder="Cari klien..."
+            value={clientSearch}
+            onChange={(e) => { setClientSearch(e.target.value); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}
+            className="h-8 w-40"
+          />
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="h-8" />}>
               <Columns3Icon /> Columns <ChevronDownIcon />

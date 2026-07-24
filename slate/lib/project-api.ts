@@ -42,6 +42,7 @@ export async function fetchProjects(params?: {
   page?: number
   per_page?: number
   search?: string
+  client_search?: string
   sort_field?: string
   sort_dir?: string
 }): Promise<PaginatedResponse> {
@@ -49,6 +50,7 @@ export async function fetchProjects(params?: {
   if (params?.page) searchParams.set("page", String(params.page))
   if (params?.per_page) searchParams.set("per_page", String(params.per_page))
   if (params?.search) searchParams.set("search", params.search)
+  if (params?.client_search) searchParams.set("client_search", params.client_search)
   if (params?.sort_field) searchParams.set("sort_field", params.sort_field)
   if (params?.sort_dir) searchParams.set("sort_dir", params.sort_dir)
 

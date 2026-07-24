@@ -15,6 +15,7 @@ class ProjectController extends Controller
     {
         $perPage = $request->integer('per_page', 10);
         $search = $request->string('search', '');
+        $clientSearch = $request->string('client_search', '');
 
         $query = Project::with(['client', 'unit']);
 
@@ -23,6 +24,10 @@ class ProjectController extends Controller
                 $q->where('kode', 'ilike', "%{$search}%")
                     ->orWhere('nama', 'ilike', "%{$search}%");
             });
+        }
+
+        if ($clientSearch) {
+            $query->whereHas('client', fn($q) => $q->where('nama', 'ilike', "%{$clientSearch}%"));
         }
 
         $sortField = $request->string('sort_field', 'created_at');
