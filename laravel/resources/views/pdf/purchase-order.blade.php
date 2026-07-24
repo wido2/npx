@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <title>Purchase Order - {{ $po->kode ?? 'Draft' }}</title>
 <style>
-  @page { margin: 15mm 12mm; }
+  @page { margin: 20mm 12mm 15mm; }
+  html, body { height: 100%; margin: 0; padding: 0; }
   body {
     font-family: '{{ $setting['font_family'] ?? 'Segoe UI' }}', 'DejaVu Sans', sans-serif;
     font-size: {{ $setting['font_size_base'] ?? 9 }}pt;
@@ -12,6 +13,9 @@
     line-height: 1.5;
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
   }
   table { width: 100%; border-collapse: collapse; }
   td, th { padding: 3px 5px; vertical-align: top; }
@@ -110,7 +114,11 @@
   .extra-section .label { font-weight: 600; color: #333; }
 
   /* ─── SIGNATURE BOXES ─── */
-  .signature-section { margin-top: 20px; }
+  .signature-section {
+    flex-shrink: 0;
+    page-break-inside: avoid;
+    padding-top: 20px;
+  }
   .signature-table { border-collapse: separate; border-spacing: 6px; width: 100%; }
   .signature-box { border: 1px solid #ddd; border-radius: 3px; width: 24%; height: 105px; padding: 0; vertical-align: top; }
   .signature-label {
@@ -130,16 +138,24 @@
 
   /* ─── FOOTER ─── */
   .footer-text {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     font-size: 6.5pt;
     text-align: center;
     color: #bbb;
-    margin-top: 14px;
     border-top: 1px solid #eee;
-    padding-top: 6px;
+    padding: 6px 12mm 3px;
+  }
+  .page-content {
+    flex: 1 0 auto;
   }
 </style>
 </head>
 <body>
+
+<div class="page-content">
 
 {{-- HEADER --}}
 <table class="header-table">
@@ -348,6 +364,8 @@
   @endif
 </div>
 @endif
+
+</div>{{-- /page-content --}}
 
 {{-- SIGNATURE --}}
 @if ($setting['tampilkan_ttd'] ?? true)
