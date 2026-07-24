@@ -88,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('harga-update', [\App\Http\Controllers\HargaUpdateController::class, 'index']);
     Route::post('harga-update', [\App\Http\Controllers\HargaUpdateController::class, 'store']);
     Route::get('harga-update/{hargaUpdate}', [\App\Http\Controllers\HargaUpdateController::class, 'show']);
+    Route::get('riwayat-harga/terbaru', [\App\Http\Controllers\HargaUpdateController::class, 'riwayatTerbaru']);
 
     // ——— Harga Supplier ———
     Route::get('harga-supplier', [HargaSupplierController::class, 'index']);

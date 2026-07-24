@@ -65,6 +65,24 @@ export async function fetchHargaUpdate(id: string): Promise<HargaUpdate> {
   return res.json()
 }
 
+export interface RiwayatHargaItem {
+  id: string
+  barang_id: string
+  harga_beli_lama: number
+  harga_beli_baru: number
+  created_at: string
+  barang?: { id: string; kode: string; nama: string; unit?: { id: string; singkatan: string } }
+  dibuat_oleh?: { id: string; name: string }
+}
+
+export async function fetchRiwayatHargaTerbaru(): Promise<RiwayatHargaItem[]> {
+  const res = await authFetch(`${API_BASE}/riwayat-harga/terbaru`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch riwayat harga (${res.status})`)
+  return res.json()
+}
+
 export async function createHargaUpdate(data: {
   vendor_id: string
   keterangan?: string

@@ -46,6 +46,26 @@ class HargaUpdateController extends Controller
         ]);
     }
 
+    public function riwayatTerbaru(Request $request): JsonResponse
+    {
+        if (!$request->user()->can('master.barang.view')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $data = RiwayatHarga::with(['barang:id,kode,nama,unit_id', 'barang.unit:id,singkatan', 'dibuatOleh:id,name'])
+            ->whereRaw('id IN (
+                SELECT r2.id FROM riwayat_hargas r2
+                WHERE r2.barang_id = riwayat_hargas.barang_id
+                ORDER BY r2.created_at DESC, r2.id DESC
+                LIMIT 1
+            )')
+            ->orderBy('created_at', 'desc')
+            ->take(6)
+            ->get();
+
+        return response()->json($data);
+    }
+
     public function show(Request $request, HargaUpdate $hargaUpdate): JsonResponse
     {
         if (!$request->user()->can('master.barang.view')) {

@@ -2,34 +2,35 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { fetchHargaUpdates, type HargaUpdate } from "@/lib/harga-update-api"
+import { fetchRiwayatHargaTerbaru, type RiwayatHargaItem } from "@/lib/harga-update-api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { LoaderIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { LoaderIcon, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
 
 export function RecentHargaUpdate() {
   const { can } = useAuth()
-  const router = useRouter()
-  const [data, setData] = useState<HargaUpdate[]>([])
+  const [data, setData] = useState<RiwayatHargaItem[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!can("widget.recent_harga_update")) return
-    fetchHargaUpdates({ per_page: 5 })
-      .then((res) => setData(res.data))
+    fetchRiwayatHargaTerbaru()
+      .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [can])
 
   if (!can("widget.recent_harga_update")) return null
 
+  const diff = (item: RiwayatHargaItem) => item.harga_beli_baru - item.harga_beli_lama
+  const naik = (item: RiwayatHargaItem) => diff(item) > 0
+  const turun = (item: RiwayatHargaItem) => diff(item) < 0
+
   return (
     <Card>
-      <CardHeader className="cursor-pointer" onClick={() => router.push("/barang/harga/update")}>
+      <CardHeader>
         <CardTitle className="text-base">Harga Terupdate</CardTitle>
-        <CardDescription>5 Harga Update terakhir</CardDescription>
+        <CardDescription>6 perubahan harga terakhir per barang</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         {loading ? (
@@ -42,19 +43,28 @@ export function RecentHargaUpdate() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Kode</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Item</TableHead>
-                <TableHead>Dibuat</TableHead>
+                <TableHead>Barang</TableHead>
+                <TableHead>Harga Lama</TableHead>
+                <TableHead>Harga Baru</TableHead>
+                <TableHead>Selisih</TableHead>
+                <TableHead>Tanggal</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((hu) => (
-                <TableRow key={hu.id} className="cursor-pointer" onClick={() => router.push(`/barang/harga/update/${hu.id}`)}>
-                  <TableCell className="font-medium">{hu.kode || "—"}</TableCell>
-                  <TableCell>{hu.vendor?.nama || "—"}</TableCell>
-                  <TableCell className="tabular-nums">{hu.riwayat?.length || 0}</TableCell>
-                  <TableCell>{new Date(hu.created_at).toLocaleDateString("id-ID")}</TableCell>
+              {data.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">
+                    {item.barang?.kode || "—"} - {item.barang?.nama || "—"}
+                  </TableCell>
+                  <TableCell className="tabular-nums">{item.harga_beli_lama.toLocaleString("id-ID")}</TableCell>
+                  <TableCell className="tabular-nums font-semibold">{item.harga_beli_baru.toLocaleString("id-ID")}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center gap-1 tabular-nums ${naik(item) ? "text-emerald-600" : turun(item) ? "text-red-600" : ""}`}>
+                      {naik(item) ? <TrendingUpIcon className="size-3.5" /> : turun(item) ? <TrendingDownIcon className="size-3.5" /> : null}
+                      {diff(item) > 0 ? "+" : ""}{diff(item).toLocaleString("id-ID")}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{new Date(item.created_at).toLocaleDateString("id-ID")}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
