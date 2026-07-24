@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Pengambilan Barang - {{ $pb->kode }}</title>
 <style>
-  @page { margin: 20mm 12mm 15mm; }
+  @page { margin: 25mm 15mm 18mm; }
   html, body { height: 100%; margin: 0; padding: 0; }
   body {
     font-family: 'Segoe UI', 'DejaVu Sans', sans-serif;
