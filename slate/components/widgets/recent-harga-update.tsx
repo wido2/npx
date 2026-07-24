@@ -22,6 +22,7 @@ export function RecentHargaUpdate() {
 
   if (!can("widget.recent_harga_update")) return null
 
+  const fmt = (n: number) => new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)
   const diff = (item: RiwayatHargaItem) => item.harga_beli_baru - item.harga_beli_lama
   const naik = (item: RiwayatHargaItem) => diff(item) > 0
   const turun = (item: RiwayatHargaItem) => diff(item) < 0
@@ -56,12 +57,12 @@ export function RecentHargaUpdate() {
                   <TableCell className="font-medium">
                     {item.barang?.kode || "—"} - {item.barang?.nama || "—"}
                   </TableCell>
-                  <TableCell className="tabular-nums">{item.harga_beli_lama.toLocaleString("id-ID")}</TableCell>
-                  <TableCell className="tabular-nums font-semibold">{item.harga_beli_baru.toLocaleString("id-ID")}</TableCell>
+                  <TableCell className="tabular-nums">{fmt(item.harga_beli_lama)}</TableCell>
+                  <TableCell className="tabular-nums font-semibold">{fmt(item.harga_beli_baru)}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center gap-1 tabular-nums ${naik(item) ? "text-emerald-600" : turun(item) ? "text-red-600" : ""}`}>
                       {naik(item) ? <TrendingUpIcon className="size-3.5" /> : turun(item) ? <TrendingDownIcon className="size-3.5" /> : null}
-                      {diff(item) > 0 ? "+" : ""}{diff(item).toLocaleString("id-ID")}
+                      {diff(item) > 0 ? "+" : ""}{fmt(diff(item))}
                     </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{new Date(item.created_at).toLocaleDateString("id-ID")}</TableCell>

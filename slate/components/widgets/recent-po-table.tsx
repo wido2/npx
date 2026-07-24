@@ -25,6 +25,8 @@ export function RecentPoTable() {
 
   if (!can("widget.recent_po")) return null
 
+  const fmt = (n: number) => new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)
+
   const statusColor: Record<string, string> = {
     draft: "secondary",
     dikirim: "secondary",
@@ -55,6 +57,7 @@ export function RecentPoTable() {
                 <TableHead>Vendor</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Pembuat</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -62,10 +65,11 @@ export function RecentPoTable() {
                 <TableRow key={po.id} className="cursor-pointer" onClick={() => router.push(`/purchase-order/${po.id}`)}>
                   <TableCell className="font-medium">{po.kode || "—"}</TableCell>
                   <TableCell>{po.vendor?.nama || "—"}</TableCell>
-                  <TableCell className="tabular-nums">{po.total.toLocaleString("id-ID")}</TableCell>
+                  <TableCell className="tabular-nums">{fmt(po.total)}</TableCell>
                   <TableCell>
                     <Badge variant={(statusColor[po.status] || "secondary") as any}>{po.status}</Badge>
                   </TableCell>
+                  <TableCell className="text-muted-foreground">{po.dibuat_oleh_user?.name || "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

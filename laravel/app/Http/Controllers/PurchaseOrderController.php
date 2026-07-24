@@ -44,6 +44,7 @@ class PurchaseOrderController extends Controller
             'vendor:id,kode,nama',
             'client:id,kode,nama',
             'project:id,kode,nama',
+            'dibuatOleh:id,name',
         ]);
 
         if (!$request->user()->can('po.view_all')) {
