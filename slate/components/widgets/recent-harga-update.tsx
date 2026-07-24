@@ -45,9 +45,9 @@ export function RecentHargaUpdate() {
             <TableHeader>
               <TableRow>
                 <TableHead>Barang</TableHead>
-                <TableHead>Harga Lama</TableHead>
-                <TableHead>Harga Baru</TableHead>
-                <TableHead>Selisih</TableHead>
+                <TableHead className="text-right">Harga Lama</TableHead>
+                <TableHead className="text-right">Harga Baru</TableHead>
+                <TableHead className="text-right">Selisih</TableHead>
                 <TableHead>Tanggal</TableHead>
               </TableRow>
             </TableHeader>
@@ -57,9 +57,9 @@ export function RecentHargaUpdate() {
                   <TableCell className="font-medium">
                     {item.barang?.kode || "—"} - {item.barang?.nama || "—"}
                   </TableCell>
-                  <TableCell className="tabular-nums">{fmt(item.harga_beli_lama)}</TableCell>
-                  <TableCell className="tabular-nums font-semibold">{fmt(item.harga_beli_baru)}</TableCell>
-                  <TableCell>
+                  <TableCell className="tabular-nums text-right">{fmt(item.harga_beli_lama)}</TableCell>
+                  <TableCell className="tabular-nums font-semibold text-right">{fmt(item.harga_beli_baru)}</TableCell>
+                  <TableCell className="text-right">
                     <span className={`inline-flex items-center gap-1 tabular-nums ${naik(item) ? "text-emerald-600" : turun(item) ? "text-red-600" : ""}`}>
                       {naik(item) ? <TrendingUpIcon className="size-3.5" /> : turun(item) ? <TrendingDownIcon className="size-3.5" /> : null}
                       {diff(item) > 0 ? "+" : ""}{fmt(diff(item))}

@@ -47,6 +47,8 @@ export function AgingPoTable() {
 
   if (!can("widget.aging_po")) return null
 
+  const fmt = (n: number) => new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)
+
   const statusColor: Record<string, string> = {
     draft: "secondary",
     dikirim: "secondary",
@@ -75,7 +77,7 @@ export function AgingPoTable() {
               <TableRow>
                 <TableHead>Kode</TableHead>
                 <TableHead>Vendor</TableHead>
-                <TableHead>Total</TableHead>
+                <TableHead className="text-right">Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Hari</TableHead>
               </TableRow>
@@ -85,7 +87,7 @@ export function AgingPoTable() {
                 <TableRow key={po.id} className="cursor-pointer" onClick={() => router.push(`/purchase-order/${po.id}`)}>
                   <TableCell className="font-medium">{po.kode || "—"}</TableCell>
                   <TableCell>{po.vendor_nama}</TableCell>
-                  <TableCell className="tabular-nums">{po.total.toLocaleString("id-ID")}</TableCell>
+                  <TableCell className="tabular-nums text-right">{fmt(po.total)}</TableCell>
                   <TableCell>
                     <Badge variant={(statusColor[po.status] || "secondary") as any}>{po.status}</Badge>
                   </TableCell>
