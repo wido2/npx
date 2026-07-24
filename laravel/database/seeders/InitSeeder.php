@@ -66,11 +66,10 @@ class InitSeeder extends Seeder
             'notification.stock_opname', 'notification.vendor_price_changed',
             'notification.project_created', 'notification.client_created',
 
-            'widget.chart_area_interactive', 'widget.data_table',
-            'widget.report_cards', 'widget.inventory_laporan', 'widget.barang_history',
-            'widget.barang_overview', 'widget.po_overview', 'widget.barang_report_cards',
+            'widget.chart_area_interactive',
+            'widget.barang_overview', 'widget.po_overview',
             'widget.vendor_summary', 'widget.client_summary', 'widget.project_summary', 'widget.karyawan_summary',
-            
+
             'widget.recent_po', 'widget.recent_pb', 'widget.aging_po', 'widget.top_vendor', 'widget.low_stock', 'widget.recent_harga_update',
             'widget.aktivitas_terbaru',
         ];
@@ -96,12 +95,11 @@ class InitSeeder extends Seeder
             'master.karyawan.view', 'master.karyawan.create', 'master.karyawan.edit', 'master.karyawan.delete',
             'master.alamat.view', 'master.kontak.view',
             'reports.view',
-            'widget.chart_area_interactive', 'widget.data_table',
-            'widget.report_cards', 'widget.inventory_laporan', 'widget.barang_history',
+            'widget.chart_area_interactive',
             'widget.barang_overview',
             'widget.vendor_summary', 'widget.client_summary', 'widget.project_summary', 'widget.karyawan_summary',
-            
-            'widget.recent_po', 'widget.recent_pb', 'widget.aktivitas_terbaru',
+
+            'widget.recent_po', 'widget.recent_pb', 'widget.recent_harga_update', 'widget.aktivitas_terbaru',
         ]);
 
         $admin = User::where('email', 'admin@gmail.com')->first();
