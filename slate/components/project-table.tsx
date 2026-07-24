@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { Combobox } from "@/components/ui/combobox"
+import { fetchClients } from "@/lib/client-api"
 import {
   flexRender,
   getCoreRowModel,
@@ -87,7 +89,8 @@ export function ProjectTable() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
-  const [clientSearch, setClientSearch] = useState("")
+  const [clientId, setClientId] = useState("")
+  const [clients, setClients] = useState<{ id: string; kode: string; nama: string }[]>([])
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -107,7 +110,7 @@ export function ProjectTable() {
         page: pagination.pageIndex + 1,
         per_page: pagination.pageSize,
         search,
-        client_search: clientSearch || undefined,
+        client_id: clientId || undefined,
         sort_field: sortField,
         sort_dir: sortDir,
       })
@@ -118,7 +121,13 @@ export function ProjectTable() {
     } finally {
       setLoading(false)
     }
-  }, [pagination.pageIndex, pagination.pageSize, search, clientSearch, sorting])
+  }, [pagination.pageIndex, pagination.pageSize, search, clientId, sorting])
+
+  useEffect(() => {
+    fetchClients({ per_page: 200 })
+      .then((res) => setClients(res.data))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -263,11 +272,13 @@ export function ProjectTable() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Input
-            placeholder="Cari klien..."
-            value={clientSearch}
-            onChange={(e) => { setClientSearch(e.target.value); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}
-            className="h-8 w-40"
+          <Combobox
+            options={clients.map((c) => ({ value: c.id, label: c.nama }))}
+            value={clientId}
+            onValueChange={(v) => { setClientId(v); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}
+            placeholder="Filter klien..."
+            searchPlaceholder="Cari klien..."
+            className="w-48"
           />
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="h-8" />}>
