@@ -17,17 +17,15 @@ export const AVAILABLE_WIDGETS: WidgetDef[] = [
   { id: "karyawan-summary", title: "Ringkasan Karyawan", description: "Total karyawan aktif", permission: "widget.karyawan_summary", category: "stat", defaultEnabled: true },
 
   // Overview
-  { id: "section-cards", title: "Ringkasan Bisnis", description: "Gambaran umum bisnis (PO, Barang, Vendor, Client)", permission: "widget.section_cards", category: "overview", defaultEnabled: true },
   { id: "po-overview", title: "Overview PO", description: "Ringkasan status Purchase Order", permission: "widget.po_overview", category: "overview", defaultEnabled: true },
   { id: "barang-overview", title: "Overview Barang", description: "Ringkasan stok barang", permission: "widget.barang_overview", category: "overview", defaultEnabled: true },
 
   // Charts
   { id: "chart-po-harian", title: "Grafik PO per Hari", description: "Nilai PO harian (disetujui vs pending)", permission: "widget.chart_area_interactive", category: "chart", defaultEnabled: true },
-  { id: "po-status-chart", title: "Distribusi PO per Status", description: "Pie chart status PO", permission: "widget.po_status_chart", category: "chart", defaultEnabled: true },
-  { id: "barang-kategori-chart", title: "Distribusi Barang per Kategori", description: "Pie chart barang per kategori", permission: "widget.barang_kategori_chart", category: "chart", defaultEnabled: true },
 
   // Tables
   { id: "recent-po", title: "PO Terbaru", description: "5 Purchase Order terbaru", permission: "widget.recent_po", category: "table", defaultEnabled: true },
+  { id: "recent-harga-update", title: "Harga Terupdate", description: "5 Harga Update terakhir", permission: "widget.recent_harga_update", category: "table", defaultEnabled: true },
   { id: "recent-pb", title: "PB Terbaru", description: "5 Pengambilan Barang terbaru", permission: "widget.recent_pb", category: "table", defaultEnabled: true },
   { id: "aging-po", title: "Aging PO", description: "PO pending paling lama", permission: "widget.aging_po", category: "table", defaultEnabled: true },
   { id: "top-vendor", title: "Top Vendor by Nilai PO", description: "Vendor dengan nilai PO tertinggi", permission: "widget.top_vendor", category: "table", defaultEnabled: true },

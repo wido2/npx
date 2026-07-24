@@ -5,10 +5,12 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 export interface HargaUpdate {
   id: string
   kode: string
+  vendor_id: string
   keterangan: string | null
   created_by: string | null
   created_at: string
   updated_at: string
+  vendor?: { id: string; kode: string; nama: string }
   dibuat_oleh?: { id: string; name: string }
   riwayat?: HargaUpdateRiwayat[]
 }

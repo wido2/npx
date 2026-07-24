@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { SectionCards } from "@/components/section-cards"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { PurchaseOrderOverviewCards } from "@/components/purchase-order-overview-cards"
 import { BarangOverviewCards } from "@/components/barang-overview-cards"
@@ -10,13 +9,12 @@ import { VendorSummaryCard } from "@/components/widgets/vendor-summary-card"
 import { ClientSummaryCard } from "@/components/widgets/client-summary-card"
 import { ProjectSummaryCard } from "@/components/widgets/project-summary-card"
 import { KaryawanSummaryCard } from "@/components/widgets/karyawan-summary-card"
-import { PoStatusChart } from "@/components/widgets/po-status-chart"
-import { BarangKategoriChart } from "@/components/widgets/barang-kategori-chart"
 import { RecentPoTable } from "@/components/widgets/recent-po-table"
 import { RecentPbTable } from "@/components/widgets/recent-pb-table"
 import { AgingPoTable } from "@/components/widgets/aging-po-table"
 import { TopVendorTable } from "@/components/widgets/top-vendor-table"
 import { LowStockTable } from "@/components/widgets/low-stock-table"
+import { RecentHargaUpdate } from "@/components/widgets/recent-harga-update"
 import { AktivitasTerbaru } from "@/components/widgets/aktivitas-terbaru"
 import { DashboardWidgetConfig } from "@/components/dashboard-widget-config"
 import { AVAILABLE_WIDGETS, getEnabledWidgets } from "@/lib/dashboard-config"
@@ -29,25 +27,24 @@ const WIDGET_MAP: Record<string, React.FC> = {
   "client-summary": ClientSummaryCard,
   "project-summary": ProjectSummaryCard,
   "karyawan-summary": KaryawanSummaryCard,
-  "section-cards": SectionCards,
   "po-overview": PurchaseOrderOverviewCards,
   "barang-overview": BarangOverviewCards,
   "chart-po-harian": ChartAreaInteractive,
-  "po-status-chart": PoStatusChart,
-  "barang-kategori-chart": BarangKategoriChart,
   "recent-po": RecentPoTable,
   "recent-pb": RecentPbTable,
   "aging-po": AgingPoTable,
   "top-vendor": TopVendorTable,
   "low-stock": LowStockTable,
+  "recent-harga-update": RecentHargaUpdate,
   "aktivitas-terbaru": AktivitasTerbaru,
 }
 
 const GRID_CLASSES: Record<string, string> = {
   stat: "grid grid-cols-2 sm:grid-cols-4 gap-4",
   overview: "grid grid-cols-1 lg:grid-cols-2 gap-4",
-  chart: "grid grid-cols-1 lg:grid-cols-3 gap-4",
-  table: "grid grid-cols-1 lg:grid-cols-2 gap-4",
+  chart: "grid grid-cols-1 gap-4",
+  table: "",
+  table_rest: "grid grid-cols-1 lg:grid-cols-2 gap-4",
   activity: "",
 }
 
@@ -100,16 +97,34 @@ export default function Page() {
             <p>Memuat widget...</p>
           </div>
         ) : (
-          Object.entries(grouped).map(([category, widgets]) => (
-            <div key={category}>
-              <div className={GRID_CLASSES[category] || "grid grid-cols-1 gap-4"}>
-                {widgets.map(({ id, Comp }) => (
-                  <Comp key={id} />
-                ))}
+          Object.entries(grouped).map(([category, widgets]) => {
+            if (category === "activity") return null
+            if (category === "table") {
+              const FirstWidget = widgets[0]?.Comp
+              return (
+                <div key={category} className="flex flex-col gap-4">
+                  {FirstWidget && <FirstWidget />}
+                  {widgets.length > 1 && (
+                    <div className={GRID_CLASSES["table_rest"]}>
+                      {widgets.slice(1).map(({ id, Comp }) => (
+                        <Comp key={id} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+            return (
+              <div key={category}>
+                <div className={GRID_CLASSES[category] || "grid grid-cols-1 gap-4"}>
+                  {widgets.map(({ id, Comp }) => (
+                    <Comp key={id} />
+                  ))}
+                </div>
+                <div className="h-4" />
               </div>
-              {category !== "activity" && widgets.length > 0 && <div className="h-4" />}
-            </div>
-          ))
+            )
+          })
         )}
 
         {grouped.activity?.length > 0 && (

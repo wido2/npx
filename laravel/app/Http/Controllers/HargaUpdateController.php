@@ -23,11 +23,11 @@ class HargaUpdateController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        if (!$request->user()->can('master.barang.update_harga')) {
+        if (!$request->user()->can('master.barang.view')) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $query = HargaUpdate::with(['dibuatOleh', 'vendor:id,kode,nama'])
+        $query = HargaUpdate::with(['dibuatOleh', 'vendor:id,kode,nama', 'riwayat'])
             ->orderBy('created_at', 'desc');
 
         $perPage = min((int) ($request->query('per_page', 20)), 100);
@@ -48,7 +48,7 @@ class HargaUpdateController extends Controller
 
     public function show(Request $request, HargaUpdate $hargaUpdate): JsonResponse
     {
-        if (!$request->user()->can('master.barang.update_harga')) {
+        if (!$request->user()->can('master.barang.view')) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

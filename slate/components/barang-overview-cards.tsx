@@ -11,13 +11,9 @@ import {
   AlertTriangleIcon,
   XCircleIcon,
   CheckCircleIcon,
-  CoinsIcon,
   LoaderIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-const currency = (val: number) =>
-  `Rp${new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(val))}`
 
 export function BarangOverviewCards() {
   const { can } = useAuth()
@@ -42,8 +38,8 @@ export function BarangOverviewCards() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-        {[...Array(5)].map((_, i) => (
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
           <Card key={i}>
             <CardContent className="flex items-center justify-center py-8">
               <LoaderIcon className="size-5 animate-spin text-muted-foreground" />
@@ -55,7 +51,7 @@ export function BarangOverviewCards() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">Total Barang</CardTitle>
@@ -94,15 +90,6 @@ export function BarangOverviewCards() {
           <div className={cn("text-2xl font-bold tabular-nums", (summary?.stok_kosong || 0) > 0 ? "text-red-600" : "text-muted-foreground")}>
             {summary?.stok_kosong || 0}
           </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Total Nilai Stok</CardTitle>
-          <CoinsIcon className="size-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold tabular-nums">{currency(summary?.total_nilai_stok || 0)}</div>
         </CardContent>
       </Card>
     </div>
