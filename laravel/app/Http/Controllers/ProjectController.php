@@ -15,7 +15,7 @@ class ProjectController extends Controller
     {
         $perPage = $request->integer('per_page', 10);
         $search = $request->string('search', '');
-        $clientId = $request->string('client_id', '');
+        $clientId = $request->input('client_id', '');
 
         $query = Project::with(['client', 'unit']);
 
