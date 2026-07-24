@@ -31,6 +31,7 @@ export function Combobox({
   placeholder = "Pilih...",
   searchPlaceholder = "Cari...",
   emptyText = "Tidak ditemukan",
+  emptySlot,
   disabled,
   className,
 }: {
@@ -40,11 +41,14 @@ export function Combobox({
   placeholder?: string
   searchPlaceholder?: string
   emptyText?: string
+  emptySlot?: React.ReactNode | ((props: { close: () => void }) => React.ReactNode)
   disabled?: boolean
   className?: string
 }) {
   const [open, setOpen] = React.useState(false)
   const selected = options.find((o) => o.value === value)
+
+  const close = React.useCallback(() => setOpen(false), [])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -66,7 +70,7 @@ export function Combobox({
         >
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
-            <CommandEmpty>{emptyText}</CommandEmpty>
+            <CommandEmpty>{typeof emptySlot === "function" ? emptySlot({ close }) : (emptySlot || emptyText)}</CommandEmpty>
             <CommandGroup>
               {options.map((opt) => (
                 <CommandItem

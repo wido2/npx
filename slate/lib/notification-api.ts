@@ -74,3 +74,10 @@ export async function deleteNotification(id: string): Promise<void> {
     headers: await authHeaders(),
   })
 }
+
+export async function deleteAllNotifications(): Promise<void> {
+  await fetch(`${API_BASE}/notifications`, {
+    method: "DELETE",
+    headers: await authHeaders(),
+  })
+}

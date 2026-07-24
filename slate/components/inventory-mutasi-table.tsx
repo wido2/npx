@@ -38,6 +38,7 @@ import {
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
+  ExternalLinkIcon,
   SearchIcon,
 } from "lucide-react"
 import {
@@ -77,7 +78,7 @@ export function InventoryMutasiTable() {
       const res = await fetchMutasi({
         page: pagination.pageIndex + 1,
         per_page: pagination.pageSize,
-        barang_id: search || undefined,
+        search: search || undefined,
       })
       setData(res.data)
       setTotal(res.total)
@@ -155,12 +156,34 @@ export function InventoryMutasiTable() {
     },
     {
       accessorKey: "referensi_type",
-      header: "Referensi",
+      header: "Dokumen",
       cell: ({ row }) => {
         const ref = row.original.referensi_type
-        if (!ref) return "-"
-        const short = ref.split("\\").pop() || ref
-        return <span className="text-xs text-muted-foreground">{short}</span>
+        const refId = row.original.referensi_id
+        if (!ref || !refId) return "-"
+
+        const routeMap: Record<string, { path: string; label: string }> = {
+          "App\\Models\\PembelianLangsung": { path: "/pembelian-langsung", label: "PL" },
+          "App\\Models\\PengambilanBarang": { path: "/pengambilan-barang", label: "PB" },
+          "App\\Models\\PurchaseOrder": { path: "/purchase-order", label: "PO" },
+        }
+
+        const entry = routeMap[ref]
+        if (!entry) {
+          const short = ref.split("\\").pop() || ref
+          return <span className="text-xs text-muted-foreground">{short}</span>
+        }
+
+        return (
+          <a
+            href={`${entry.path}/${refId}`}
+            onClick={(e) => { e.stopPropagation(); router.push(`${entry.path}/${refId}`) }}
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            {entry.label}
+            <ExternalLinkIcon className="size-3" />
+          </a>
+        )
       },
     },
   ], [])

@@ -24,6 +24,7 @@ class InventoryController extends Controller
         }
 
         $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
             'barang_id' => 'nullable|exists:barangs,id',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
@@ -32,6 +33,12 @@ class InventoryController extends Controller
 
         if (!empty($validated['barang_id'])) {
             $query->where('barang_id', $validated['barang_id']);
+        } elseif (!empty($validated['search'])) {
+            $search = $validated['search'];
+            $query->whereHas('barang', function ($q) use ($search) {
+                $q->where('nama', 'ilike', "%{$search}%")
+                  ->orWhere('kode', 'ilike', "%{$search}%");
+            });
         }
 
         $query->orderBy('created_at', 'desc');

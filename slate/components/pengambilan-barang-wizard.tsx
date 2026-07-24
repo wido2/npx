@@ -31,6 +31,7 @@ import { fetchClients, type Client } from "@/lib/client-api"
 import { fetchProjects, type Project } from "@/lib/project-api"
 import { fetchBarangs, type Barang } from "@/lib/barang-api"
 import { fetchKaryawans, type Karyawan } from "@/lib/karyawan-api"
+import { AddKaryawanSheet } from "@/components/add-karyawan-sheet"
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -44,6 +45,7 @@ interface LineItem {
   barang_id: string
   barang_nama: string
   barang_kode: string
+  barang_unit: string
   stok_tersedia: number
   jumlah: number
   keterangan: string
@@ -74,6 +76,8 @@ export function PengambilanBarangWizard() {
   const [itemJumlah, setItemJumlah] = useState("1")
   const [itemKeterangan, setItemKeterangan] = useState("")
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null)
+
+  const [karyawanSheetOpen, setKaryawanSheetOpen] = useState(false)
 
   useEffect(() => {
     if (user && !can("pb.create")) {
@@ -121,6 +125,7 @@ export function PengambilanBarangWizard() {
       barang_id: itemBarangId,
       barang_nama: selectedBarang?.nama || "",
       barang_kode: selectedBarang?.kode || "",
+      barang_unit: selectedBarang?.unit?.singkatan || "",
       stok_tersedia: selectedBarang?.stok || 0,
       jumlah,
       keterangan: itemKeterangan,
@@ -222,6 +227,16 @@ export function PengambilanBarangWizard() {
                         onValueChange={(v) => setKaryawanId(v)}
                         placeholder="Pilih karyawan..."
                         searchPlaceholder="Cari karyawan..."
+                        emptySlot={({ close }) => (
+                          <button
+                            type="button"
+                            className="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-primary hover:bg-accent rounded-sm"
+                            onClick={() => { close(); setKaryawanSheetOpen(true) }}
+                          >
+                            <PlusIcon className="size-4" />
+                            Tambah Karyawan
+                          </button>
+                        )}
                       />
                     </FieldContent>
                   </Field>
@@ -272,7 +287,7 @@ export function PengambilanBarangWizard() {
             <CardContent>
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-10">
-                  <Field className="md:col-span-5">
+                  <Field className="md:col-span-4">
                     <FieldLabel htmlFor="barang_id">Barang</FieldLabel>
                     <FieldContent>
                       <Combobox
@@ -295,6 +310,12 @@ export function PengambilanBarangWizard() {
                         value={itemJumlah}
                         onChange={(e) => setItemJumlah(e.target.value)}
                       />
+                    </FieldContent>
+                  </Field>
+                  <Field className="md:col-span-1">
+                    <FieldLabel htmlFor="item_satuan">Satuan</FieldLabel>
+                    <FieldContent>
+                      <Input id="item_satuan" value={selectedBarang?.unit?.singkatan || ""} disabled />
                     </FieldContent>
                   </Field>
                   <Field className="md:col-span-3">
@@ -327,13 +348,14 @@ export function PengambilanBarangWizard() {
                     <TableHead>Barang</TableHead>
                     <TableHead className="text-right">Stok</TableHead>
                     <TableHead className="text-right">Jumlah</TableHead>
+                    <TableHead className="text-center">Satuan</TableHead>
                     <TableHead>Keterangan</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Belum ada item</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">Belum ada item</TableCell></TableRow>
                   ) : (
                     items.map((item) => (
                       <TableRow key={item.tempId}>
@@ -343,6 +365,7 @@ export function PengambilanBarangWizard() {
                         </TableCell>
                         <TableCell className="text-right">{item.stok_tersedia}</TableCell>
                         <TableCell className="text-right">{item.jumlah}</TableCell>
+                        <TableCell className="text-center">{item.barang_unit || "-"}</TableCell>
                         <TableCell>{item.keterangan || "-"}</TableCell>
                         <TableCell>
                           <Button variant="ghost" size="icon" className="size-8 text-destructive" onClick={() => setDeleteItemId(item.tempId)}>
@@ -389,6 +412,7 @@ export function PengambilanBarangWizard() {
                   <TableRow>
                     <TableHead>Barang</TableHead>
                     <TableHead className="text-right">Jumlah</TableHead>
+                    <TableHead className="text-center">Satuan</TableHead>
                     <TableHead>Keterangan</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -400,6 +424,7 @@ export function PengambilanBarangWizard() {
                         <div className="text-xs text-muted-foreground">{item.barang_kode}</div>
                       </TableCell>
                       <TableCell className="text-right">{item.jumlah}</TableCell>
+                      <TableCell className="text-center">{item.barang_unit || "-"}</TableCell>
                       <TableCell>{item.keterangan || "-"}</TableCell>
                     </TableRow>
                   ))}
@@ -435,6 +460,12 @@ export function PengambilanBarangWizard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddKaryawanSheet
+        open={karyawanSheetOpen}
+        onOpenChange={setKaryawanSheetOpen}
+        onSuccess={() => { loadRefs() }}
+      />
     </div>
   )
 }

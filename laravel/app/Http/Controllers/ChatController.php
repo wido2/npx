@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\MessageSent;
-use App\Events\NewChatMessage;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
@@ -117,15 +115,6 @@ class ChatController extends Controller
             'type' => $request->type ?? ($request->hasFile('file') ? 'image' : 'text'),
             'file_path' => $filePath,
         ]);
-
-        broadcast(new MessageSent($message))->toOthers();
-
-        $conversation->users()
-            ->where('user_id', '!=', $request->user()->id)
-            ->pluck('user_id')
-            ->each(function ($uid) use ($message) {
-                NewChatMessage::dispatch($message, $uid);
-            });
 
         return response()->json($message->load('sender:id,name'), 201);
     }

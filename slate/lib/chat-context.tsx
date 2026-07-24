@@ -1,9 +1,6 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react"
-import Echo from "laravel-echo"
-import Pusher from "pusher-js"
-import { getToken } from "./api"
 import {
   fetchConversations,
   fetchMessages,
@@ -54,59 +51,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [messagesLoading, setMessagesLoading] = useState(false)
   const [messagePage, setMessagePage] = useState(1)
   const [hasMoreMessages, setHasMoreMessages] = useState(false)
-  const echoRef = useRef<Echo<"reverb"> | null>(null)
-
-  useEffect(() => {
-    const token = getToken()
-    if (!token) return
-
-    const echo = new Echo<"reverb">({
-      broadcaster: "reverb",
-      Pusher,
-      key: process.env.NEXT_PUBLIC_REVERB_APP_KEY,
-      wsHost: process.env.NEXT_PUBLIC_REVERB_HOST,
-      wsPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT) || undefined,
-      wssPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT) || undefined,
-      forceTLS: process.env.NEXT_PUBLIC_REVERB_SCHEME === "https",
-      enabledTransports: ["ws", "wss"],
-      authEndpoint: `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/api$/, "")}/broadcasting/auth`,
-      auth: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      },
-    })
-
-    echoRef.current = echo
-
-    return () => {
-      try { echo.disconnect() } catch {}
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!activeConversation || !echoRef.current) return
-
-    const channel = echoRef.current.private(`conversation.${activeConversation.id}`)
-
-    channel.listen("MessageSent", (e: { message: Message }) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === e.message.id)) return prev
-        return [...prev, e.message]
-      })
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === activeConversation.id ? { ...c, last_message: e.message, updated_at: e.message.created_at } : c,
-        ),
-      )
-      window.dispatchEvent(new CustomEvent("chat:unread-update"))
-    })
-
-    return () => {
-      echoRef.current?.leave(`conversation.${activeConversation.id}`)
-    }
-  }, [activeConversation])
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -128,6 +72,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     loadData()
+    const interval = setInterval(loadData, 5000)
+    return () => clearInterval(interval)
   }, [loadData])
 
   const loadMessages = useCallback(async () => {

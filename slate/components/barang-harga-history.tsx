@@ -46,6 +46,7 @@ import {
   TrendingUpIcon,
   TrendingDownIcon,
   Columns3Icon,
+  ExternalLinkIcon,
 } from "lucide-react"
 import {
   flexRender,
@@ -158,12 +159,29 @@ export function BarangHargaHistory({ barangId, compact }: { barangId: string; co
       accessorKey: "keterangan",
       header: "Sumber",
       cell: ({ row }) => {
-        const ref = row.original.keterangan
-        const tipe = sumberSingkat(row.original.referensi_type)
-        if (tipe === "PO" && ref) {
-          return <span className="text-xs">{ref}</span>
+        const refType = row.original.referensi_type
+        const refId = row.original.referensi_id
+        const ket = row.original.keterangan
+
+        const routeMap: Record<string, { path: string; label: string }> = {
+          "App\\Models\\PembelianLangsung": { path: "/pembelian-langsung", label: "PL" },
+          "App\\Models\\PengambilanBarang": { path: "/pengambilan-barang", label: "PB" },
         }
-        return <span className="text-xs">{tipe}</span>
+
+        const entry = routeMap[refType || ""]
+        if (entry && refId) {
+          return (
+            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => router.push(`${entry.path}/${refId}`)}>
+              {entry.label} <ExternalLinkIcon className="ml-0.5 size-3" />
+            </Button>
+          )
+        }
+
+        if (refType === "App\\Models\\PurchaseOrderItem" && ket) {
+          return <span className="text-xs">{ket}</span>
+        }
+
+        return <span className="text-xs">{sumberSingkat(refType)}</span>
       },
     },
     {

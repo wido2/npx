@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\User;
+use App\Notifications\ClientCreated;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 
 class ClientController extends Controller
 {
@@ -44,6 +47,9 @@ class ClientController extends Controller
         ]);
 
         $client = Client::create($validated);
+
+        $users = User::permission('notification.client_created')->get();
+        Notification::send($users, new ClientCreated($client, $request->user()->name));
 
         return response()->json($client, 201);
     }

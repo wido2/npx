@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Bell, CheckCircle, InboxIcon, AlertTriangle, Tag, CheckCheck, Send, Clock, ClipboardCheck, X } from "lucide-react"
+import { Bell, CheckCircle, InboxIcon, AlertTriangle, Tag, CheckCheck, Send, Clock, ClipboardCheck, X, FolderKanbanIcon, UsersIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useNotifications } from "@/lib/notification-context"
@@ -28,6 +28,10 @@ function NotificationIcon({ type }: { type: string }) {
       return <ClipboardCheck className={cn(className, "text-blue-500")} />
     case "vendor_price_changed":
       return <Tag className={cn(className, "text-purple-500")} />
+    case "project_created":
+      return <FolderKanbanIcon className={cn(className, "text-cyan-500")} />
+    case "client_created":
+      return <UsersIcon className={cn(className, "text-amber-500")} />
     default:
       return <Bell className={cn(className, "text-muted-foreground")} />
   }

@@ -6,6 +6,16 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Bell,
   CheckCircle,
   InboxIcon,
@@ -20,9 +30,11 @@ import {
   ChevronRight,
   LoaderIcon,
   X,
+  FolderKanbanIcon,
+  UsersIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { deleteNotification, fetchNotifications, markAsRead, markAllAsRead, type NotificationItem } from "@/lib/notification-api"
+import { deleteNotification, deleteAllNotifications, fetchNotifications, markAsRead, markAllAsRead, type NotificationItem } from "@/lib/notification-api"
 import { formatDistanceToNow } from "date-fns"
 import { id } from "date-fns/locale"
 
@@ -45,6 +57,10 @@ function NotificationIcon({ type }: { type: string }) {
       return <ClipboardCheck className={cn(className, "text-blue-500")} />
     case "vendor_price_changed":
       return <Tag className={cn(className, "text-purple-500")} />
+    case "project_created":
+      return <FolderKanbanIcon className={cn(className, "text-cyan-500")} />
+    case "client_created":
+      return <UsersIcon className={cn(className, "text-amber-500")} />
     default:
       return <Bell className={cn(className, "text-muted-foreground")} />
   }
@@ -60,6 +76,8 @@ function NotificationLabel({ type }: { type: string }) {
     stock_minimum: "Stok Menipis",
     stock_opname: "Stok Opname",
     vendor_price_changed: "Harga Vendor Berubah",
+    project_created: "Project Baru",
+    client_created: "Client Baru",
   }
   return <span>{labels[type] || type}</span>
 }
@@ -72,6 +90,8 @@ export default function NotificationsPage() {
   const [lastPage, setLastPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [markingAll, setMarkingAll] = useState(false)
+  const [deletingAll, setDeletingAll] = useState(false)
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false)
 
   const load = useCallback(async (pageNum: number) => {
     setLoading(true)
@@ -109,6 +129,17 @@ export default function NotificationsPage() {
     }
   }
 
+  async function handleDeleteAll() {
+    setDeletingAll(true)
+    try {
+      await deleteAllNotifications()
+      setNotifications([])
+      setTotal(0)
+    } finally {
+      setDeletingAll(false)
+    }
+  }
+
   async function handleDelete(item: NotificationItem) {
     await deleteNotification(item.id)
     setNotifications((prev) => prev.filter((n) => n.id !== item.id))
@@ -116,7 +147,7 @@ export default function NotificationsPage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="size-5" />
@@ -126,10 +157,16 @@ export default function NotificationsPage() {
             <p className="text-sm text-muted-foreground">Semua notifikasi berdasarkan peran Anda</p>
           </div>
           {total > 0 && (
-            <Button variant="outline" size="sm" onClick={handleMarkAllAsRead} disabled={markingAll}>
-              <CheckCheck className="size-4" />
-              {markingAll ? "..." : "Tandai Semua Dibaca"}
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={handleMarkAllAsRead} disabled={markingAll}>
+                <CheckCheck className="size-4" />
+                {markingAll ? "..." : "Tandai Semua Dibaca"}
+              </Button>
+              <Button variant="destructive" size="sm" onClick={() => setDeleteAllConfirm(true)} disabled={deletingAll}>
+                <X className="size-4" />
+                {deletingAll ? "..." : "Hapus Semua"}
+              </Button>
+            </>
           )}
         </div>
 
@@ -227,6 +264,23 @@ export default function NotificationsPage() {
           </>
         )}
       </div>
+
+      <AlertDialog open={deleteAllConfirm} onOpenChange={setDeleteAllConfirm}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Semua Notifikasi?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Semua notifikasi akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDeleteAll}>
+              Hapus Semua
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   )
 }

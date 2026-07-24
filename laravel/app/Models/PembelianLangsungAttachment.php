@@ -22,6 +22,8 @@ class PembelianLangsungAttachment extends Model
         'ukuran',
     ];
 
+    protected $appends = ['url'];
+
     public function pembelianLangsung(): BelongsTo
     {
         return $this->belongsTo(PembelianLangsung::class, 'pembelian_langsung_id');
@@ -29,6 +31,6 @@ class PembelianLangsungAttachment extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::url($this->path);
+        return url(Storage::url($this->path));
     }
 }

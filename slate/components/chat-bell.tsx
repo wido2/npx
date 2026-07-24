@@ -6,7 +6,6 @@ import { MessageCircle, X, Reply } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { fetchUnreadMessages, type UnreadItem } from "@/lib/chat-api"
 import { getToken } from "@/lib/api"
-import { useAuth } from "@/lib/auth-context"
 import { formatDistanceToNow } from "date-fns"
 import { id } from "date-fns/locale"
 
@@ -16,8 +15,6 @@ export function ChatBell() {
   const [totalUnread, setTotalUnread] = useState(0)
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const { user } = useAuth()
-  const echoRef = useRef<{ destroy: () => void } | null>(null)
 
   const load = useCallback(async () => {
     const token = getToken()
@@ -36,64 +33,10 @@ export function ChatBell() {
   useEffect(() => {
     load()
     const interval = setInterval(load, 5000)
-    function onUnreadUpdate() { load() }
-    window.addEventListener("chat:unread-update", onUnreadUpdate)
     return () => {
       clearInterval(interval)
-      window.removeEventListener("chat:unread-update", onUnreadUpdate)
     }
   }, [load])
-
-  useEffect(() => {
-    if (!user?.id) return
-
-    let echo: any = null
-    import("laravel-echo").then((EchoModule) => {
-      import("pusher-js").then((PusherModule) => {
-        const token = getToken()
-        if (!token) return
-        const Echo = EchoModule.default || EchoModule
-        const Pusher = PusherModule.default || PusherModule
-        const options: Record<string, any> = {
-          broadcaster: "reverb",
-          Pusher,
-          key: process.env.NEXT_PUBLIC_REVERB_APP_KEY,
-          wsHost: process.env.NEXT_PUBLIC_REVERB_HOST,
-          wsPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT) || undefined,
-          wssPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT) || undefined,
-          forceTLS: process.env.NEXT_PUBLIC_REVERB_SCHEME === "https",
-          enabledTransports: ["ws", "wss"],
-          authEndpoint: `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/api$/, "")}/broadcasting/auth`,
-          userAuthentication: {
-            endpoint: `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/api$/, "")}/broadcasting/user-auth`,
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          },
-          auth: {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          },
-        }
-        echo = new Echo(options as any)
-
-        echoRef.current = echo
-
-        echo.private(`App.Models.User.${user.id}`).listen(".NewChatMessage", () => {
-          load()
-        })
-      })
-    })
-
-    return () => {
-      if (echo) {
-        try { echo.disconnect() } catch {}
-      }
-    }
-  }, [user?.id, load])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\User;
+use App\Notifications\ProjectCreated;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 
 class ProjectController extends Controller
 {
@@ -45,6 +48,9 @@ class ProjectController extends Controller
         ]);
 
         $project = Project::create($validated);
+
+        $users = User::permission('notification.project_created')->get();
+        Notification::send($users, new ProjectCreated($project, $request->user()->name));
 
         return response()->json($project->load(['client', 'unit']), 201);
     }

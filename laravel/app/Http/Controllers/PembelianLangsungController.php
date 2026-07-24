@@ -6,6 +6,9 @@ use App\Models\Barang;
 use App\Models\PembelianLangsung;
 use App\Models\ItemPembelianLangsung;
 use App\Models\PembelianLangsungAttachment;
+use App\Models\HargaSupplier;
+use App\Models\RiwayatHargaSupplier;
+use App\Models\User;
 use App\Services\KodePLService;
 use App\Services\StokService;
 use App\Services\HargaService;
@@ -13,6 +16,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\VendorPriceChanged;
 
 class PembelianLangsungController extends Controller
 {
@@ -129,6 +134,8 @@ class PembelianLangsungController extends Controller
                     $request->user()->id
                 );
             }
+
+            $this->updateHargaSupplierDariPL($pl, $validated['vendor_id'], $validated['items'], $request->user()->id);
 
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
@@ -304,6 +311,10 @@ class PembelianLangsungController extends Controller
                 }
             }
 
+            if (isset($validated['items'])) {
+                $this->updateHargaSupplierDariPL($pl, $pl->vendor_id, $validated['items'], $request->user()->id);
+            }
+
             if ($request->hasFile('attachments')) {
                 $currentCount = $pl->attachments()->count();
                 $newCount = count($request->file('attachments'));
@@ -379,5 +390,78 @@ class PembelianLangsungController extends Controller
         $attachment->delete();
 
         return response()->json(['message' => 'Attachment deleted']);
+    }
+
+    private function updateHargaSupplierDariPL(PembelianLangsung $pl, string $vendorId, array $items, string $userId): void
+    {
+        $pl->loadMissing('vendor:id,kode,nama');
+        $vendorNama = $pl->vendor?->nama ?? 'Unknown';
+        $changedPrices = [];
+
+        foreach ($items as $itemData) {
+            $barang = Barang::find($itemData['barang_id']);
+            if (!$barang) continue;
+
+            $hargaSupplier = HargaSupplier::where('vendor_id', $vendorId)
+                ->where('barang_id', $barang->id)
+                ->first();
+
+            if ($hargaSupplier) {
+                $hargaLama = (float) $hargaSupplier->harga_beli;
+                $hargaBaru = (float) $itemData['harga_satuan'];
+
+                if ($hargaLama !== $hargaBaru) {
+                    $hargaSupplier->update(['harga_beli' => $hargaBaru]);
+
+                    RiwayatHargaSupplier::create([
+                        'harga_supplier_id' => $hargaSupplier->id,
+                        'barang_id' => $barang->id,
+                        'vendor_id' => $vendorId,
+                        'harga_beli_lama' => $hargaLama,
+                        'harga_beli_baru' => $hargaBaru,
+                        'referensi_type' => PembelianLangsung::class,
+                        'referensi_id' => $pl->id,
+                        'keterangan' => "Dari PL {$pl->kode}",
+                        'created_by' => $userId,
+                        'created_at' => now(),
+                    ]);
+
+                    $changedPrices[] = [
+                        'barang' => $barang,
+                        'vendor_nama' => $vendorNama,
+                        'harga_lama' => $hargaLama,
+                        'harga_baru' => $hargaBaru,
+                    ];
+                }
+            } else {
+                HargaSupplier::create([
+                    'barang_id' => $barang->id,
+                    'vendor_id' => $vendorId,
+                    'harga_beli' => (float) $itemData['harga_satuan'],
+                    'keterangan' => "Dari PL {$pl->kode}",
+                ]);
+
+                $changedPrices[] = [
+                    'barang' => $barang,
+                    'vendor_nama' => $vendorNama,
+                    'harga_lama' => 0,
+                    'harga_baru' => (float) $itemData['harga_satuan'],
+                ];
+            }
+        }
+
+        if (!empty($changedPrices)) {
+            $users = User::permission('notification.vendor_price_changed')->get();
+
+            foreach ($changedPrices as $change) {
+                Notification::send($users, new VendorPriceChanged(
+                    $change['barang'],
+                    $change['vendor_nama'],
+                    $change['harga_lama'],
+                    $change['harga_baru'],
+                    "PL {$pl->kode}",
+                ));
+            }
+        }
     }
 }

@@ -192,19 +192,25 @@ export function InventoryBarangHistory({ barangId }: Props) {
       header: "Dokumen",
       cell: ({ row }) => {
         const ref = row.original.referensi_type
-        if (!ref) return "-"
-        const short = ref.split("\\").pop() || ref
         const refId = row.original.referensi_id
-        let href = ""
-        if (short === "PengambilanBarang") href = `/pengambilan-barang/${refId}`
-        else if (short === "PurchaseOrder") href = `/purchase-order/${refId}`
+        if (!ref || !refId) return "-"
 
-        return href ? (
-          <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => router.push(href)}>
-            {short} <ExternalLinkIcon className="ml-0.5 size-3" />
+        const routeMap: Record<string, { path: string; label: string }> = {
+          "App\\Models\\PembelianLangsung": { path: "/pembelian-langsung", label: "PL" },
+          "App\\Models\\PengambilanBarang": { path: "/pengambilan-barang", label: "PB" },
+          "App\\Models\\PurchaseOrder": { path: "/purchase-order", label: "PO" },
+        }
+
+        const entry = routeMap[ref]
+        if (!entry) {
+          const short = ref.split("\\").pop() || ref
+          return <span className="text-xs text-muted-foreground">{short}</span>
+        }
+
+        return (
+          <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => router.push(`${entry.path}/${refId}`)}>
+            {entry.label} <ExternalLinkIcon className="ml-0.5 size-3" />
           </Button>
-        ) : (
-          <span className="text-xs text-muted-foreground">{short}</span>
         )
       },
     },
