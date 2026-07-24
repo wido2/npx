@@ -170,6 +170,11 @@ export function ProjectTable() {
     { accessorKey: "kode", header: "Kode" },
     { accessorKey: "nama", header: "Nama" },
     {
+      accessorKey: "jumlah",
+      header: "Jumlah",
+      cell: ({ row }) => row.original.jumlah ?? "-",
+    },
+    {
       accessorKey: "client",
       header: "Client",
       cell: ({ row }) => row.original.client?.nama || "-",

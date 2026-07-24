@@ -19,6 +19,7 @@ class Project extends Model
         'unit_id',
         'deskripsi',
         'nilai_kontrak',
+        'jumlah',
         'tanggal_mulai',
         'tanggal_selesai',
         'status',

@@ -38,6 +38,7 @@ export function ProjectForm({ projectId }: Props) {
   const [unitId, setUnitId] = useState("")
   const [deskripsi, setDeskripsi] = useState("")
   const [nilaiKontrak, setNilaiKontrak] = useState("")
+  const [jumlah, setJumlah] = useState("")
   const [tanggalMulai, setTanggalMulai] = useState("")
   const [tanggalSelesai, setTanggalSelesai] = useState("")
   const [status, setStatus] = useState("aktif")
@@ -67,6 +68,7 @@ export function ProjectForm({ projectId }: Props) {
       setUnitId(project.unit_id)
       setDeskripsi(project.deskripsi || "")
       setNilaiKontrak(project.nilai_kontrak != null ? String(project.nilai_kontrak) : "")
+      setJumlah(project.jumlah != null ? String(project.jumlah) : "")
       setTanggalMulai(project.tanggal_mulai || "")
       setTanggalSelesai(project.tanggal_selesai || "")
       setStatus(project.status)
@@ -98,6 +100,7 @@ export function ProjectForm({ projectId }: Props) {
         unit_id: unitId,
         deskripsi: deskripsi.trim() || undefined,
         nilai_kontrak: nilaiKontrak ? parseFloat(nilaiKontrak) : undefined,
+        jumlah: jumlah ? parseInt(jumlah, 10) : undefined,
         tanggal_mulai: tanggalMulai || undefined,
         tanggal_selesai: tanggalSelesai || undefined,
         status,
@@ -209,6 +212,13 @@ export function ProjectForm({ projectId }: Props) {
                   <Input id="nilai_kontrak" type="number" step="1" value={nilaiKontrak} onChange={(e) => setNilaiKontrak(e.target.value)} placeholder="0" />
                 </FieldContent>
                 <FieldDescription>Nilai kontrak project dalam Rupiah</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="jumlah">Jumlah</FieldLabel>
+                <FieldContent>
+                  <Input id="jumlah" type="number" step="1" min="1" value={jumlah} onChange={(e) => setJumlah(e.target.value)} placeholder="1" />
+                </FieldContent>
+                <FieldDescription>Jumlah unit project</FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="tanggal_mulai">Tanggal Mulai</FieldLabel>

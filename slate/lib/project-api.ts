@@ -8,6 +8,7 @@ export interface Project {
   nama: string
   client_id: string
   unit_id: string
+  jumlah: number | null
   deskripsi: string | null
   nilai_kontrak: number | null
   tanggal_mulai: string | null
@@ -84,8 +85,9 @@ export async function updateProject(
   data: Partial<{
     kode: string
     nama: string
-    client_id: string
-    unit_id: string
+  client_id: string
+  unit_id: string
+  jumlah: number | null
     deskripsi: string
     nilai_kontrak: number
     tanggal_mulai: string

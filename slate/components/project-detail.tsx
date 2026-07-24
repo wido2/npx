@@ -71,6 +71,7 @@ export function ProjectDetail({ projectId }: Props) {
             <div className="flex justify-between"><span className="text-muted-foreground">Unit</span><span>{project.unit?.nama || "-"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge variant={statusColors[project.status] || "outline"} className="capitalize">{project.status}</Badge></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Nilai Kontrak</span><span>{project.nilai_kontrak != null ? `Rp${new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(project.nilai_kontrak))}` : "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Jumlah</span><span>{project.jumlah ?? "-"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Tanggal Mulai</span><span>{project.tanggal_mulai || "-"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Tanggal Selesai</span><span>{project.tanggal_selesai || "-"}</span></div>
             {project.deskripsi && (
