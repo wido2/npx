@@ -204,8 +204,8 @@
       <td class="signature-box">
         <div class="signature-label">Yang Menyerahkan</div>
         <div class="signature-line"></div>
-        <div class="signature-name">________________</div>
-        <div class="signature-date">&nbsp;</div>
+        <div class="signature-name">{{ $pb->dibuatOleh?->name ?? '________________' }}</div>
+        <div class="signature-date">{{ $pb->created_at ? \Carbon\Carbon::parse($pb->created_at)->locale('id')->isoFormat('D MMMM YYYY') : '' }}</div>
       </td>
       <td class="signature-box">
         <div class="signature-label">Yang Menerima</div>

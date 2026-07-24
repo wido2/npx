@@ -241,7 +241,10 @@ class PengambilanBarangController extends Controller
         ]);
 
         $generalSetting = Setting::where('group', 'general')->first();
+        $pdfSetting = Setting::where('group', 'pdf_report')->first();
         $dataSetting = $generalSetting ? $generalSetting->data : [];
+        $pdfData = $pdfSetting ? $pdfSetting->data : [];
+        $dataSetting = array_merge($dataSetting, $pdfData);
 
         $pdf = Pdf::loadView('pdf.pengambilan-barang', [
             'pb' => $pb,
