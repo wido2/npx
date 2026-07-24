@@ -55,7 +55,7 @@ export function RecentPoTable() {
               <TableRow>
                 <TableHead>Kode</TableHead>
                 <TableHead>Vendor</TableHead>
-                <TableHead>Total</TableHead>
+                <TableHead className="text-right">Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Pembuat</TableHead>
               </TableRow>
@@ -65,11 +65,11 @@ export function RecentPoTable() {
                 <TableRow key={po.id} className="cursor-pointer" onClick={() => router.push(`/purchase-order/${po.id}`)}>
                   <TableCell className="font-medium">{po.kode || "—"}</TableCell>
                   <TableCell>{po.vendor?.nama || "—"}</TableCell>
-                  <TableCell className="tabular-nums">{fmt(po.total)}</TableCell>
+                  <TableCell className="tabular-nums text-right">{fmt(po.total)}</TableCell>
                   <TableCell>
                     <Badge variant={(statusColor[po.status] || "secondary") as any}>{po.status}</Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{po.dibuat_oleh_user?.name || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{(po as any).dibuat_oleh?.name || "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
