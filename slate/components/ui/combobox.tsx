@@ -54,7 +54,7 @@ export function Combobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         render={
-          <Button variant="outline" role="combobox" aria-expanded={open} disabled={disabled} className={cn("w-full justify-between font-normal text-start whitespace-normal text-wrap", !selected && "text-muted-foreground", className)}>
+          <Button variant="outline" role="combobox" aria-expanded={open} disabled={disabled} className={cn("justify-between font-normal text-start whitespace-normal text-wrap", !selected && "text-muted-foreground", className)}>
             <span className="min-w-0 flex-1 break-words">{selected ? selected.label : placeholder}</span>
             <ChevronDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
           </Button>

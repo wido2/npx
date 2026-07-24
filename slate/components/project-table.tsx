@@ -278,7 +278,6 @@ export function ProjectTable() {
             onValueChange={(v) => { setClientId(v); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}
             placeholder="Filter klien..."
             searchPlaceholder="Cari klien..."
-            className="w-48"
           />
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="h-8" />}>
