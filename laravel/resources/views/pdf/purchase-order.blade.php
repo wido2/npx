@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Purchase Order - {{ $po->kode ?? 'Draft' }}</title>
 <style>
-  @page { margin: 25mm 15mm 18mm; }
+  @page { margin: 15mm 12mm 15mm; }
   body {
     font-family: '{{ $setting['font_family'] ?? 'Segoe UI' }}', 'DejaVu Sans', sans-serif;
     font-size: {{ $setting['font_size_base'] ?? 9 }}pt;
