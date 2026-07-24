@@ -100,15 +100,17 @@ export default function Page() {
           Object.entries(grouped).map(([category, widgets]) => {
             if (category === "activity") return null
             if (category === "table") {
-              const FirstWidget = widgets[0]?.Comp
+              const fullWidth = ["recent-po", "recent-harga-update"]
+              const [fw, rest] = widgets.reduce(
+                ([f, r], w) => (fullWidth.includes(w.id) ? [[...f, w], r] : [f, [...r, w]]),
+                [[], []] as typeof widgets[]
+              )
               return (
                 <div key={category} className="flex flex-col gap-4">
-                  {FirstWidget && <FirstWidget />}
-                  {widgets.length > 1 && (
+                  {fw.map(({ id, Comp }) => <Comp key={id} />)}
+                  {rest.length > 0 && (
                     <div className={GRID_CLASSES["table_rest"]}>
-                      {widgets.slice(1).map(({ id, Comp }) => (
-                        <Comp key={id} />
-                      ))}
+                      {rest.map(({ id, Comp }) => <Comp key={id} />)}
                     </div>
                   )}
                 </div>

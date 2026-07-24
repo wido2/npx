@@ -56,6 +56,8 @@ class RolePermissionSeeder extends Seeder
             'notification.stock_minimum',
             'notification.stock_opname',
             'notification.vendor_price_changed',
+            'notification.project_created',
+            'notification.client_created',
 
             // Widget
             'widget.chart_area_interactive',
