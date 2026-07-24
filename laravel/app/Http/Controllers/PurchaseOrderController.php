@@ -496,7 +496,7 @@ class PurchaseOrderController extends Controller
         ]);
 
         $generalSetting = Setting::where('group', 'general')->first();
-        $pdfSetting = Setting::where('group', 'pdf_report')->first();
+        $pdfSetting = Setting::where('group', 'po_pdf')->first() ?? Setting::where('group', 'pdf_report')->first();
         $dataSetting = $generalSetting ? $generalSetting->data : [];
         $pdfData = $pdfSetting ? $pdfSetting->data : [];
         $dataSetting = array_merge($dataSetting, $pdfData);

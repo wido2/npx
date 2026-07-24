@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <title>Pengambilan Barang - {{ $pb->kode }}</title>
 <style>
-  @page { margin: 15mm 12mm 15mm; }
+  @page { margin: {{ $setting['margin_top'] ?? 15 }}mm {{ $setting['margin_right'] ?? 12 }}mm {{ $setting['margin_bottom'] ?? 15 }}mm {{ $setting['margin_left'] ?? 12 }}mm; }
   body {
-    font-family: 'Segoe UI', 'DejaVu Sans', sans-serif;
-    font-size: 9pt;
+    font-family: '{{ $setting['font_family'] ?? 'Segoe UI' }}', 'DejaVu Sans', sans-serif;
+    font-size: {{ $setting['font_size_tabel_body'] ?? 8 }}pt;
     color: #333;
     line-height: 1.5;
     margin: 0;
@@ -20,29 +20,29 @@
   .header-table td { border: none; padding: 0; vertical-align: middle; }
   .header-left { text-align: left; }
   .header-right { text-align: right; }
-  .company-name { font-size: 14pt; font-weight: bold; color: #2c3e50; }
+  .company-name { font-size: 14pt; font-weight: bold; color: {{ $setting['warna_secondary'] ?? '#2c3e50' }}; }
   .company-details { font-size: 7pt; color: #555; margin-top: 2px; line-height: 1.5; }
-  .doc-title { font-size: 16pt; font-weight: bold; color: #2c3e50; letter-spacing: 1px; }
-  .doc-ref { font-size: 9pt; color: #7c7bad; font-weight: bold; margin-top: 2px; }
-  .header-divider { border: none; border-top: 2px solid #7c7bad; margin: 6px 0 8px; }
+  .doc-title { font-size: {{ $setting['font_size_judul'] ?? 16 }}pt; font-weight: bold; color: {{ $setting['warna_secondary'] ?? '#2c3e50' }}; letter-spacing: 1px; }
+  .doc-ref { font-size: 9pt; color: {{ $setting['warna_primary'] ?? '#7c7bad' }}; font-weight: bold; margin-top: 2px; }
+  .header-divider { border: none; border-top: 2px solid {{ $setting['warna_primary'] ?? '#7c7bad' }}; margin: 6px 0 8px; }
 
   /* ─── INFO ROW ─── */
   .info-row { width: 100%; margin-top: 8px; border-collapse: collapse; }
-  .info-row td { width: 33.33%; padding: 8px 10px; background: #f8f9fa; font-size: 7.5pt; text-align: center; vertical-align: middle; }
+  .info-row td { width: 33.33%; padding: 8px 10px; background: #f8f9fa; font-size: {{ $setting['font_size_info'] ?? 7.5 }}pt; text-align: center; vertical-align: middle; }
   .info-row td + td { border-left: 1px solid #e5e5e5; }
   .info-row label { display: block; color: #95a5a6; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: 600; }
   .info-row span { color: #333; font-weight: 500; }
 
   /* ─── KETERANGAN ─── */
-  .extra-section { margin-top: 6px; font-size: 7.5pt; color: #555; line-height: 1.6; }
+  .extra-section { margin-top: 6px; font-size: {{ $setting['font_size_info'] ?? 7.5 }}pt; color: #555; line-height: 1.6; }
   .extra-section .label { font-weight: 600; color: #333; }
 
   /* ─── ITEMS TABLE ─── */
   .items-table { margin-top: 8px; }
   .items-table th {
-    background-color: #7c7bad;
+    background-color: {{ $setting['warna_tabel_header'] ?? '#7c7bad' }};
     color: #fff;
-    font-size: 7pt;
+    font-size: {{ $setting['font_size_tabel_header'] ?? 7 }}pt;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -53,7 +53,7 @@
   .items-table th.right { text-align: right; }
   .items-table td {
     padding: 4px 6px;
-    font-size: 8pt;
+    font-size: {{ $setting['font_size_tabel_body'] ?? 8 }}pt;
     border-bottom: 1px solid #eee;
   }
   .items-table tr:last-child td { border-bottom: 1px solid #ccc; }
@@ -65,20 +65,20 @@
 
   /* ─── SIGNATURE ─── */
   .signature-table { border-collapse: separate; border-spacing: 6px; width: 100%; }
-  .signature-box { border: 1px solid #ddd; border-radius: 3px; width: 33%; height: 105px; padding: 0; vertical-align: top; }
+  .signature-box { border: 1px solid {{ $setting['warna_ttd'] ?? '#7c7bad' }}44; border-radius: 3px; width: 33%; height: 105px; padding: 0; vertical-align: top; }
   .signature-label {
-    font-size: 7pt;
+    font-size: {{ $setting['font_size_ttd'] ?? 7 }}pt;
     font-weight: 600;
-    color: #7c7bad;
+    color: {{ $setting['warna_ttd'] ?? '#7c7bad' }};
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 4px 6px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid {{ $setting['warna_ttd'] ?? '#7c7bad' }}44;
     text-align: center;
-    background-color: #7c7bad10;
+    background-color: {{ $setting['warna_ttd'] ?? '#7c7bad' }}10;
   }
-  .signature-line { border-top: 1px solid #ccc; margin: 0 8px; margin-top: 48px; }
-  .signature-name { font-size: 7.5pt; text-align: center; padding: 2px 4px; font-weight: 600; color: #333; }
+  .signature-line { border-top: 1px solid {{ $setting['warna_ttd'] ?? '#7c7bad' }}44; margin: 0 8px; margin-top: 48px; }
+  .signature-name { font-size: {{ $setting['font_size_ttd'] ?? 7 }}pt; text-align: center; padding: 2px 4px; font-weight: 600; color: #333; }
   .signature-date { font-size: 6.5pt; text-align: center; color: #999; }
 
   /* ─── FOOTER ─── */
@@ -91,11 +91,11 @@
     bottom: 0;
     left: 0;
     right: 0;
-    font-size: 6.5pt;
+    font-size: {{ $setting['font_size_footer'] ?? 6.5 }}pt;
     text-align: center;
-    color: #bbb;
+    color: {{ $setting['warna_footer_text'] ?? '#bbbbbb' }};
     border-top: 1px solid #eee;
-    padding: 6px 12mm 3px;
+    padding: 6px {{ $setting['margin_right'] ?? 12 }}mm 3px {{ $setting['margin_left'] ?? 12 }}mm;
   }
 </style>
 </head>
@@ -109,7 +109,7 @@
         <tr>
           @if (($setting['tampilkan_logo'] ?? true) && !empty($setting['logo']))
           <td style="width: 1%; padding: 0 10px 0 0; vertical-align: middle; border: none;">
-            <img src="{{ public_path('storage/' . $setting['logo']) }}" alt="Logo" style="max-height: 125px; max-width: 125px;">
+            <img src="{{ public_path('storage/' . $setting['logo']) }}" alt="Logo" style="max-height: {{ $setting['logo_max_height'] ?? 125 }}px; max-width: {{ $setting['logo_max_height'] ?? 125 }}px;">
           </td>
           @endif
           <td style="padding: 0; vertical-align: middle; border: none;">
@@ -181,7 +181,7 @@
         <td class="no-col">{{ $no++ }}</td>
         <td class="product-col">
           <div>{{ $item->barang->nama ?? '-' }}</div>
-          @if ($item->barang?->kode)
+          @if (($setting['tampilkan_kode_barang'] ?? true) && $item->barang?->kode)
             <div style="font-size: 6.5pt; color: #999;">{{ $item->barang->kode }}</div>
           @endif
         </td>
@@ -198,6 +198,7 @@
 </table>
 
 {{-- SIGNATURE --}}
+@if ($setting['tampilkan_ttd'] ?? true)
 <div class="signature-section">
   <table class="signature-table">
     <tr>
@@ -222,11 +223,14 @@
     </tr>
   </table>
 </div>
+@endif
 
 {{-- FOOTER --}}
+@if ($setting['tampilkan_footer'] ?? true)
 <div class="footer-text">
   Dicetak: {{ now()->locale('id')->isoFormat('D MMMM YYYY HH:mm') }}
 </div>
+@endif
 
 </body>
 </html>
