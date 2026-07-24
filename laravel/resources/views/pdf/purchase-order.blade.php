@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Purchase Order - {{ $po->kode ?? 'Draft' }}</title>
 <style>
-  @page { margin: 25mm 15mm 18mm; }
+  @page { margin: 0; }
   html, body { height: 100%; margin: 0; padding: 0; }
   body {
     font-family: '{{ $setting['font_family'] ?? 'Segoe UI' }}', 'DejaVu Sans', sans-serif;
@@ -12,10 +12,9 @@
     color: #333;
     line-height: 1.5;
     margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    padding: 20mm 15mm;
+    display: table;
+    width: 100%;
   }
   table { width: 100%; border-collapse: collapse; }
   td, th { padding: 3px 5px; vertical-align: top; }
@@ -114,11 +113,6 @@
   .extra-section .label { font-weight: 600; color: #333; }
 
   /* ─── SIGNATURE BOXES ─── */
-  .signature-section {
-    flex-shrink: 0;
-    page-break-inside: avoid;
-    padding-top: 20px;
-  }
   .signature-table { border-collapse: separate; border-spacing: 6px; width: 100%; }
   .signature-box { border: 1px solid #ddd; border-radius: 3px; width: 24%; height: 105px; padding: 0; vertical-align: top; }
   .signature-label {
@@ -137,19 +131,24 @@
   .signature-date { font-size: 6.5pt; text-align: center; color: #999; }
 
   /* ─── FOOTER ─── */
+  .page-content {
+    display: table-row;
+    height: 100%;
+  }
+  .signature-section {
+    display: table-row;
+    page-break-inside: avoid;
+  }
   .footer-text {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: 12mm;
+    left: 15mm;
+    right: 15mm;
     font-size: 6.5pt;
     text-align: center;
     color: #bbb;
     border-top: 1px solid #eee;
-    padding: 6px 12mm 3px;
-  }
-  .page-content {
-    flex: 1 0 auto;
+    padding: 6px 0 3px;
   }
 </style>
 </head>
