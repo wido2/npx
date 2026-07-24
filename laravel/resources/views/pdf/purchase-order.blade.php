@@ -4,17 +4,14 @@
 <meta charset="utf-8">
 <title>Purchase Order - {{ $po->kode ?? 'Draft' }}</title>
 <style>
-  @page { margin: 0; }
-  html, body { height: 100%; margin: 0; padding: 0; }
+  @page { margin: 25mm 15mm 18mm; }
   body {
     font-family: '{{ $setting['font_family'] ?? 'Segoe UI' }}', 'DejaVu Sans', sans-serif;
     font-size: {{ $setting['font_size_base'] ?? 9 }}pt;
     color: #333;
     line-height: 1.5;
     margin: 0;
-    padding: 20mm 15mm;
-    display: table;
-    width: 100%;
+    padding: 0;
   }
   table { width: 100%; border-collapse: collapse; }
   td, th { padding: 3px 5px; vertical-align: top; }
@@ -131,30 +128,24 @@
   .signature-date { font-size: 6.5pt; text-align: center; color: #999; }
 
   /* ─── FOOTER ─── */
-  .page-content {
-    display: table-row;
-    height: 100%;
-  }
   .signature-section {
-    display: table-row;
+    margin-top: 20px;
     page-break-inside: avoid;
   }
   .footer-text {
     position: fixed;
-    bottom: 12mm;
-    left: 15mm;
-    right: 15mm;
+    bottom: 0;
+    left: 0;
+    right: 0;
     font-size: 6.5pt;
     text-align: center;
     color: #bbb;
     border-top: 1px solid #eee;
-    padding: 6px 0 3px;
+    padding: 6px 12mm 3px;
   }
 </style>
 </head>
 <body>
-
-<div class="page-content">
 
 {{-- HEADER --}}
 <table class="header-table">
@@ -363,8 +354,6 @@
   @endif
 </div>
 @endif
-
-</div>{{-- /page-content --}}
 
 {{-- SIGNATURE --}}
 @if ($setting['tampilkan_ttd'] ?? true)
