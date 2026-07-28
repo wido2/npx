@@ -49,12 +49,16 @@ function authHeaders(): Record<string, string> {
 export async function fetchMutasi(params: {
   search?: string
   barang_id?: string
+  dari?: string
+  sampai?: string
   page?: number
   per_page?: number
 }): Promise<{ data: MutasiStok[]; current_page: number; last_page: number; per_page: number; total: number }> {
   const searchParams = new URLSearchParams()
   if (params?.search) searchParams.set("search", params.search)
   if (params?.barang_id) searchParams.set("barang_id", params.barang_id)
+  if (params?.dari) searchParams.set("dari", params.dari)
+  if (params?.sampai) searchParams.set("sampai", params.sampai)
   if (params?.page) searchParams.set("page", String(params.page))
   if (params?.per_page) searchParams.set("per_page", String(params.per_page))
 

@@ -181,4 +181,64 @@ class ReportPurchaseOrderController extends Controller
             'total_nilai' => (float) $item->total_nilai,
         ]));
     }
+
+    public function perProject(Request $request): JsonResponse
+    {
+        $tahun = $request->filled('tahun') ? $request->integer('tahun') : null;
+        $limit = $request->integer('limit', 20);
+
+        $query = PurchaseOrder::whereNotNull('project_id')
+            ->select(
+                'project_id',
+                DB::raw('count(*) as total_po'),
+                DB::raw('COALESCE(sum(total), 0) as total_nilai')
+            )
+            ->groupBy('project_id')
+            ->orderByDesc('total_nilai')
+            ->limit($limit);
+
+        if ($tahun) {
+            $query->whereYear('created_at', $tahun);
+        }
+
+        $data = $query->get()->load('project:id,kode,nama');
+
+        return response()->json($data->map(fn($item) => [
+            'project_id' => $item->project_id,
+            'project_kode' => $item->project->kode ?? '',
+            'project_nama' => $item->project->nama ?? '',
+            'total_po' => (int) $item->total_po,
+            'total_nilai' => (float) $item->total_nilai,
+        ]));
+    }
+
+    public function perClient(Request $request): JsonResponse
+    {
+        $tahun = $request->filled('tahun') ? $request->integer('tahun') : null;
+        $limit = $request->integer('limit', 20);
+
+        $query = PurchaseOrder::whereNotNull('client_id')
+            ->select(
+                'client_id',
+                DB::raw('count(*) as total_po'),
+                DB::raw('COALESCE(sum(total), 0) as total_nilai')
+            )
+            ->groupBy('client_id')
+            ->orderByDesc('total_nilai')
+            ->limit($limit);
+
+        if ($tahun) {
+            $query->whereYear('created_at', $tahun);
+        }
+
+        $data = $query->get()->load('client:id,kode,nama');
+
+        return response()->json($data->map(fn($item) => [
+            'client_id' => $item->client_id,
+            'client_kode' => $item->client->kode ?? '',
+            'client_nama' => $item->client->nama ?? '',
+            'total_po' => (int) $item->total_po,
+            'total_nilai' => (float) $item->total_nilai,
+        ]));
+    }
 }

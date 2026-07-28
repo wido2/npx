@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { fetchSetting } from "@/lib/settings-api"
 import { useAuth } from "@/lib/auth-context"
 import {
@@ -151,7 +152,10 @@ export function SiteHeader() {
               <Button variant="ghost" size="icon" className="lg:hidden shrink-0" />
             }
           >
-            <MenuIcon className="size-5" />
+            <Tooltip>
+              <TooltipTrigger render={<MenuIcon className="size-5" />} />
+              <TooltipContent side="bottom">Buka Menu</TooltipContent>
+            </Tooltip>
             <span className="sr-only">Menu</span>
           </SheetTrigger>
           <SheetContent side="left" className="flex flex-col overflow-hidden">
@@ -163,20 +167,24 @@ export function SiteHeader() {
                 const Icon = item.icon
                 const active = isActive(item.href)
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setSheetOpen(false)}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors",
-                      active
-                        ? "bg-muted text-foreground"
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                    )}
-                  >
-                    <Icon className="size-4 shrink-0" />
-                    <span>{item.label}</span>
-                  </Link>
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger>
+                      <Link
+                        href={item.href}
+                        onClick={() => setSheetOpen(false)}
+                        className={cn(
+                          "flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors",
+                          active
+                            ? "bg-muted text-foreground"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="size-4 shrink-0" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Buka {item.label}</TooltipContent>
+                  </Tooltip>
                 )
               })}
               <Separator className="my-2" />
@@ -194,20 +202,24 @@ export function SiteHeader() {
                         const Icon = item.icon
                         const active = isActive(item.href)
                         return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setSheetOpen(false)}
-                            className={cn(
-                              "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
-                              active
-                                ? "bg-muted font-medium text-foreground"
-                                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                            )}
-                          >
-                            <Icon className="size-4 shrink-0" />
-                            <span>{item.label}</span>
-                          </Link>
+                          <Tooltip key={item.href}>
+                            <TooltipTrigger>
+                              <Link
+                                href={item.href}
+                                onClick={() => setSheetOpen(false)}
+                                className={cn(
+                                  "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                                  active
+                                    ? "bg-muted font-medium text-foreground"
+                                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                )}
+                              >
+                                <Icon className="size-4 shrink-0" />
+                                <span>{item.label}</span>
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">Buka {item.label}</TooltipContent>
+                          </Tooltip>
                         )
                       })}
                     </div>

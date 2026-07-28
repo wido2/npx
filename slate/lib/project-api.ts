@@ -68,6 +68,7 @@ export async function createProject(data: {
   unit_id: string
   deskripsi?: string
   nilai_kontrak?: number
+  jumlah?: number
   tanggal_mulai?: string
   tanggal_selesai?: string
   status?: string

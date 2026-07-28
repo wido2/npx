@@ -33,6 +33,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { format } from "date-fns"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -40,6 +43,7 @@ import {
   ChevronsRightIcon,
   ExternalLinkIcon,
   SearchIcon,
+  CalendarIcon,
 } from "lucide-react"
 import {
   fetchMutasi,
@@ -66,6 +70,8 @@ export function InventoryMutasiTable() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [dari, setDari] = useState<Date | undefined>(undefined)
+  const [sampai, setSampai] = useState<Date | undefined>(undefined)
   const [sorting, setSorting] = useState<SortingState>([])
   const [pagination, setPagination] = useState({
     pageIndex: 0,
@@ -79,6 +85,8 @@ export function InventoryMutasiTable() {
         page: pagination.pageIndex + 1,
         per_page: pagination.pageSize,
         search: search || undefined,
+        dari: dari ? format(dari, "yyyy-MM-dd") : undefined,
+        sampai: sampai ? format(sampai, "yyyy-MM-dd") : undefined,
       })
       setData(res.data)
       setTotal(res.total)
@@ -87,7 +95,7 @@ export function InventoryMutasiTable() {
     } finally {
       setLoading(false)
     }
-  }, [pagination.pageIndex, pagination.pageSize, search])
+  }, [pagination.pageIndex, pagination.pageSize, search, dari, sampai])
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -206,14 +214,54 @@ export function InventoryMutasiTable() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="relative flex items-center gap-2">
-        <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Filter by barang ID..."
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}
-          className="h-8 w-full max-w-sm pl-8"
-        />
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Filter by barang ID..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}
+            className="h-8 w-full pl-8"
+          />
+        </div>
+
+        <Popover>
+          <PopoverTrigger>
+            <Button variant="outline" size="sm" className="h-8 gap-1">
+              <CalendarIcon className="size-3.5" />
+              {dari ? format(dari, "dd/MM/yyyy") : "Dari"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={dari}
+              onSelect={(d) => { setDari(d); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}
+            />
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger>
+            <Button variant="outline" size="sm" className="h-8 gap-1">
+              <CalendarIcon className="size-3.5" />
+              {sampai ? format(sampai, "dd/MM/yyyy") : "Sampai"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={sampai}
+              onSelect={(d) => { setSampai(d); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}
+            />
+          </PopoverContent>
+        </Popover>
+
+        {(dari || sampai) && (
+          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setDari(undefined); setSampai(undefined); setPagination((prev) => ({ ...prev, pageIndex: 0 })) }}>
+            Reset
+          </Button>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-lg border">

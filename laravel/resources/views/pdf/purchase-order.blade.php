@@ -16,14 +16,14 @@
   table { width: 100%; border-collapse: collapse; }
   td, th { padding: 3px 5px; vertical-align: top; }
 
-  /* ─── HEADER ─── */
+/* ─── HEADER ─── */
   .header-table td { border: none; padding: 0; vertical-align: middle; }
   .header-table table td { border: none; padding: 0; vertical-align: middle; }
   .header-left { text-align: left; }
   .header-right { text-align: right; }
-  .company-name { font-size: 14pt; font-weight: bold; color: {{ $setting['warna_secondary'] ?? '#2c3e50' }}; }
-  .company-tagline { font-size: 7pt; color: #7f8c8d; margin-top: 1px; }
-  .company-details { font-size: 7pt; color: #555; margin-top: 2px; line-height: 1.5; }
+  .company-name { font-size: {{ $setting['header_company_name_font_size'] ?? 14 }}pt; font-weight: {{ $setting['header_company_name_font_weight'] ?? 'bold' }}; color: {{ $setting['header_company_name_color'] ?? $setting['warna_secondary'] ?? '#2c3e50' }}; }
+  .company-tagline { font-size: {{ $setting['header_tagline_font_size'] ?? 7 }}pt; color: {{ $setting['header_tagline_color'] ?? '#7f8c8d' }}; font-style: {{ $setting['header_tagline_font_style'] ?? 'normal' }}; margin-top: 1px; }
+  .company-details { font-size: {{ $setting['header_details_font_size'] ?? 7 }}pt; color: {{ $setting['header_details_color'] ?? '#555' }}; margin-top: 2px; line-height: 1.5; }
   .doc-title { font-size: {{ $setting['font_size_judul'] ?? 16 }}pt; font-weight: bold; color: {{ $setting['warna_secondary'] ?? '#2c3e50' }}; letter-spacing: 1px; }
   .doc-ref { font-size: 9pt; color: {{ $setting['warna_primary'] ?? '#7c7bad' }}; font-weight: bold; margin-top: 2px; }
   .header-divider { border: none; border-top: 2px solid {{ $setting['warna_primary'] ?? '#7c7bad' }}; margin: 6px 0 8px; }
@@ -103,28 +103,40 @@
   .totals-table .label { text-align: left; color: #555; }
   .totals-table .value { text-align: right; }
   .totals-table .total-row td { font-size: 10pt; font-weight: bold; color: {{ $setting['warna_secondary'] ?? '#2c3e50' }}; padding-top: 4px; border-top: 2px solid {{ $setting['warna_secondary'] ?? '#2c3e50' }}; }
+  .totals-table .diskon-total-row td { font-size: 8pt; color: #e74c3c; padding-top: 2px; }
   .terbilang-row td { font-size: 7pt; font-style: italic; color: #7f8c8d; text-align: right; padding: 1px 6px; }
+  .terbilang-full { 
+    width: 100%; 
+    text-align: {{ $setting['terbilang_text_align'] ?? 'right' }}; 
+    font-size: {{ $setting['terbilang_font_size'] ?? 7 }}pt; 
+    font-weight: {{ $setting['terbilang_font_weight'] ?? 'normal' }};
+    font-style: {{ $setting['terbilang_font_style'] ?? 'italic' }};
+    color: {{ $setting['terbilang_color'] ?? '#7f8c8d' }};
+    margin-top: 4px; 
+    padding-right: {{ $setting['margin_right'] ?? 12 }}mm; 
+  }
 
   /* ─── EXTRA INFO ─── */
   .extra-section { margin-top: 6px; font-size: {{ $setting['font_size_info'] ?? 7.5 }}pt; color: #555; line-height: 1.6; }
   .extra-section .label { font-weight: 600; color: #333; }
 
   /* ─── SIGNATURE BOXES ─── */
-  .signature-table { border-collapse: separate; border-spacing: 6px; width: 100%; }
-  .signature-box { border: 1px solid #ddd; border-radius: 3px; width: 24%; height: 105px; padding: 0; vertical-align: top; }
+  .signature-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; }
+  .signature-table td { width: 25%; vertical-align: top; padding: 0 6px; box-sizing: border-box; }
+  .signature-box { border: {{ $setting['ttd_border'] ?? 1 }}px solid {{ $setting['ttd_border_color'] ?? '#ddd' }}; border-radius: 3px; height: 105px; padding: 0; box-sizing: border-box; }
   .signature-label {
-    font-size: {{ $setting['font_size_ttd'] ?? 7 }}pt;
-    font-weight: 600;
-    color: {{ $setting['warna_ttd'] ?? '#7c7bad' }};
+    font-size: {{ $setting['ttd_font_size'] ?? $setting['font_size_ttd'] ?? 7 }}pt;
+    font-weight: {{ $setting['ttd_font_weight'] ?? '600' }};
+    color: {{ $setting['ttd_header_text_color'] ?? '#fff' }};
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 4px 6px;
-    border-bottom: 1px solid #eee;
     text-align: center;
-    background-color: {{ $setting['warna_ttd'] ?? '#7c7bad' }}10;
+    background-color: {{ $setting['ttd_header_bg'] ?? $setting['warna_ttd'] ?? '#7c7bad' }};
+    border-radius: 3px 3px 0 0;
   }
-  .signature-line { border-top: 1px solid #ccc; margin: 0 8px; margin-top: 48px; }
-  .signature-name { font-size: {{ $setting['font_size_ttd'] ?? 7 }}pt; text-align: center; padding: 2px 4px; font-weight: 600; color: #333; }
+  .signature-line { border-top: 1px solid {{ $setting['ttd_border_color'] ?? '#ddd' }}44; margin: 0 8px; margin-top: 48px; }
+  .signature-name { font-size: {{ $setting['ttd_font_size'] ?? $setting['font_size_ttd'] ?? 7 }}pt; text-align: center; padding: 2px 4px; font-weight: 600; color: #333; }
   .signature-date { font-size: 6.5pt; text-align: center; color: #999; }
 
   /* ─── FOOTER ─── */
@@ -159,20 +171,22 @@
           </td>
           @endif
           <td style="padding: 0; vertical-align: middle; border: none;">
-            <div class="company-name">{{ $setting['nama_perusahaan'] ?? 'PERUSAHAAN' }}</div>
-            @if (!empty($setting['alamat']) || !empty($setting['kota']))
+            @if ($setting['tampilkan_nama_perusahaan'] ?? true)
+              <div class="company-name">{{ $setting['nama_perusahaan'] ?? 'PERUSAHAAN' }}</div>
+            @endif
+            @if (($setting['tampilkan_alamat'] ?? true) && (!empty($setting['alamat']) || !empty($setting['kota'])))
               <div class="company-details">
                 @if (!empty($setting['alamat'])) {{ $setting['alamat'] }}, @endif
                 @if (!empty($setting['kota'])) {{ $setting['kota'] }} @endif
                 @if (!empty($setting['provinsi'])) , {{ $setting['provinsi'] }} @endif
                 @if (!empty($setting['kode_pos'])) {{ $setting['kode_pos'] }} @endif
                 <br>
-                @if (!empty($setting['telepon'])) T: {{ $setting['telepon'] }} &nbsp;|&nbsp; @endif
-                @if (!empty($setting['email'])) {{ $setting['email'] }} @endif
-                @if (!empty($setting['npwp'])) &nbsp;|&nbsp; NPWP: {{ $setting['npwp'] }} @endif
+                @if (($setting['tampilkan_telepon'] ?? true) && !empty($setting['telepon'])) T: {{ $setting['telepon'] }} &nbsp;|&nbsp; @endif
+                @if (($setting['tampilkan_email'] ?? true) && !empty($setting['email'])) {{ $setting['email'] }} @endif
+                @if (($setting['tampilkan_npwp'] ?? true) && !empty($setting['npwp'])) &nbsp;|&nbsp; NPWP: {{ $setting['npwp'] }} @endif
               </div>
             @endif
-            @if (!empty($setting['tagline']))
+            @if (($setting['tampilkan_tagline'] ?? true) && !empty($setting['tagline']))
               <div class="company-tagline">{{ $setting['tagline'] }}</div>
             @endif
           </td>
@@ -293,9 +307,9 @@
           </td>
           <td class="qty-col">{{ number_format($item->jumlah, 0) }}</td>
           <td class="price-col">{{ number_format($item->harga_satuan, 0) }}</td>
-          <td class="disc-col">{{ $item->diskon > 0 ? number_format($item->diskon, 0) : '0' }}</td>
+          <td class="disc-col">{{ $item->diskon > 0 ? number_format($item->diskon, 0) . '%' : '0%' }}</td>
           <td class="tax-col">{{ $item->nilai_pajak > 0 ? number_format($item->nilai_pajak, 0) : '0' }}</td>
-          <td class="total-col">{{ number_format($item->total_setelah_pajak, 0) }}</td>
+          <td class="total-col">{{ number_format($item->subtotal, 0) }}</td>
         </tr>
         @php $sectionSubtotal += $item->total_setelah_pajak; @endphp
       @endif
@@ -317,12 +331,43 @@
 @php
   $totalPajak = $po->items->sum('nilai_pajak');
   $subtotal = $po->subtotal;
-  $grandTotal = $po->total;
+  $diskonPct = $po->diskon ?? 0;
+  $diskonAmt = $subtotal * $diskonPct / 100;
+  // Calculate total discount from items (informational - already included in subtotal)
+  $totalItemDiscount = $po->items->sum(function ($item) {
+    $itemSubtotal = $item->jumlah * $item->harga_satuan;
+    return $itemSubtotal * ($item->diskon ?? 0) / 100;
+  });
+  // PO-level discount is applied on top of subtotal (which already has item discounts)
+  $untaxedAmount = $subtotal - $diskonAmt;
+  $grandTotal = $untaxedAmount + $totalPajak;
 @endphp
 <table class="totals-table">
+  @if ($diskonPct > 0)
+  <tr>
+    <td class="label">
+      <div>Discount ({{ number_format($diskonPct, 0) }}%)</div>
+    </td>
+    <td class="value" style="color: #e74c3c;">- Rp {{ number_format($diskonAmt, 0) }}</td>
+  </tr>
+  @endif
+  @if ($totalItemDiscount > 0)
+  <tr>
+    <td class="label">
+      <div>Item Discounts</div>
+    </td>
+    <td class="value" style="color: #e74c3c;">- Rp {{ number_format($totalItemDiscount, 0) }}</td>
+  </tr>
+  @endif
+  @if ($diskonPct > 0)
+  <tr class="diskon-total-row">
+    <td class="label">Diskon Total</td>
+    <td class="value" style="color: #e74c3c;">- Rp {{ number_format($diskonAmt, 0) }}</td>
+  </tr>
+  @endif
   <tr>
     <td class="label">Untaxed Amount</td>
-    <td class="value">Rp {{ number_format($subtotal, 0) }}</td>
+    <td class="value">Rp {{ number_format($untaxedAmount, 0) }}</td>
   </tr>
   @if ($totalPajak > 0)
   <tr>
@@ -333,16 +378,20 @@
     <td class="value">Rp {{ number_format($totalPajak, 0) }}</td>
   </tr>
   @endif
-  <tr class="total-row">
+<tr class="total-row">
     <td class="label">Total</td>
     <td class="value">Rp {{ number_format($grandTotal, 0) }}</td>
   </tr>
-  <tr class="terbilang-row">
-    <td colspan="2">{{ terbilang($grandTotal) }}</td>
-  </tr>
 </table>
 
-{{-- EXTRA INFO --}}
+@if ($setting['tampilkan_terbilang'] ?? true)
+<div class="terbilang-full">
+  @php $prefix = $setting['terbilang_prefix'] ?? ''; @endphp
+  {{ $prefix ? $prefix . ' ' : '' }}{{ terbilang($grandTotal) }}
+</div>
+@endif
+
+ {{-- EXTRA INFO --}}
 @if ($po->catatan)
 <div class="extra-section">
   @if ($po->catatan)
@@ -356,29 +405,37 @@
 <div class="signature-section">
   <table class="signature-table">
     <tr>
-      <td class="signature-box">
-        <div class="signature-label">Dibuat Oleh</div>
-        <div class="signature-line"></div>
-        <div class="signature-name">{{ $po->dibuatOleh?->name ?? '________________' }}</div>
-        <div class="signature-date">{{ $po->created_at ? \Carbon\Carbon::parse($po->created_at)->locale('id')->isoFormat('D MMMM YYYY') : '' }}</div>
+      <td>
+        <div class="signature-box">
+          <div class="signature-label">Dibuat Oleh</div>
+          <div class="signature-line"></div>
+          <div class="signature-name">{{ $po->dibuatOleh?->name ?? '________________' }}</div>
+          <div class="signature-date">{{ $po->created_at ? \Carbon\Carbon::parse($po->created_at)->locale('id')->isoFormat('D MMMM YYYY') : '' }}</div>
+        </div>
       </td>
-      <td class="signature-box">
-        <div class="signature-label">Mengetahui</div>
-        <div class="signature-line"></div>
-        <div class="signature-name">________________</div>
-        <div class="signature-date">&nbsp;</div>
+      <td>
+        <div class="signature-box">
+          <div class="signature-label">Mengetahui</div>
+          <div class="signature-line"></div>
+          <div class="signature-name">________________</div>
+          <div class="signature-date">&nbsp;</div>
+        </div>
       </td>
-      <td class="signature-box">
-        <div class="signature-label">Menyetujui</div>
-        <div class="signature-line"></div>
-        <div class="signature-name">{{ $po->disetujuiOleh?->name ?? '________________' }}</div>
-        <div class="signature-date">{{ $po->tanggal_disetujui ? \Carbon\Carbon::parse($po->tanggal_disetujui)->locale('id')->isoFormat('D MMMM YYYY') : '' }}</div>
+      <td>
+        <div class="signature-box">
+          <div class="signature-label">Menyetujui</div>
+          <div class="signature-line"></div>
+          <div class="signature-name">{{ $po->disetujuiOleh?->name ?? '________________' }}</div>
+          <div class="signature-date">{{ $po->tanggal_disetujui ? \Carbon\Carbon::parse($po->tanggal_disetujui)->locale('id')->isoFormat('D MMMM YYYY') : '' }}</div>
+        </div>
       </td>
-      <td class="signature-box">
-        <div class="signature-label">Penerima</div>
-        <div class="signature-line"></div>
-        <div class="signature-name">{{ $po->diterimaOleh?->name ?? '________________' }}</div>
-        <div class="signature-date">{{ $po->tanggal_diterima ? \Carbon\Carbon::parse($po->tanggal_diterima)->locale('id')->isoFormat('D MMMM YYYY') : '' }}</div>
+      <td>
+        <div class="signature-box">
+          <div class="signature-label">Penerima</div>
+          <div class="signature-line"></div>
+          <div class="signature-name">{{ $po->diterimaOleh?->name ?? '________________' }}</div>
+          <div class="signature-date">{{ $po->tanggal_diterima ? \Carbon\Carbon::parse($po->tanggal_diterima)->locale('id')->isoFormat('D MMMM YYYY') : '' }}</div>
+        </div>
       </td>
     </tr>
   </table>

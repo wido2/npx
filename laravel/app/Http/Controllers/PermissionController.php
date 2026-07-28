@@ -40,6 +40,7 @@ class PermissionController extends Controller
         $groupLabelMap = [
             'pb' => 'PB - Pengambilan Barang',
             'po' => 'Purchase Order',
+            'pp' => 'PP - Permintaan Pembelian',
             'master' => 'Master Data',
             'inventory' => 'Inventory',
             'notification' => 'Notifikasi',
@@ -54,7 +55,9 @@ class PermissionController extends Controller
             $parts = explode('.', $perm, 2);
             $group = $parts[0] ?? 'other';
             $name = $parts[1] ?? $perm;
-            $label = $labelMap[$name] ?? str_replace('_', ' ', ucfirst($name));
+            $label = $labelMap[$name] ?? collect(explode('.', $name))
+                ->map(fn($p) => $labelMap[$p] ?? str_replace('_', ' ', ucfirst($p)))
+                ->implode(' - ');
             $grouped[$group][] = ['name' => $perm, 'label' => $label];
         }
 

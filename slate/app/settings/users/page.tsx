@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import {
   Table,
@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import {
   fetchUsers,
@@ -34,7 +33,6 @@ import {
   syncUserRoles,
   syncRolePermissions,
   deleteUser,
-  deleteRole,
   type ManagedUser,
   type RoleInfo,
   type PermissionsGrouped,
@@ -46,7 +44,6 @@ import {
   Trash2Icon,
   ShieldIcon,
   UserPlusIcon,
-  PlusIcon,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -272,10 +269,6 @@ export default function UsersPage() {
   const [creating, setCreating] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null)
 
-  const [roles, setRoles] = useState<RoleInfo[]>([])
-  const [rolesLoading, setRolesLoading] = useState(true)
-  const [deleteRoleTarget, setDeleteRoleTarget] = useState<RoleInfo | null>(null)
-
   const load = useCallback(async () => {
     try {
       const u = await fetchUsers()
@@ -287,20 +280,7 @@ export default function UsersPage() {
     }
   }, [])
 
-  useEffect(() => { load() }, [load])
-
-  const loadRoles = useCallback(async () => {
-    try {
-      const r = await fetchRoles()
-      setRoles(r)
-    } catch {
-      toast.error("Failed to load roles")
-    } finally {
-      setRolesLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { loadRoles() }, [loadRoles])
+  useEffect(() => { load()   }, [load])
 
   async function handleDelete() {
     if (!deleteTarget) return
@@ -311,18 +291,6 @@ export default function UsersPage() {
       load()
     } catch {
       toast.error("Failed to delete user")
-    }
-  }
-
-  async function handleDeleteRole() {
-    if (!deleteRoleTarget) return
-    try {
-      await deleteRole(deleteRoleTarget.id)
-      toast.success("Role deleted")
-      setDeleteRoleTarget(null)
-      loadRoles()
-    } catch {
-      toast.error("Failed to delete role")
     }
   }
 
@@ -346,14 +314,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="users">
-        <TabsList>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="roles">Role Manager</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="users" className="mt-6">
-          <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">All Users</h2>
             {can("users.manage") && (
               <Button onClick={() => setCreating(true)}>
@@ -410,70 +371,6 @@ export default function UsersPage() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="roles" className="mt-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Role Manager</h2>
-            {can("users.manage") && (
-              <Button onClick={() => router.push("/settings/roles/create")}>
-                <PlusIcon className="mr-2 size-4" />
-                Create Role
-              </Button>
-            )}
-          </div>
-
-          {rolesLoading ? (
-            <div className="flex justify-center py-20">
-              <LoaderIcon className="size-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : roles.length === 0 ? (
-            <Card>
-              <CardContent className="py-20 text-center text-muted-foreground">
-                No roles found. Create one to get started.
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {roles.map((role) => (
-                <Card key={role.id}>
-                  <CardHeader>
-                    <CardTitle className="text-base capitalize">{role.name.replace(/_/g, " ")}</CardTitle>
-                    <CardDescription>{role.permissions.length} permission(s)</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {role.permissions.slice(0, 6).map((p) => (
-                        <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>
-                      ))}
-                      {role.permissions.length > 6 && (
-                        <Badge variant="outline" className="text-[10px]">+{role.permissions.length - 6}</Badge>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => router.push(`/settings/roles/${role.id}/edit`)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteRoleTarget(role)}
-                        className="text-destructive"
-                      >
-                        <Trash2Icon className="size-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
 
       {editingUserId && (
         <AlertDialog open={true} onOpenChange={() => setEditingUserId(null)}>
@@ -503,21 +400,6 @@ export default function UsersPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={!!deleteRoleTarget} onOpenChange={() => setDeleteRoleTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Role?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the role &ldquo;{deleteRoleTarget?.name}&rdquo;. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteRole}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

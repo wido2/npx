@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,7 @@ import {
 import { terbilang } from "@/lib/terbilang"
 import { createPurchaseOrder, fetchPurchaseOrder, updatePurchaseOrder } from "@/lib/purchase-order-api"
 import { createPOItem } from "@/lib/purchase-order-item-api"
+import { fetchPP, buatPOdariPP, type PermintaanPembelian } from "@/lib/permintaan-pembelian-api"
 import { fetchVendors, type Vendor } from "@/lib/vendor-api"
 import { fetchClients, type Client } from "@/lib/client-api"
 import { fetchProjects, type Project } from "@/lib/project-api"
@@ -38,6 +39,7 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   CheckIcon,
+  PencilIcon,
   PlusIcon,
   SaveIcon,
   Trash2Icon,
@@ -56,16 +58,22 @@ interface LineItem {
   jenis_pajak_persentase: number
   keterangan: string
   tempId: string
+  pp_item_id?: string
 }
 
 const steps = ["Header", "Items", "Review"]
 
 export function PurchaseOrderWizard({ poId }: { poId?: string }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const ppId = searchParams.get("pp_id")
+  const [ppData, setPpData] = useState<PermintaanPembelian | null>(null)
   const [step, setStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
-  const [loading, setLoading] = useState(!!poId)
+  const submitRef = useRef(false)
+  const [loading, setLoading] = useState(!!poId || !!ppId)
   const isEdit = !!poId
+  const isFromPP = !!ppId
 
   // References
   const [vendors, setVendors] = useState<Vendor[]>([])
@@ -85,6 +93,7 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
   const [catatan, setCatatan] = useState("")
   const [syaratPembayaran, setSyaratPembayaran] = useState("")
   const [alamatKirim, setAlamatKirim] = useState("")
+  const [poDiskon, setPoDiskon] = useState("0")
 
   // Step 2: Items
   const [items, setItems] = useState<LineItem[]>([])
@@ -95,6 +104,7 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
   const [itemPajakId, setItemPajakId] = useState("")
   const [itemKeterangan, setItemKeterangan] = useState("")
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null)
+  const [editingItem, setEditingItem] = useState<LineItem | null>(null)
 
   const loadRefs = useCallback(async () => {
     try {
@@ -135,6 +145,7 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
       setCatatan(po.catatan || "")
       setSyaratPembayaran(po.syarat_pembayaran || "")
       setAlamatKirim(po.alamat_kirim || "")
+      setPoDiskon(String(po.diskon || 0))
       if (po.items) {
         setItems(po.items.map((it) => ({
           id: it.id,
@@ -159,8 +170,44 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
     }
   }, [poId, router])
 
+  const loadPp = useCallback(async () => {
+    if (!ppId) return
+    try {
+      const pp = await fetchPP(ppId)
+      setPpData(pp)
+      setClientId(pp.client_id || "")
+      setProjectId(pp.project_id || "")
+      setCatatan("Dibuat dari PP: " + (pp.kode || ""))
+      if (pp.items) {
+        setItems(pp.items
+          .filter((i) => i.jumlah_disetujui && i.jumlah_disetujui > 0 && !i.purchase_order_item?.purchase_order)
+          .map((i) => ({
+            barang_id: i.barang_id,
+            barang_nama: i.barang?.nama || "",
+            barang_kode: i.barang?.kode || "",
+            jumlah: i.jumlah_disetujui || 0,
+            harga_satuan: 0,
+            diskon: 0,
+            jenis_pajak_id: "",
+            jenis_pajak_nama: "",
+            jenis_pajak_persentase: 0,
+            keterangan: "Dari PP: " + (pp.kode || ""),
+            tempId: Math.random().toString(36).slice(2),
+            pp_item_id: i.id,
+          }))
+        )
+      }
+    } catch {
+      toast.error("Failed to load PP")
+      router.push("/purchase-order")
+    } finally {
+      setLoading(false)
+    }
+  }, [ppId, router])
+
   useEffect(() => { loadRefs() }, [loadRefs])
   useEffect(() => { if (poId) loadPo() }, [loadPo, poId])
+  useEffect(() => { if (ppId) loadPp() }, [loadPp, ppId])
 
   const selectedBarang = barangs.find((b) => b.id === itemBarangId)
 
@@ -181,15 +228,31 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
       jenis_pajak_nama: pajak?.nama || "",
       jenis_pajak_persentase: pajak?.persentase || 0,
       keterangan: itemKeterangan,
-      tempId: Math.random().toString(36).slice(2),
+      tempId: editingItem?.tempId || Math.random().toString(36).slice(2),
+      pp_item_id: editingItem?.pp_item_id,
     }
-    setItems((prev) => [...prev, newItem])
+    if (editingItem) {
+      setItems((prev) => prev.map((i) => i.tempId === editingItem.tempId ? newItem : i))
+      setEditingItem(null)
+    } else {
+      setItems((prev) => [...prev, newItem])
+    }
     setItemBarangId("")
     setItemJumlah("1")
     setItemHarga("")
     setItemDiskon("0")
     setItemPajakId("")
     setItemKeterangan("")
+  }
+
+  function startEdit(item: LineItem) {
+    setItemBarangId(item.barang_id)
+    setItemJumlah(item.jumlah.toString())
+    setItemHarga(item.harga_satuan.toString())
+    setItemDiskon(item.diskon.toString())
+    setItemPajakId(item.jenis_pajak_id)
+    setItemKeterangan(item.keterangan)
+    setEditingItem(item)
   }
 
   function removeItem(tempId: string) {
@@ -199,14 +262,16 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
 
   const subtotalKomputer = useMemo(() => {
     return items.reduce((sum, item) => {
-      const sub = (item.jumlah * item.harga_satuan) - item.diskon
+      const diskonPct = Math.min(item.diskon, 100)
+      const sub = (item.jumlah * item.harga_satuan) * (100 - diskonPct) / 100
       return sum + sub
     }, 0)
   }, [items])
 
   const totalPajak = useMemo(() => {
     return items.reduce((sum, item) => {
-      const sub = (item.jumlah * item.harga_satuan) - item.diskon
+      const diskonPct = Math.min(item.diskon, 100)
+      const sub = (item.jumlah * item.harga_satuan) * (100 - diskonPct) / 100
       const pajak = sub * item.jenis_pajak_persentase / 100
       return sum + pajak
     }, 0)
@@ -218,17 +283,24 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
     `Rp${new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(val))}`
 
   async function handleSubmit() {
+    if (submitRef.current) return
+    submitRef.current = true
+    setSubmitting(true)
+
     if (!vendorId) {
       toast.error("Please select vendor")
       setStep(0)
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
     if (items.length === 0) {
       toast.error("Please add at least one item")
       setStep(1)
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
-    setSubmitting(true)
     try {
       const payload = {
         vendor_id: vendorId,
@@ -239,6 +311,7 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
         catatan: catatan.trim() || undefined,
         syarat_pembayaran: syaratPembayaran.trim() || undefined,
         alamat_kirim: alamatKirim.trim() || undefined,
+        diskon: parseFloat(poDiskon) || 0,
         items: items.map((it) => ({
           ...(it.id ? { id: it.id } : {}),
           barang_id: it.barang_id,
@@ -250,7 +323,27 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
         })),
       }
 
-      if (isEdit && poId) {
+      if (isFromPP && ppId) {
+        const po = await buatPOdariPP(ppId, {
+          vendor_id: vendorId,
+          tanggal_po: tanggalPo,
+          catatan: catatan.trim() || undefined,
+          syarat_pembayaran: syaratPembayaran.trim() || undefined,
+          alamat_kirim: alamatKirim.trim() || undefined,
+          diskon: parseFloat(poDiskon) || 0,
+          items: items.map((it) => ({
+            pp_item_id: it.pp_item_id || undefined,
+            barang_id: it.pp_item_id ? undefined : it.barang_id,
+            jumlah: it.jumlah,
+            harga_satuan: it.harga_satuan,
+            diskon: it.diskon,
+            jenis_pajak_id: it.jenis_pajak_id || undefined,
+            keterangan: it.keterangan || undefined,
+          })),
+        })
+        toast.success("Purchase order created from PP")
+        router.push(`/purchase-order/${po.id}`)
+      } else if (isEdit && poId) {
         await updatePurchaseOrder(poId, payload)
         toast.success("Purchase order updated")
         router.push(`/purchase-order/${poId}`)
@@ -261,6 +354,7 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
           project_id: projectId || undefined,
           tanggal_po: tanggalPo,
           tanggal_kirim_expected: tanggalKirim || undefined,
+          diskon: parseFloat(poDiskon) || 0,
           catatan: catatan.trim() || undefined,
           syarat_pembayaran: syaratPembayaran.trim() || undefined,
           alamat_kirim: alamatKirim.trim() || undefined,
@@ -281,8 +375,9 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
         router.push(`/purchase-order/${po.id}`)
       }
     } catch {
-      toast.error(isEdit ? "Failed to update purchase order" : "Failed to create purchase order")
+      toast.error(isFromPP ? "Failed to create PO from PP" : (isEdit ? "Failed to update purchase order" : "Failed to create purchase order"))
     } finally {
+      submitRef.current = false
       setSubmitting(false)
     }
   }
@@ -298,8 +393,8 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
           <ArrowLeftIcon className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">{isEdit ? "Edit Purchase Order" : "New Purchase Order"}</h1>
-          <p className="text-muted-foreground">{isEdit ? "Update purchase order details" : "Create a new purchase order"}</p>
+          <h1 className="text-2xl font-bold">{isFromPP ? "Buat PO dari PP" : isEdit ? "Edit Purchase Order" : "New Purchase Order"}</h1>
+          <p className="text-muted-foreground">{isFromPP ? "PP " + (ppData?.kode || "") : isEdit ? "Update purchase order details" : "Create a new purchase order"}</p>
         </div>
       </div>
 
@@ -341,11 +436,17 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                             try {
                               const res = await fetchHargaSuppliers({ vendor_id: v, per_page: 500 })
                               setVendorPrices(res.data)
+                              setItems((prev) => prev.map((item) => {
+                                const hp = res.data.find((p) => p.barang_id === item.barang_id)
+                                if (hp) return { ...item, harga_satuan: hp.harga_beli }
+                                return item
+                              }))
                             } catch {
                               setVendorPrices([])
                             }
                           } else {
                             setVendorPrices([])
+                            setItems((prev) => prev.map((item) => ({ ...item, harga_satuan: 0 })))
                           }
                         }}
                         placeholder="Pilih vendor..."
@@ -393,6 +494,12 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                     <FieldLabel htmlFor="syarat_pembayaran">Syarat Pembayaran</FieldLabel>
                     <FieldContent>
                       <Input id="syarat_pembayaran" value={syaratPembayaran} onChange={(e) => setSyaratPembayaran(e.target.value)} placeholder="e.g. 30 days" />
+                    </FieldContent>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="diskon">Diskon (%)</FieldLabel>
+                    <FieldContent>
+                      <Input id="diskon" type="number" min="0" max="100" step="0.01" value={poDiskon} onChange={(e) => setPoDiskon(e.target.value)} placeholder="0" className="w-24" />
                     </FieldContent>
                   </Field>
                 </div>
@@ -480,9 +587,12 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                     </FieldContent>
                   </Field>
                   <Field className="md:col-span-1">
-                    <FieldLabel htmlFor="item_diskon">Diskon</FieldLabel>
+                    <FieldLabel htmlFor="item_diskon">Diskon (%)</FieldLabel>
                     <FieldContent>
-                      <Input id="item_diskon" type="number" step="1" value={itemDiskon} onChange={(e) => setItemDiskon(e.target.value)} />
+                      <div className="relative">
+                        <Input id="item_diskon" type="number" step="1" min="0" max="100" value={itemDiskon} onChange={(e) => setItemDiskon(e.target.value)} className="[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none pr-6" />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">%</span>
+                      </div>
                     </FieldContent>
                   </Field>
                   <Field className="md:col-span-2">
@@ -505,9 +615,14 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                   </FieldContent>
                 </Field>
               </div>
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex justify-end gap-2">
+                {editingItem && (
+                  <Button type="button" variant="ghost" onClick={() => { setEditingItem(null); setItemBarangId(""); setItemJumlah("1"); setItemHarga(""); setItemDiskon("0"); setItemPajakId(""); setItemKeterangan("") }}>
+                    Batal
+                  </Button>
+                )}
                 <Button type="button" variant="outline" onClick={addItem} disabled={!itemBarangId}>
-                  <PlusIcon /> Add Item
+                  {editingItem ? <CheckIcon /> : <PlusIcon />} {editingItem ? "Update" : "Add Item"}
                 </Button>
               </div>
             </CardContent>
@@ -533,7 +648,8 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                     <TableRow><TableCell colSpan={7} className="h-24 text-center text-muted-foreground">No items yet</TableCell></TableRow>
                   ) : (
                     items.map((item) => {
-                      const sub = (item.jumlah * item.harga_satuan) - item.diskon
+                      const diskonPct = Math.min(item.diskon, 100)
+                      const sub = (item.jumlah * item.harga_satuan) * (100 - diskonPct) / 100
                       const pajak = sub * item.jenis_pajak_persentase / 100
                       return (
                         <TableRow key={item.tempId}>
@@ -543,13 +659,18 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                           </TableCell>
                           <TableCell className="text-right">{item.jumlah}</TableCell>
                           <TableCell className="text-right">{currency(item.harga_satuan)}</TableCell>
-                          <TableCell className="text-right">{item.diskon > 0 ? currency(item.diskon) : "-"}</TableCell>
+                          <TableCell className="text-right">{item.diskon > 0 ? `${item.diskon}%` : "-"}</TableCell>
                           <TableCell className="text-right">{pajak > 0 ? currency(pajak) : "-"}</TableCell>
                           <TableCell className="text-right font-medium">{currency(sub + pajak)}</TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="icon" className="size-8 text-destructive" onClick={() => setDeleteItemId(item.tempId)}>
-                              <Trash2Icon className="size-4" />
-                            </Button>
+                            <div className="flex items-center gap-1 justify-end">
+                              <Button variant="ghost" size="icon" className="size-8" onClick={() => startEdit(item)}>
+                                <PencilIcon className="size-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="size-8 text-destructive" onClick={() => setDeleteItemId(item.tempId)}>
+                                <Trash2Icon className="size-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       )
@@ -605,7 +726,8 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                 </TableHeader>
                 <TableBody>
                   {items.map((item) => {
-                    const sub = (item.jumlah * item.harga_satuan) - item.diskon
+                    const diskonPct = Math.min(item.diskon, 100)
+                    const sub = (item.jumlah * item.harga_satuan) * (100 - diskonPct) / 100
                     const pajak = sub * item.jenis_pajak_persentase / 100
                     return (
                       <TableRow key={item.tempId}>
@@ -615,7 +737,7 @@ export function PurchaseOrderWizard({ poId }: { poId?: string }) {
                         </TableCell>
                         <TableCell className="text-right">{item.jumlah}</TableCell>
                         <TableCell className="text-right">{currency(item.harga_satuan)}</TableCell>
-                        <TableCell className="text-right">{item.diskon > 0 ? currency(item.diskon) : "-"}</TableCell>
+                        <TableCell className="text-right">{item.diskon > 0 ? `${item.diskon}%` : "-"}</TableCell>
                         <TableCell className="text-right">{currency(sub)}</TableCell>
                         <TableCell className="text-right">{pajak > 0 ? currency(pajak) : "-"}</TableCell>
                         <TableCell className="text-right font-medium">{currency(sub + pajak)}</TableCell>

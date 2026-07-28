@@ -65,6 +65,15 @@ const statusColors: Record<string, "default" | "secondary" | "outline" | "destru
   diterima_sebagian: "default", diterima: "default", dibatalkan: "destructive",
 }
 
+const statusClasses: Record<string, string> = {
+  draft: "bg-gray-100 text-gray-700 border-gray-200",
+  dikirim: "bg-blue-100 text-blue-700 border-blue-200",
+  disetujui: "bg-green-100 text-green-700 border-green-200",
+  diterima_sebagian: "bg-amber-100 text-amber-700 border-amber-200",
+  diterima: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  dibatalkan: "bg-red-100 text-red-700 border-red-200",
+}
+
 const statusLabels: Record<string, string> = {
   draft: "Pengajuan", dikirim: "Dikirim", disetujui: "Disetujui",
   diterima_sebagian: "Diterima Sebagian", diterima: "Diterima", dibatalkan: "Dibatalkan",
@@ -263,7 +272,7 @@ export function PurchaseOrderDetail({ poId }: Props) {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">{po.kode || "Pengajuan"}</h1>
-              <Badge variant={statusColors[po.status]}>{statusLabels[po.status]}</Badge>
+              <Badge variant={statusColors[po.status]} className={statusClasses[po.status]}>{statusLabels[po.status]}</Badge>
             </div>
             <p className="text-muted-foreground">{formatDate(po.tanggal_po)}</p>
           </div>
@@ -330,7 +339,7 @@ export function PurchaseOrderDetail({ poId }: Props) {
           <CardHeader><CardTitle>Financial Summary</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{currency(po.subtotal)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Diskon</span><span>{po.diskon > 0 ? currency(po.diskon) : "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Diskon</span><span>{po.diskon > 0 ? `${po.diskon}%` : "-"}</span></div>
             <div className="flex justify-between text-base font-bold"><span>Total</span><span>{currency(po.total)}</span></div>
           </CardContent>
           {po.alamat_kirim && (
@@ -401,7 +410,7 @@ export function PurchaseOrderDetail({ poId }: Props) {
                           </TableCell>
                           <TableCell className="text-right">{item.jumlah}</TableCell>
                           <TableCell className="text-right">{currency(item.harga_satuan)}</TableCell>
-                          <TableCell className="text-right">{item.diskon > 0 ? currency(item.diskon) : "-"}</TableCell>
+                          <TableCell className="text-right">{item.diskon > 0 ? `${item.diskon}%` : "-"}</TableCell>
                           <TableCell className="text-right">{item.nilai_pajak > 0 ? currency(item.nilai_pajak) : "-"}</TableCell>
                           <TableCell className="text-right font-medium">{currency(item.total_setelah_pajak)}</TableCell>
                         </TableRow>

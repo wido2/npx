@@ -58,11 +58,11 @@ export function LowStockTable() {
                   <TableCell>{item.barang_kode}</TableCell>
                   <TableCell>
                     <Badge variant={item.stok === 0 ? "destructive" : "secondary"}>
-                      {item.stok} {item.unit_nama}
+                      {item.stok} {item.unit}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {item.stok_minimum} {item.unit_nama}
+                    {item.stok_minimum} {item.unit}
                   </TableCell>
                 </TableRow>
               ))}

@@ -14,8 +14,8 @@ class PurchaseOrderService
         $po->load('items');
 
         $subtotal = $po->items->sum('subtotal');
-        $diskon = $po->diskon ?? 0;
-        $total = $subtotal - $diskon;
+        $diskonPct = min($po->diskon ?? 0, 100);
+        $total = $subtotal * (100 - $diskonPct) / 100;
 
         $po->update([
             'subtotal' => $subtotal,
@@ -25,7 +25,8 @@ class PurchaseOrderService
 
     public function recalculateItem(PurchaseOrderItem $item): void
     {
-        $subtotal = ($item->jumlah * $item->harga_satuan) - $item->diskon;
+        $diskonPct = min($item->diskon ?? 0, 100);
+        $subtotal = ($item->jumlah * $item->harga_satuan) * (100 - $diskonPct) / 100;
         $nilaiPajak = 0;
 
         if ($item->jenis_pajak_id && $item->jenisPajak) {

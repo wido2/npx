@@ -7,11 +7,19 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import { fetchProject, type Project } from "@/lib/project-api"
 import { ArrowLeftIcon, LoaderIcon, PencilIcon } from "lucide-react"
 
 const statusColors: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  aktif: "default", selesai: "secondary", ditunda: "outline", dibatalkan: "destructive",
+  aktif: "default", selesai: "secondary", ditunda: "outline",   dibatalkan: "destructive",
+}
+
+const statusClasses: Record<string, string> = {
+  aktif: "bg-green-100 text-green-700 border-green-200",
+  selesai: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  ditunda: "bg-purple-100 text-purple-700 border-purple-200",
+  dibatalkan: "bg-red-100 text-red-700 border-red-200",
 }
 
 interface Props {
@@ -61,21 +69,26 @@ export function ProjectDetail({ projectId }: Props) {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Project Info</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Informasi Project</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Kode</span><span>{project.kode}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Nama</span><span>{project.nama}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Client</span><span>{project.client?.nama || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Unit</span><span>{project.unit?.nama || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge variant={statusColors[project.status] || "outline"} className="capitalize">{project.status}</Badge></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Nilai Kontrak</span><span>{project.nilai_kontrak != null ? `Rp${new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(project.nilai_kontrak))}` : "-"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Jumlah</span><span>{project.jumlah ?? "-"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Tanggal Mulai</span><span>{project.tanggal_mulai || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Tanggal Selesai</span><span>{project.tanggal_selesai || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Kode</span><span className="font-medium">{project.kode}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Nama</span><span className="font-medium">{project.nama}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Client</span><span className="font-medium">{project.client?.nama || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge variant={statusColors[project.status] || "outline"} className={cn(statusClasses[project.status], "capitalize")}>{project.status}</Badge></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Detail Project</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Unit</span><span className="font-medium">{project.unit?.nama || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Nilai Kontrak</span><span className="font-medium">{project.nilai_kontrak != null ? `Rp${new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(project.nilai_kontrak))}` : "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Jumlah</span><span className="font-medium">{project.jumlah ?? "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Tanggal Mulai</span><span className="font-medium">{project.tanggal_mulai || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Tanggal Selesai</span><span className="font-medium">{project.tanggal_selesai || "-"}</span></div>
             {project.deskripsi && (
-              <div className="flex justify-between"><span className="text-muted-foreground">Deskripsi</span><span>{project.deskripsi}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Deskripsi</span><span className="font-medium">{project.deskripsi}</span></div>
             )}
           </CardContent>
         </Card>

@@ -48,6 +48,22 @@ export interface TopItem {
   total_nilai: number
 }
 
+export interface PerProjectItem {
+  project_id: string
+  project_kode: string
+  project_nama: string
+  total_po: number
+  total_nilai: number
+}
+
+export interface PerClientItem {
+  client_id: string
+  client_kode: string
+  client_nama: string
+  total_po: number
+  total_nilai: number
+}
+
 function authHeaders(): Record<string, string> {
   const token = getToken()
   return {
@@ -98,21 +114,48 @@ export async function fetchPOTopItems(sortBy?: "total_dipesan" | "total_nilai"):
   return res.json()
 }
 
+export async function fetchPOPerProject(limit?: number): Promise<PerProjectItem[]> {
+  const params = new URLSearchParams()
+  if (limit) params.set('limit', String(limit))
+  const qs = params.toString()
+  const res = await authFetch(`${API_BASE}/reports/purchase-order/per-project${qs ? `?${qs}` : ''}`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch PO per project (${res.status})`)
+  return res.json()
+}
+
+export async function fetchPOPerClient(limit?: number): Promise<PerClientItem[]> {
+  const params = new URLSearchParams()
+  if (limit) params.set('limit', String(limit))
+  const qs = params.toString()
+  const res = await authFetch(`${API_BASE}/reports/purchase-order/per-client${qs ? `?${qs}` : ''}`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch PO per client (${res.status})`)
+  return res.json()
+}
+
 // ——— Barang Reports ———
 
 export interface BarangSummary {
   total_barang: number
+  total_aktif: number
+  total_non_aktif: number
+  total_kategori: number
   total_nilai_stok: number
+  total_stok: number
+  stok_kosong: number
+  stok_minimum: number
   stok_normal: number
   stok_menipis: number
-  stok_kosong: number
 }
 
 export interface PerKategoriItem {
   kategori_id: string
   kategori_nama: string
   total_barang: number
-  total_nilai_stok: number
+  total_stok: number
 }
 
 export interface PerStatusItemBarang {
@@ -126,16 +169,18 @@ export interface StokTerendahItem {
   barang_kode: string
   stok: number
   stok_minimum: number
-  unit_nama: string
+  unit: string
+  kategori_nama: string
 }
 
 export interface TopBarItemByNilai {
   barang_id: string
   barang_nama: string
   barang_kode: string
-  nilai_stok: number
-  harga_beli: number
   stok: number
+  harga_beli: number
+  nilai_stok: number
+  unit: string
 }
 
 export interface TopByPengambilanItem {

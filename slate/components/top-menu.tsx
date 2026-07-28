@@ -18,6 +18,8 @@ import {
   UserRoundIcon,
   ShieldIcon,
   ShoppingCartIcon,
+  CreditCardIcon,
+  FilePlusIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -30,6 +32,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 interface MenuGroup {
   label: string
@@ -71,8 +74,8 @@ const groups: MenuGroup[] = [
   {
     label: "Transaksi",
     icon: FileTextIcon,
-    permission: "po.view_all",
     items: [
+      { href: "/permintaan-pembelian", label: "Permintaan Pembelian", icon: FilePlusIcon, permission: "pp.view_all" },
       { href: "/purchase-order", label: "Purchase Order", icon: FileTextIcon, permission: "po.view_all" },
       { href: "/pengambilan-barang", label: "Pengambilan Barang", icon: PackageOpenIcon, permission: "pb.view_all" },
       { href: "/pembelian-langsung", label: "Pembelian Langsung", icon: ShoppingCartIcon, permission: "pl.view_all" },
@@ -92,6 +95,8 @@ const groups: MenuGroup[] = [
     permission: "reports.view",
     items: [
       { href: "/reports", label: "Reports", icon: BarChart3Icon, permission: "reports.view" },
+      { href: "/pengeluaran-po", label: "Pengeluaran PO", icon: CreditCardIcon, permission: "reports.view" },
+      { href: "/laporan-barang", label: "Laporan Barang", icon: PackageIcon, permission: "reports.view" },
     ],
   },
   {
@@ -126,14 +131,19 @@ export function TopMenu() {
             const active = isActive(pathname, group.href!)
             return (
               <NavigationMenuItem key={group.href}>
-                <NavigationMenuLink
-                  data-active={active}
-                  className={cn("gap-1", active && "bg-muted/50")}
-                  render={<Link href={group.href!} />}
-                >
-                  <Icon className="size-4" />
-                  <span>{group.label}</span>
-                </NavigationMenuLink>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <NavigationMenuLink
+                      data-active={active}
+                      className={cn("gap-1", active && "bg-muted/50")}
+                      render={<Link href={group.href!} />}
+                    >
+                      <Icon className="size-4" />
+                      <span>{group.label}</span>
+                    </NavigationMenuLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Buka {group.label}</TooltipContent>
+                </Tooltip>
               </NavigationMenuItem>
             )
           }
@@ -161,15 +171,19 @@ export function TopMenu() {
                     const ItemIcon = item.icon
                     const active = isActive(pathname, item.href)
                     return (
-                      <NavigationMenuLink
-                        key={item.href}
-                        data-active={active}
-                        className={cn("w-48 gap-1", active && "bg-muted/50")}
-                        render={<Link href={item.href} />}
-                      >
-                        <ItemIcon className="size-4" />
-                        <span>{item.label}</span>
-                      </NavigationMenuLink>
+                      <Tooltip key={item.href}>
+                        <TooltipTrigger>
+                          <NavigationMenuLink
+                            data-active={active}
+                            className={cn("w-48 gap-1", active && "bg-muted/50")}
+                            render={<Link href={item.href} />}
+                          >
+                            <ItemIcon className="size-4" />
+                            <span>{item.label}</span>
+                          </NavigationMenuLink>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">Buka {item.label}</TooltipContent>
+                      </Tooltip>
                     )
                   })}
                 </div>

@@ -32,6 +32,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import * as XLSX from "xlsx"
 import { AlertCircleIcon, PackageIcon, SearchIcon, DownloadIcon } from "lucide-react"
 import {
   fetchLaporanStok,
@@ -166,25 +167,26 @@ export function InventoryLaporanTable() {
     return table.getSelectedRowModel().rows.map((r) => r.original)
   }, [laporan, rowSelection, table])
 
-  function handleExportSelected() {
-    const rows = selectedData.map((r) => ({
-      Kode: r.kode,
-      Nama: r.nama,
-      Kategori: r.kategori?.nama || "",
-      Stok: r.stok,
-      "Stok Minimum": r.stok_minimum,
-      "Harga Beli": r.harga_beli ?? 0,
-      "Nilai Stok": (r.harga_beli ?? 0) * r.stok,
-    }))
-    const header = Object.keys(rows[0] || {}).join(",")
-    const csv = [header, ...rows.map((r) => Object.values(r).join(","))].join("\n")
-    const blob = new Blob([csv], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "laporan-stok.csv"
-    a.click()
-    URL.revokeObjectURL(url)
+  function handleExportExcel() {
+    const sourceData = selectedCount > 0 ? selectedData : (laporan?.data || [])
+    const rows = sourceData.map((r) => [
+      r.kode,
+      r.nama,
+      r.kategori?.nama || "-",
+      r.unit?.nama || "-",
+      r.stok,
+      r.stok_minimum,
+      r.harga_beli ?? 0,
+      (r.harga_beli ?? 0) * r.stok,
+    ])
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["Kode", "Nama", "Kategori", "Unit", "Stok", "Stok Minimum", "Harga Beli", "Nilai Stok"],
+      ...rows,
+    ])
+    ws["!cols"] = [{ wch: 18 }, { wch: 40 }, { wch: 18 }, { wch: 8 }, { wch: 8 }, { wch: 12 }, { wch: 20 }, { wch: 24 }]
+    XLSX.utils.book_append_sheet(wb, ws, "Laporan Stok")
+    XLSX.writeFile(wb, "laporan-stok.xlsx")
   }
 
   if (!can("inventory.view")) {
@@ -254,9 +256,9 @@ export function InventoryLaporanTable() {
           {selectedCount > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
-              <Button variant="outline" size="sm" onClick={handleExportSelected}>
+              <Button variant="outline" size="sm" onClick={handleExportExcel}>
                 <DownloadIcon className="size-4" />
-                Export
+                Export Excel
               </Button>
             </div>
           )}

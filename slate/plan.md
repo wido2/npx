@@ -532,6 +532,36 @@ routes/
 - [x] Seeders created & seeded (2 settings records, 2 tax types)
 - [x] All PHP syntax errors: NONE
 
+## Permintaan Pembelian (PP) Feature — Implementation Status
+
+### Backend (Laravel)
+- [x] Migrations: `permintaan_pembelian`, `permintaan_pembelian_items`, `add_pp_item_id_to_purchase_order_items`
+- [x] Models: `PermintaanPembelian`, `PermintaanPembelianItem`
+- [x] Service: `KodePPService` (PP-{Y}-{M}-{seq} format)
+- [x] Controller: `PermintaanPembelianController` (index, store, show, update, destroy, bulkDestroy, kirim, verifikasi, tolak, batalkan, buatPO)
+- [x] Controller: `PermintaanPembelianItemController` (index, store, update, destroy)
+- [x] Routes registered in api.php (15 PP routes)
+- [x] `permintaan_pembelian_item_id` FK added to `purchase_order_items`
+- [x] `PurchaseOrderItem` model updated with `permintaan_pembelian_item_id` fillable + relation
+
+### Frontend (Next.js)
+- [x] API lib: `lib/permintaan-pembelian-api.ts`
+- [x] Component: `components/permintaan-pembelian-table.tsx`
+- [x] Component: `components/permintaan-pembelian-wizard.tsx` (3-step: Header → Items → Review)
+- [x] Component: `components/permintaan-pembelian-detail.tsx` (detail + verifikasi sheet + buat PO dialog)
+- [x] Page: `app/permintaan-pembelian/page.tsx`
+- [x] Page: `app/permintaan-pembelian/create/page.tsx`
+- [x] Page: `app/permintaan-pembelian/[id]/page.tsx`
+- [x] Page: `app/permintaan-pembelian/[id]/edit/page.tsx`
+- [x] Navigation: Added "Permintaan Pembelian" to Transaksi menu in TopMenu
+
+### Status Workflow
+```
+draft → kirim → menunggu → verifikasi → diverifikasi
+                  ↓              ↓
+              dibatalkan      ditolak
+```
+
 ## To Start Development Server
 
 ```bash

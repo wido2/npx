@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
@@ -56,6 +56,7 @@ export function PembelianLangsungWizard({ editData }: Props) {
   const { user, can } = useAuth()
   const [step, setStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+  const submitRef = useRef(false)
 
   const [vendors, setVendors] = useState<Vendor[]>([])
   const [barangs, setBarangs] = useState<Barang[]>([])
@@ -213,6 +214,8 @@ export function PembelianLangsungWizard({ editData }: Props) {
   }
 
   async function handleSubmit() {
+    if (submitRef.current) return
+    submitRef.current = true
     setSubmitting(true)
     try {
       const payloadItems = items.map((i) => ({
@@ -247,6 +250,7 @@ export function PembelianLangsungWizard({ editData }: Props) {
     } catch (e: any) {
       toast.error(e?.message || "Gagal menyimpan")
     } finally {
+      submitRef.current = false
       setSubmitting(false)
     }
   }

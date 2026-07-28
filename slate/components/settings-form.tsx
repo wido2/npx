@@ -1,7 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
+import { useAuth } from "@/lib/auth-context"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -63,6 +64,20 @@ interface PBData {
   reset_periode: string
 }
 
+interface PLData {
+  format_kode: string
+  urutan_terakhir: number
+  tahun_bulan_terakhir: string
+  reset_periode: string
+}
+
+interface StokOpnameData {
+  format_kode: string
+  urutan_terakhir: number
+  tahun_bulan_terakhir: string
+  reset_periode: string
+}
+
 interface POPDFData {
   margin_top: number
   margin_right: number
@@ -81,12 +96,42 @@ interface POPDFData {
   font_size_ttd: number
   font_size_footer: number
   logo_max_height: number
+  ttd_border: number
   tampilkan_logo: boolean
   tampilkan_kode_barang: boolean
   tampilkan_ttd: boolean
   tampilkan_footer: boolean
   rahasiakan_client: boolean
   judul_laporan: string
+  // TTD Box styling
+  ttd_border_color: string
+  ttd_header_bg: string
+  ttd_header_text_color: string
+  ttd_font_size: number
+  ttd_font_weight: string
+  // Header styling
+  header_company_name_font_size: number
+  header_company_name_font_weight: string
+  header_company_name_color: string
+  header_details_font_size: number
+  header_details_color: string
+  header_tagline_font_size: number
+  header_tagline_color: string
+  header_tagline_font_style: string
+  tampilkan_nama_perusahaan: boolean
+  tampilkan_alamat: boolean
+  tampilkan_telepon: boolean
+  tampilkan_email: boolean
+  tampilkan_npwp: boolean
+  tampilkan_tagline: boolean
+  // Terbilang styling
+  terbilang_font_size: number
+  terbilang_font_weight: string
+  terbilang_font_style: string
+  terbilang_color: string
+  terbilang_text_align: string
+  terbilang_prefix: string
+  tampilkan_terbilang: boolean
 }
 
 interface PBPDFData {
@@ -115,8 +160,10 @@ interface PBPDFData {
 }
 
 export function SettingsForm() {
+  const { can } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const saveRef = useRef(false)
   const [alamatList, setAlamatList] = useState<AlamatKirim[]>([])
   const [alamatSheetOpen, setAlamatSheetOpen] = useState(false)
   const [editAlamat, setEditAlamat] = useState<AlamatKirim | null>(null)
@@ -132,13 +179,43 @@ export function SettingsForm() {
   const [pb, setPB] = useState<PBData>({
     format_kode: "", urutan_terakhir: 0, tahun_bulan_terakhir: "", reset_periode: "bulanan",
   })
+  const [pl, setPL] = useState<PLData>({
+    format_kode: "", urutan_terakhir: 0, tahun_bulan_terakhir: "", reset_periode: "bulanan",
+  })
+  const [stokOpname, setStokOpname] = useState<StokOpnameData>({
+    format_kode: "", urutan_terakhir: 0, tahun_bulan_terakhir: "", reset_periode: "bulanan",
+  })
   const [poPdf, setPoPdf] = useState<POPDFData>({
     margin_top: 15, margin_right: 12, margin_bottom: 15, margin_left: 12,
     warna_primary: "#7c7bad", warna_secondary: "#2c3e50", warna_tabel_header: "#7c7bad", warna_ttd: "#7c7bad", warna_footer_text: "#bbbbbb",
     font_family: "Segoe UI", font_size_judul: 16, font_size_tabel_header: 7, font_size_tabel_body: 8, font_size_info: 7.5, font_size_ttd: 7, font_size_footer: 6.5,
-    logo_max_height: 125,
+    logo_max_height: 125, ttd_border: 1,
+    ttd_border_color: "#ddd", ttd_header_bg: "#7c7bad", ttd_header_text_color: "#fff", ttd_font_size: 7, ttd_font_weight: "600",
     tampilkan_logo: true, tampilkan_kode_barang: true, tampilkan_ttd: true, tampilkan_footer: true, rahasiakan_client: false,
     judul_laporan: "PURCHASE ORDER",
+    // Header styling
+    header_company_name_font_size: 14,
+    header_company_name_font_weight: "bold",
+    header_company_name_color: "#2c3e50",
+    header_details_font_size: 7,
+    header_details_color: "#555",
+    header_tagline_font_size: 7,
+    header_tagline_color: "#7f8c8d",
+    header_tagline_font_style: "normal",
+    tampilkan_nama_perusahaan: true,
+    tampilkan_alamat: true,
+    tampilkan_telepon: true,
+    tampilkan_email: true,
+    tampilkan_npwp: true,
+    tampilkan_tagline: true,
+    // Terbilang styling
+    terbilang_font_size: 7,
+    terbilang_font_weight: "normal",
+    terbilang_font_style: "italic",
+    terbilang_color: "#7f8c8d",
+    terbilang_text_align: "right",
+    terbilang_prefix: "Terbilang: ",
+    tampilkan_terbilang: true,
   })
   const [pbPdf, setPbPdf] = useState<PBPDFData>({
     margin_top: 15, margin_right: 12, margin_bottom: 15, margin_left: 12,
@@ -151,12 +228,14 @@ export function SettingsForm() {
   const loadSettings = useCallback(async () => {
     setLoading(true)
     try {
-      const [generalRes, poRes, pbRes, poPdfRes, pbPdfRes] = await Promise.all([
+      const [generalRes, poRes, pbRes, poPdfRes, pbPdfRes, plRes, stokOpnameRes] = await Promise.all([
         fetchSetting("general"),
         fetchSetting("purchase_order"),
         fetchSetting("pengambilan_barang"),
         fetchSetting("po_pdf").catch(() => fetchSetting("pdf_report")),
         fetchSetting("pb_pdf").catch(() => fetchSetting("pdf_report")),
+        fetchSetting("pembelian_langsung"),
+        fetchSetting("stok_opname").catch(() => ({ data: {} })),
       ])
       const g = generalRes.data as Record<string, unknown>
       const p = poRes.data as Record<string, unknown>
@@ -188,6 +267,20 @@ export function SettingsForm() {
         tahun_bulan_terakhir: (pbData.tahun_bulan_terakhir as string) ?? "",
         reset_periode: (pbData.reset_periode as string) ?? "bulanan",
       })
+      const plData = plRes.data as Record<string, unknown>
+      setPL({
+        format_kode: (plData.format_kode as string) ?? "",
+        urutan_terakhir: (plData.urutan_terakhir as number) ?? 0,
+        tahun_bulan_terakhir: (plData.tahun_bulan_terakhir as string) ?? "",
+        reset_periode: (plData.reset_periode as string) ?? "bulanan",
+      })
+      const soData = stokOpnameRes.data as Record<string, unknown>
+      setStokOpname({
+        format_kode: (soData.format_kode as string) ?? "",
+        urutan_terakhir: (soData.urutan_terakhir as number) ?? 0,
+        tahun_bulan_terakhir: (soData.tahun_bulan_terakhir as string) ?? "",
+        reset_periode: (soData.reset_periode as string) ?? "bulanan",
+      })
       const poPdfData = poPdfRes.data as Record<string, unknown>
       setPoPdf({
         margin_top: (poPdfData.margin_top as number) ?? 15,
@@ -207,12 +300,41 @@ export function SettingsForm() {
         font_size_ttd: (poPdfData.font_size_ttd as number) ?? 7,
         font_size_footer: (poPdfData.font_size_footer as number) ?? 6.5,
         logo_max_height: (poPdfData.logo_max_height as number) ?? 125,
+        ttd_border: (poPdfData.ttd_border as number) ?? 1,
+        ttd_border_color: (poPdfData.ttd_border_color as string) ?? "#ddd",
+        ttd_header_bg: (poPdfData.ttd_header_bg as string) ?? "#7c7bad",
+        ttd_header_text_color: (poPdfData.ttd_header_text_color as string) ?? "#fff",
+        ttd_font_size: (poPdfData.ttd_font_size as number) ?? 7,
+        ttd_font_weight: (poPdfData.ttd_font_weight as string) ?? "600",
         tampilkan_logo: (poPdfData.tampilkan_logo as boolean) ?? true,
         tampilkan_kode_barang: (poPdfData.tampilkan_kode_barang as boolean) ?? true,
         tampilkan_ttd: (poPdfData.tampilkan_ttd as boolean) ?? true,
         tampilkan_footer: (poPdfData.tampilkan_footer as boolean) ?? true,
         rahasiakan_client: (poPdfData.rahasiakan_client as boolean) ?? false,
         judul_laporan: (poPdfData.judul_laporan as string) ?? "PURCHASE ORDER",
+        // Header styling
+        header_company_name_font_size: (poPdfData.header_company_name_font_size as number) ?? 14,
+        header_company_name_font_weight: (poPdfData.header_company_name_font_weight as string) ?? "bold",
+        header_company_name_color: (poPdfData.header_company_name_color as string) ?? "#2c3e50",
+        header_details_font_size: (poPdfData.header_details_font_size as number) ?? 7,
+        header_details_color: (poPdfData.header_details_color as string) ?? "#555",
+        header_tagline_font_size: (poPdfData.header_tagline_font_size as number) ?? 7,
+        header_tagline_color: (poPdfData.header_tagline_color as string) ?? "#7f8c8d",
+        header_tagline_font_style: (poPdfData.header_tagline_font_style as string) ?? "normal",
+        tampilkan_nama_perusahaan: (poPdfData.tampilkan_nama_perusahaan as boolean) ?? true,
+        tampilkan_alamat: (poPdfData.tampilkan_alamat as boolean) ?? true,
+        tampilkan_telepon: (poPdfData.tampilkan_telepon as boolean) ?? true,
+        tampilkan_email: (poPdfData.tampilkan_email as boolean) ?? true,
+        tampilkan_npwp: (poPdfData.tampilkan_npwp as boolean) ?? true,
+        tampilkan_tagline: (poPdfData.tampilkan_tagline as boolean) ?? true,
+        // Terbilang styling
+        terbilang_font_size: (poPdfData.terbilang_font_size as number) ?? 7,
+        terbilang_font_weight: (poPdfData.terbilang_font_weight as string) ?? "normal",
+        terbilang_font_style: (poPdfData.terbilang_font_style as string) ?? "italic",
+        terbilang_color: (poPdfData.terbilang_color as string) ?? "#7f8c8d",
+        terbilang_text_align: (poPdfData.terbilang_text_align as string) ?? "right",
+        terbilang_prefix: (poPdfData.terbilang_prefix as string) ?? "Terbilang: ",
+        tampilkan_terbilang: (poPdfData.tampilkan_terbilang as boolean) ?? true,
       })
       const pbPdfData = pbPdfRes.data as Record<string, unknown>
       setPbPdf({
@@ -318,6 +440,32 @@ export function SettingsForm() {
     }
   }
 
+  async function handleSavePL(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await updateSetting("pembelian_langsung", pl as unknown as Record<string, unknown>)
+      toast.success("PL settings saved")
+    } catch {
+      toast.error("Failed to save PL settings")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleSaveStokOpname(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await updateSetting("stok_opname", stokOpname as unknown as Record<string, unknown>)
+      toast.success("Stok opname settings saved")
+    } catch {
+      toast.error("Failed to save stok opname settings")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function handleSavePOPdf(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
@@ -344,6 +492,16 @@ export function SettingsForm() {
     }
   }
 
+  const tabs = useMemo(() => [
+    { value: "general", label: "General", perm: "settings.general.view" },
+    { value: "alamat", label: "Alamat", perm: "settings.alamat.view" },
+    { value: "purchase_order", label: "Purchase Order", perm: "settings.purchase_order.view" },
+    { value: "pengambilan_barang", label: "PB - Pengambilan Barang", perm: "settings.pengambilan_barang.view" },
+    { value: "pembelian_langsung", label: "PL - Pembelian Langsung", perm: "settings.pembelian_langsung.view" },
+    { value: "stok_opname", label: "Stok Opname", perm: "settings.stok_opname.view" },
+    { value: "export_pdf", label: "Export PDF", perm: "settings.pdf.view" },
+  ].filter((t) => can(t.perm)), [can])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -352,14 +510,16 @@ export function SettingsForm() {
     )
   }
 
+  if (tabs.length === 0) {
+    return <p className="text-sm text-muted-foreground">Anda tidak memiliki izin untuk mengakses settings.</p>
+  }
+
   return (
-    <Tabs defaultValue="general" className="w-full">
+    <Tabs defaultValue={tabs[0].value} className="w-full">
       <TabsList>
-        <TabsTrigger value="general">General</TabsTrigger>
-        <TabsTrigger value="alamat">Alamat</TabsTrigger>
-        <TabsTrigger value="purchase_order">Purchase Order</TabsTrigger>
-        <TabsTrigger value="pengambilan_barang">PB - Pengambilan Barang</TabsTrigger>
-        <TabsTrigger value="export_pdf">Export PDF</TabsTrigger>
+        {tabs.map((t) => (
+          <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>
+        ))}
       </TabsList>
 
       <TabsContent value="general" className="mt-6">
@@ -666,6 +826,126 @@ export function SettingsForm() {
         </Card>
       </TabsContent>
 
+      <TabsContent value="pembelian_langsung" className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>PL - Pembelian Langsung Settings</CardTitle>
+            <CardDescription>PL code format and numbering</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSavePL} className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field>
+                  <FieldLabel htmlFor="pl_format_kode">Format Kode</FieldLabel>
+                  <FieldContent>
+                    <Input id="pl_format_kode" value={pl.format_kode} onChange={(e) => setPL((p) => ({ ...p, format_kode: e.target.value }))} />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="pl_urutan_terakhir">Urutan Terakhir</FieldLabel>
+                  <FieldContent>
+                    <Input id="pl_urutan_terakhir" type="number" value={pl.urutan_terakhir} onChange={(e) => setPL((p) => ({ ...p, urutan_terakhir: parseInt(e.target.value) || 0 }))} />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="pl_reset_periode">Reset nomor pada bulan</FieldLabel>
+                  <FieldContent>
+                    <Select value={pl.reset_periode} onValueChange={(v) => setPL((p) => ({ ...p, reset_periode: v ?? "bulanan" }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="tidak_pernah">Tidak pernah</SelectItem>
+                        <SelectItem value="bulanan">Bulanan</SelectItem>
+                        <SelectItem value="1">Januari</SelectItem>
+                        <SelectItem value="2">Februari</SelectItem>
+                        <SelectItem value="3">Maret</SelectItem>
+                        <SelectItem value="4">April</SelectItem>
+                        <SelectItem value="5">Mei</SelectItem>
+                        <SelectItem value="6">Juni</SelectItem>
+                        <SelectItem value="7">Juli</SelectItem>
+                        <SelectItem value="8">Agustus</SelectItem>
+                        <SelectItem value="9">September</SelectItem>
+                        <SelectItem value="10">Oktober</SelectItem>
+                        <SelectItem value="11">November</SelectItem>
+                        <SelectItem value="12">Desember</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FieldContent>
+                </Field>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="submit" disabled={saving}>
+                  <SaveIcon />
+                  {saving ? "Saving..." : "Save PL Settings"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="stok_opname" className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Stok Opname Settings</CardTitle>
+            <CardDescription>Stock opname code format and numbering</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSaveStokOpname} className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field>
+                  <FieldLabel htmlFor="so_format_kode">Format Kode</FieldLabel>
+                  <FieldContent>
+                    <Input id="so_format_kode" value={stokOpname.format_kode} onChange={(e) => setStokOpname((p) => ({ ...p, format_kode: e.target.value }))} />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="so_urutan_terakhir">Urutan Terakhir</FieldLabel>
+                  <FieldContent>
+                    <Input id="so_urutan_terakhir" type="number" value={stokOpname.urutan_terakhir} onChange={(e) => setStokOpname((p) => ({ ...p, urutan_terakhir: parseInt(e.target.value) || 0 }))} />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="so_reset_periode">Reset nomor pada bulan</FieldLabel>
+                  <FieldContent>
+                    <Select value={stokOpname.reset_periode} onValueChange={(v) => setStokOpname((p) => ({ ...p, reset_periode: v ?? "bulanan" }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="tidak_pernah">Tidak pernah</SelectItem>
+                        <SelectItem value="bulanan">Bulanan</SelectItem>
+                        <SelectItem value="1">Januari</SelectItem>
+                        <SelectItem value="2">Februari</SelectItem>
+                        <SelectItem value="3">Maret</SelectItem>
+                        <SelectItem value="4">April</SelectItem>
+                        <SelectItem value="5">Mei</SelectItem>
+                        <SelectItem value="6">Juni</SelectItem>
+                        <SelectItem value="7">Juli</SelectItem>
+                        <SelectItem value="8">Agustus</SelectItem>
+                        <SelectItem value="9">September</SelectItem>
+                        <SelectItem value="10">Oktober</SelectItem>
+                        <SelectItem value="11">November</SelectItem>
+                        <SelectItem value="12">Desember</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FieldContent>
+                </Field>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="submit" disabled={saving}>
+                  <SaveIcon />
+                  {saving ? "Saving..." : "Save Stok Opname Settings"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
       <TabsContent value="export_pdf" className="mt-6">
         <Tabs defaultValue="po_pdf" className="w-full">
           <TabsList>
@@ -819,6 +1099,239 @@ export function SettingsForm() {
                         <Input id="po_logo_max_height" type="number" min={0} max={300} value={poPdf.logo_max_height} onChange={(e) => setPoPdf((p) => ({ ...p, logo_max_height: parseInt(e.target.value) || 125 }))} />
                       </FieldContent>
                     </Field>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium mb-3">TTD Box</h3>
+                    <Field>
+                      <FieldLabel>Border TTD Box</FieldLabel>
+                      <FieldContent>
+                        <Switch checked={poPdf.ttd_border > 0} onCheckedChange={(v) => setPoPdf((p) => ({ ...p, ttd_border: v ? 1 : 0 }))} />
+                      </FieldContent>
+                    </Field>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium mb-3">Box TTD Style</h3>
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-5">
+                      <Field>
+                        <FieldLabel>Border Color</FieldLabel>
+                        <FieldContent>
+                          <ColorPicker value={poPdf.ttd_border_color} onChange={(v) => setPoPdf((p) => ({ ...p, ttd_border_color: v }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Header Background</FieldLabel>
+                        <FieldContent>
+                          <ColorPicker value={poPdf.ttd_header_bg} onChange={(v) => setPoPdf((p) => ({ ...p, ttd_header_bg: v }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Header Text Color</FieldLabel>
+                        <FieldContent>
+                          <ColorPicker value={poPdf.ttd_header_text_color} onChange={(v) => setPoPdf((p) => ({ ...p, ttd_header_text_color: v }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel htmlFor="po_ttd_font_size">Font Size (pt)</FieldLabel>
+                        <FieldContent>
+                          <Input id="po_ttd_font_size" type="number" min={5} max={14} value={poPdf.ttd_font_size} onChange={(e) => setPoPdf((p) => ({ ...p, ttd_font_size: parseInt(e.target.value) || 7 }))} className="w-24" />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Font Weight</FieldLabel>
+                        <FieldContent>
+                          <Select value={poPdf.ttd_font_weight} onValueChange={(v) => setPoPdf((p) => ({ ...p, ttd_font_weight: v ?? "600" }))}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="400">Normal (400)</SelectItem>
+                              <SelectItem value="500">Medium (500)</SelectItem>
+                              <SelectItem value="600">Semi Bold (600)</SelectItem>
+                              <SelectItem value="700">Bold (700)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FieldContent>
+                      </Field>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="text-sm font-medium mb-3">Header Style</h3>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field>
+                        <FieldLabel>Nama Perusahaan - Font Size (pt)</FieldLabel>
+                        <FieldContent>
+                          <Input type="number" min={8} max={24} value={poPdf.header_company_name_font_size} onChange={(e) => setPoPdf((p) => ({ ...p, header_company_name_font_size: parseInt(e.target.value) || 14 }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Nama Perusahaan - Font Weight</FieldLabel>
+                        <FieldContent>
+                          <Select value={poPdf.header_company_name_font_weight} onValueChange={(v) => setPoPdf((p) => ({ ...p, header_company_name_font_weight: v ?? "bold" }))}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="500">Medium</SelectItem>
+                              <SelectItem value="600">Semi Bold</SelectItem>
+                              <SelectItem value="700">Bold</SelectItem>
+                              <SelectItem value="800">Extra Bold</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Nama Perusahaan - Warna</FieldLabel>
+                        <FieldContent>
+                          <ColorPicker value={poPdf.header_company_name_color} onChange={(v) => setPoPdf((p) => ({ ...p, header_company_name_color: v }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Detail (Alamat, Telp, Email) - Font Size (pt)</FieldLabel>
+                        <FieldContent>
+                          <Input type="number" min={5} max={14} value={poPdf.header_details_font_size} onChange={(e) => setPoPdf((p) => ({ ...p, header_details_font_size: parseFloat(e.target.value) || 7 }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Detail - Warna</FieldLabel>
+                        <FieldContent>
+                          <ColorPicker value={poPdf.header_details_color} onChange={(v) => setPoPdf((p) => ({ ...p, header_details_color: v }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Tagline - Font Size (pt)</FieldLabel>
+                        <FieldContent>
+                          <Input type="number" min={5} max={14} value={poPdf.header_tagline_font_size} onChange={(e) => setPoPdf((p) => ({ ...p, header_tagline_font_size: parseFloat(e.target.value) || 7 }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Tagline - Warna</FieldLabel>
+                        <FieldContent>
+                          <ColorPicker value={poPdf.header_tagline_color} onChange={(v) => setPoPdf((p) => ({ ...p, header_tagline_color: v }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Tagline - Style</FieldLabel>
+                        <FieldContent>
+                          <Select value={poPdf.header_tagline_font_style} onValueChange={(v) => setPoPdf((p) => ({ ...p, header_tagline_font_style: v ?? "normal" }))}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="italic">Italic</SelectItem>
+                              <SelectItem value="oblique">Oblique</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FieldContent>
+                      </Field>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="text-sm font-medium mb-3">Header Content Visibility</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium">Tampilkan Nama Perusahaan</label>
+                        <Switch checked={poPdf.tampilkan_nama_perusahaan} onCheckedChange={(v) => setPoPdf((p) => ({ ...p, tampilkan_nama_perusahaan: v }))} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium">Tampilkan Alamat</label>
+                        <Switch checked={poPdf.tampilkan_alamat} onCheckedChange={(v) => setPoPdf((p) => ({ ...p, tampilkan_alamat: v }))} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium">Tampilkan Telepon</label>
+                        <Switch checked={poPdf.tampilkan_telepon} onCheckedChange={(v) => setPoPdf((p) => ({ ...p, tampilkan_telepon: v }))} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium">Tampilkan Email</label>
+                        <Switch checked={poPdf.tampilkan_email} onCheckedChange={(v) => setPoPdf((p) => ({ ...p, tampilkan_email: v }))} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium">Tampilkan NPWP</label>
+                        <Switch checked={poPdf.tampilkan_npwp} onCheckedChange={(v) => setPoPdf((p) => ({ ...p, tampilkan_npwp: v }))} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium">Tampilkan Tagline</label>
+                        <Switch checked={poPdf.tampilkan_tagline} onCheckedChange={(v) => setPoPdf((p) => ({ ...p, tampilkan_tagline: v }))} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="text-sm font-medium mb-3">Terbilang Style</h3>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field>
+                        <FieldLabel>Font Size (pt)</FieldLabel>
+                        <FieldContent>
+                          <Input type="number" min={5} max={14} value={poPdf.terbilang_font_size} onChange={(e) => setPoPdf((p) => ({ ...p, terbilang_font_size: parseFloat(e.target.value) || 7 }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Font Weight</FieldLabel>
+                        <FieldContent>
+                          <Select value={poPdf.terbilang_font_weight} onValueChange={(v) => setPoPdf((p) => ({ ...p, terbilang_font_weight: v ?? "normal" }))}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="500">Medium</SelectItem>
+                              <SelectItem value="600">Semi Bold</SelectItem>
+                              <SelectItem value="700">Bold</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Font Style</FieldLabel>
+                        <FieldContent>
+                          <Select value={poPdf.terbilang_font_style} onValueChange={(v) => setPoPdf((p) => ({ ...p, terbilang_font_style: v ?? "italic" }))}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="italic">Italic</SelectItem>
+                              <SelectItem value="oblique">Oblique</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Warna</FieldLabel>
+                        <FieldContent>
+                          <ColorPicker value={poPdf.terbilang_color} onChange={(v) => setPoPdf((p) => ({ ...p, terbilang_color: v }))} />
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Text Align</FieldLabel>
+                        <FieldContent>
+                          <Select value={poPdf.terbilang_text_align} onValueChange={(v) => setPoPdf((p) => ({ ...p, terbilang_text_align: v ?? "right" }))}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="left">Left</SelectItem>
+                              <SelectItem value="center">Center</SelectItem>
+                              <SelectItem value="right">Right</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FieldContent>
+                      </Field>
+                      <Field>
+                        <FieldLabel>Prefix Text</FieldLabel>
+                        <FieldContent>
+                          <Input value={poPdf.terbilang_prefix} onChange={(e) => setPoPdf((p) => ({ ...p, terbilang_prefix: e.target.value }))} />
+                        </FieldContent>
+                      </Field>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium">Tampilkan Terbilang</label>
+                      <Switch checked={poPdf.tampilkan_terbilang} onCheckedChange={(v) => setPoPdf((p) => ({ ...p, tampilkan_terbilang: v }))} />
+                    </div>
                   </div>
 
                   <Separator />

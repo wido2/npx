@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -65,6 +65,7 @@ export function RoleForm({ roleId }: Props) {
   const isEdit = !!roleId
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const submitRef = useRef(false)
   const [name, setName] = useState("")
   const [isCoreRole, setIsCoreRole] = useState(false)
   const [permissions, setPermissions] = useState<string[]>([])
@@ -121,11 +122,16 @@ export function RoleForm({ roleId }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (submitRef.current) return
+    submitRef.current = true
+    setSubmitting(true)
+
     if (!name.trim()) {
       toast.error("Nama role wajib diisi")
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
-    setSubmitting(true)
     try {
       if (isEdit && roleId) {
         if (!isCoreRole) {
@@ -141,6 +147,7 @@ export function RoleForm({ roleId }: Props) {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Gagal menyimpan role")
     } finally {
+      submitRef.current = false
       setSubmitting(false)
     }
   }

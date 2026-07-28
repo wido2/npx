@@ -1,6 +1,6 @@
 "use client"
 
-import { FormEvent, useState } from "react"
+import { FormEvent, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -30,11 +30,14 @@ export function LoginForm({
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const submitRef = useRef(false)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setError("")
+    if (submitRef.current) return
+    submitRef.current = true
     setLoading(true)
+    setError("")
 
     try {
       const res = await login(email, password)
@@ -43,6 +46,7 @@ export function LoginForm({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed")
     } finally {
+      submitRef.current = false
       setLoading(false)
     }
   }

@@ -74,12 +74,20 @@ import {
   Trash2Icon,
 } from "lucide-react"
 import { fetchProjects, deleteProject, bulkDeleteProjects, type Project } from "@/lib/project-api"
+import { cn } from "@/lib/utils"
 
 const statusColors: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   aktif: "default",
   selesai: "secondary",
   ditunda: "outline",
   dibatalkan: "destructive",
+}
+
+const statusClasses: Record<string, string> = {
+  aktif: "bg-green-100 text-green-700 border-green-200",
+  selesai: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  ditunda: "bg-purple-100 text-purple-700 border-purple-200",
+  dibatalkan: "bg-red-100 text-red-700 border-red-200",
 }
 
 export function ProjectTable() {
@@ -199,7 +207,7 @@ export function ProjectTable() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => (
-        <Badge variant={statusColors[row.original.status] || "outline"} className="capitalize">
+        <Badge variant={statusColors[row.original.status] || "outline"} className={cn(statusClasses[row.original.status], "capitalize")}>
           {row.original.status}
         </Badge>
       ),

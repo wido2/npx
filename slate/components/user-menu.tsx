@@ -18,6 +18,7 @@ import {
   LogOutIcon,
   CogIcon,
 } from "lucide-react"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 export function UserMenu() {
   const router = useRouter()
@@ -47,11 +48,14 @@ export function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="h-8 w-8 cursor-pointer rounded-full outline-none">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger render={<DropdownMenuTrigger className="h-8 w-8 cursor-pointer rounded-full outline-none" />}>
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+          </Avatar>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Menu Pengguna</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
         <div className="flex flex-col gap-1 px-2 py-1.5">
           <p className="text-sm font-medium leading-none">{user.name}</p>

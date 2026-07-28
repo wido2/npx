@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -34,6 +34,7 @@ export function AlamatForm({ alamatId }: Props) {
   const isEdit = !!alamatId
   const [loading, setLoading] = useState(isEdit)
   const [submitting, setSubmitting] = useState(false)
+  const submitRef = useRef(false)
 
   const [label, setLabel] = useState("")
   const [alamat, setAlamat] = useState("")
@@ -103,11 +104,16 @@ export function AlamatForm({ alamatId }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (submitRef.current) return
+    submitRef.current = true
+    setSubmitting(true)
+
     if (!label || !alamat || !provinsi || !kota || !entityType || !entityId) {
       toast.error("Please fill all required fields")
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
-    setSubmitting(true)
     try {
       const payload = {
         label: label.trim(),
@@ -133,6 +139,7 @@ export function AlamatForm({ alamatId }: Props) {
     } catch {
       toast.error(isEdit ? "Failed to update alamat" : "Failed to create alamat")
     } finally {
+      submitRef.current = false
       setSubmitting(false)
     }
   }

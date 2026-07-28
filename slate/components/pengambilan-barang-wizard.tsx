@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
@@ -59,6 +59,7 @@ export function PengambilanBarangWizard() {
   const { user, can } = useAuth()
   const [step, setStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+  const submitRef = useRef(false)
 
   const [clients, setClients] = useState<Client[]>([])
   const [projects, setProjects] = useState<Project[]>([])
@@ -143,17 +144,24 @@ export function PengambilanBarangWizard() {
   }
 
   async function handleSubmit() {
+    if (submitRef.current) return
+    submitRef.current = true
+    setSubmitting(true)
+
     if (!tanggal) {
       toast.error("Pilih tanggal")
       setStep(0)
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
     if (items.length === 0) {
       toast.error("Tambahkan minimal satu item")
       setStep(1)
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
-    setSubmitting(true)
     try {
       const pb = await createPengambilanBarang({
         tanggal_pengambilan: tanggal,
@@ -172,6 +180,7 @@ export function PengambilanBarangWizard() {
     } catch {
       toast.error("Gagal membuat pengambilan barang")
     } finally {
+      submitRef.current = false
       setSubmitting(false)
     }
   }
@@ -291,7 +300,7 @@ export function PengambilanBarangWizard() {
                     <FieldLabel htmlFor="barang_id">Barang</FieldLabel>
                     <FieldContent>
                       <Combobox
-                        options={barangs.map((b) => ({ value: b.id, label: `${b.kode} - ${b.nama} (Stok: ${b.stok})`, disabled: b.stok <= 0 }))}
+                        options={barangs.map((b) => ({ value: b.id, label: `${b.kode} - ${b.nama} (Min: ${b.stok_minimum} | Stok: ${b.stok})`, disabled: b.stok <= 0 }))}
                         value={itemBarangId}
                         onValueChange={(v) => setItemBarangId(v)}
                         placeholder="Pilih barang..."

@@ -57,6 +57,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {
+  CalendarIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -69,7 +70,12 @@ import {
   PlusIcon,
   SearchIcon,
   Trash2Icon,
+  XIcon,
 } from "lucide-react"
+import { format } from "date-fns"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 import {
   fetchPembelianLangsungs,
   deletePembelianLangsung,
@@ -91,6 +97,8 @@ export function PembelianLangsungTable() {
     pageIndex: 0,
     pageSize: 10,
   })
+  const [dari, setDari] = useState<Date | undefined>(undefined)
+  const [sampai, setSampai] = useState<Date | undefined>(undefined)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<PembelianLangsung | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -106,6 +114,8 @@ export function PembelianLangsungTable() {
         search,
         sort_field: sortField,
         sort_dir: sortDir,
+        date_from: dari ? format(dari, "yyyy-MM-dd") : undefined,
+        date_to: sampai ? format(sampai, "yyyy-MM-dd") : undefined,
       })
       setData(res.data)
       setTotal(res.total)
@@ -114,7 +124,7 @@ export function PembelianLangsungTable() {
     } finally {
       setLoading(false)
     }
-  }, [pagination.pageIndex, pagination.pageSize, search, sorting])
+  }, [pagination.pageIndex, pagination.pageSize, search, sorting, dari, sampai])
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -239,6 +249,27 @@ export function PembelianLangsungTable() {
           />
         </div>
         <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger render={<Button variant="outline" size="sm" className={cn("h-8 gap-1", dari && "border-blue-500")} />}>
+              <CalendarIcon className="size-3.5" />
+              {dari ? format(dari, "dd/MM/yyyy") : "Dari"}
+              {dari && <XIcon className="size-3" onClick={(e) => { e.stopPropagation(); setDari(undefined); setPagination((p) => ({ ...p, pageIndex: 0 })) }} />}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={dari} onSelect={(d) => { setDari(d); setPagination((p) => ({ ...p, pageIndex: 0 })) }} />
+            </PopoverContent>
+          </Popover>
+          <span className="text-xs text-muted-foreground">—</span>
+          <Popover>
+            <PopoverTrigger render={<Button variant="outline" size="sm" className={cn("h-8 gap-1", sampai && "border-blue-500")} />}>
+              <CalendarIcon className="size-3.5" />
+              {sampai ? format(sampai, "dd/MM/yyyy") : "Sampai"}
+              {sampai && <XIcon className="size-3" onClick={(e) => { e.stopPropagation(); setSampai(undefined); setPagination((p) => ({ ...p, pageIndex: 0 })) }} />}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={sampai} onSelect={(d) => { setSampai(d); setPagination((p) => ({ ...p, pageIndex: 0 })) }} />
+            </PopoverContent>
+          </Popover>
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="h-8" />}>
               <Columns3Icon /> Columns <ChevronDownIcon />

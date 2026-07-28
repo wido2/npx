@@ -44,6 +44,13 @@ class SettingSeeder extends Seeder
             'reset_periode' => 'bulanan',
         ]]);
 
+        Setting::firstOrCreate(['group' => 'stok_opname'], ['data' => [
+            'format_kode' => 'SO-{Y}-{M}-{seq}',
+            'urutan_terakhir' => 0,
+            'tahun_bulan_terakhir' => '',
+            'reset_periode' => 'bulanan',
+        ]]);
+
         Setting::firstOrCreate(['group' => 'harga_update'], ['data' => [
             'format_kode' => 'HU-{Y}-{M}-{seq}',
             'urutan_terakhir' => 0,

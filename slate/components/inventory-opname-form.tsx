@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "sonner"
 import { createOpname } from "@/lib/inventory-api"
@@ -30,6 +30,7 @@ export function InventoryOpnameForm() {
   const [keterangan, setKeterangan] = useState("")
   const [barangsLoading, setBarangsLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const submitRef = useRef(false)
   const [success, setSuccess] = useState(false)
 
   const loadBarangs = useCallback(() => {
@@ -51,15 +52,24 @@ export function InventoryOpnameForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!selectedBarang || !stokBaru) return
+    if (submitRef.current) return
+    submitRef.current = true
+    setSubmitting(true)
+
+    if (!selectedBarang || !stokBaru) {
+      submitRef.current = false
+      setSubmitting(false)
+      return
+    }
 
     const stokBaruNum = Number(stokBaru)
     if (stokBaruNum < 0 || !Number.isInteger(stokBaruNum)) {
       toast.error("Stok baru harus angka bulat ≥ 0")
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
 
-    setSubmitting(true)
     try {
       await createOpname({
         barang_id: selectedBarang.id,
@@ -72,6 +82,7 @@ export function InventoryOpnameForm() {
     } catch {
       toast.error("Gagal melakukan opname")
     } finally {
+      submitRef.current = false
       setSubmitting(false)
     }
   }

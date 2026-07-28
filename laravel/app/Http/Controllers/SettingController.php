@@ -9,9 +9,28 @@ use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
+    private function getGroupPermission(string $group): string
+    {
+        $map = [
+            'general' => 'settings.general',
+            'purchase_order' => 'settings.purchase_order',
+            'pengambilan_barang' => 'settings.pengambilan_barang',
+            'pembelian_langsung' => 'settings.pembelian_langsung',
+            'stok_opname' => 'settings.stok_opname',
+            'harga_update' => 'settings.general',
+        ];
+
+        if (in_array($group, ['pdf_report', 'po_pdf', 'pb_pdf'])) {
+            return 'settings.pdf';
+        }
+
+        return $map[$group] ?? 'settings.general';
+    }
+
     public function show(Request $request, string $group): JsonResponse
     {
-        if (!$request->user()->can('settings.view')) {
+        $perm = $this->getGroupPermission($group);
+        if (!$request->user()->can("{$perm}.view")) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -21,7 +40,8 @@ class SettingController extends Controller
 
     public function update(Request $request, string $group): JsonResponse
     {
-        if (!$request->user()->can('settings.update')) {
+        $perm = $this->getGroupPermission($group);
+        if (!$request->user()->can("{$perm}.update")) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -38,7 +58,7 @@ class SettingController extends Controller
 
     public function uploadLogo(Request $request): JsonResponse
     {
-        if (!$request->user()->can('settings.update')) {
+        if (!$request->user()->can('settings.general.update')) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

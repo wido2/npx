@@ -26,6 +26,8 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'search' => 'nullable|string|max:255',
             'barang_id' => 'nullable|exists:barangs,id',
+            'dari' => 'nullable|date',
+            'sampai' => 'nullable|date|after_or_equal:dari',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
@@ -39,6 +41,14 @@ class InventoryController extends Controller
                 $q->where('nama', 'ilike', "%{$search}%")
                   ->orWhere('kode', 'ilike', "%{$search}%");
             });
+        }
+
+        if (!empty($validated['dari'])) {
+            $query->whereDate('created_at', '>=', $validated['dari']);
+        }
+
+        if (!empty($validated['sampai'])) {
+            $query->whereDate('created_at', '<=', $validated['sampai']);
         }
 
         $query->orderBy('created_at', 'desc');

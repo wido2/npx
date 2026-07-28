@@ -77,6 +77,8 @@ export async function fetchPurchaseOrders(params?: {
   status?: string
   date_from?: string
   date_to?: string
+  client_id?: string
+  project_id?: string
   sort_field?: string
   sort_dir?: string
 }): Promise<PaginatedResponse> {
@@ -87,6 +89,8 @@ export async function fetchPurchaseOrders(params?: {
   if (params?.status) searchParams.set("status", params.status)
   if (params?.date_from) searchParams.set("date_from", params.date_from)
   if (params?.date_to) searchParams.set("date_to", params.date_to)
+  if (params?.client_id) searchParams.set("client_id", params.client_id)
+  if (params?.project_id) searchParams.set("project_id", params.project_id)
   if (params?.sort_field) searchParams.set("sort_field", params.sort_field)
   if (params?.sort_dir) searchParams.set("sort_dir", params.sort_dir)
 
@@ -114,6 +118,7 @@ export async function createPurchaseOrder(data: {
   catatan?: string
   syarat_pembayaran?: string
   alamat_kirim?: string
+  diskon?: number
 }): Promise<PurchaseOrder> {
   const res = await authFetch(`${API_BASE}/purchase-order`, {
     method: "POST",
@@ -145,6 +150,7 @@ export async function updatePurchaseOrder(
     catatan: string
     syarat_pembayaran: string
     alamat_kirim: string
+    diskon: number
     items: UpdatePOItem[]
   }>
 ): Promise<PurchaseOrder> {

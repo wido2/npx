@@ -13,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 export function ChatBell() {
   const [open, setOpen] = useState(false)
@@ -71,7 +72,10 @@ export function ChatBell() {
         <PopoverTrigger
           render={
             <Button variant="ghost" size="icon">
-              <MessageCircle className="size-5" />
+              <Tooltip>
+                <TooltipTrigger render={<MessageCircle className="size-5" />} />
+                <TooltipContent side="bottom">Pesan</TooltipContent>
+              </Tooltip>
             </Button>
           }
         />

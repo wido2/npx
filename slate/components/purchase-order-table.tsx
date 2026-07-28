@@ -19,6 +19,7 @@ import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
@@ -71,6 +72,7 @@ import {
   Trash2Icon,
 } from "lucide-react"
 import { fetchPurchaseOrders, deletePurchaseOrder, bulkDeletePurchaseOrders, type PurchaseOrder } from "@/lib/purchase-order-api"
+import { fetchPPs, type PermintaanPembelian } from "@/lib/permintaan-pembelian-api"
 
 const currency = (val: number) =>
   `Rp${new Intl.NumberFormat("id-ID", { style: "decimal", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(val))}`
@@ -82,6 +84,15 @@ const statusColors: Record<string, "default" | "secondary" | "outline" | "destru
   diterima_sebagian: "default",
   diterima: "default",
   dibatalkan: "destructive",
+}
+
+const statusClasses: Record<string, string> = {
+  draft: "bg-gray-100 text-gray-700 border-gray-200",
+  dikirim: "bg-blue-100 text-blue-700 border-blue-200",
+  disetujui: "bg-green-100 text-green-700 border-green-200",
+  diterima_sebagian: "bg-amber-100 text-amber-700 border-amber-200",
+  diterima: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  dibatalkan: "bg-red-100 text-red-700 border-red-200",
 }
 
 const statusLabels: Record<string, string> = {
@@ -108,6 +119,22 @@ export function PurchaseOrderTable() {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<PurchaseOrder | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [approvedPPs, setApprovedPPs] = useState<PermintaanPembelian[]>([])
+  const [ppLoading, setPPLoading] = useState(true)
+
+  const loadApprovedPPs = useCallback(async () => {
+    setPPLoading(true)
+    try {
+      const res = await fetchPPs({ status: "diverifikasi", per_page: 100 })
+      setApprovedPPs(res.data.filter((pp) => pp.items?.some((i) => !i.purchase_order_item?.purchase_order)))
+    } catch {
+      // silent
+    } finally {
+      setPPLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { loadApprovedPPs() }, [loadApprovedPPs])
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -216,7 +243,7 @@ export function PurchaseOrderTable() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => (
-        <Badge variant={statusColors[row.original.status] || "outline"}>
+        <Badge variant={statusColors[row.original.status] || "outline"} className={statusClasses[row.original.status]}>
           {statusLabels[row.original.status] || row.original.status}
         </Badge>
       ),
@@ -276,6 +303,45 @@ export function PurchaseOrderTable() {
 
   return (
     <div className="flex w-full flex-col gap-4">
+      {approvedPPs.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">PP Disetujui Siap Buat PO</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Kode PP</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Tanggal</TableHead>
+                  <TableHead className="w-20" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ppLoading ? (
+                  <TableRow><TableCell colSpan={5} className="h-12 text-center text-muted-foreground">Loading...</TableCell></TableRow>
+                ) : (
+                  approvedPPs.map((pp) => (
+                    <TableRow key={pp.id} className="cursor-pointer" onClick={() => router.push(`/permintaan-pembelian/${pp.id}`)}>
+                      <TableCell className="font-medium">{pp.kode || "Draft"}</TableCell>
+                      <TableCell>{pp.client?.nama || "-"}</TableCell>
+                      <TableCell>{pp.project?.nama || "-"}</TableCell>
+                      <TableCell>{new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "medium" }).format(new Date(pp.tanggal_diminta))}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" className="h-7" onClick={(e) => { e.stopPropagation(); router.push(`/permintaan-pembelian/${pp.id}`) }}>
+                          <ExternalLinkIcon className="size-3.5" /> Detail
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="relative flex flex-1 items-center gap-2">
           <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

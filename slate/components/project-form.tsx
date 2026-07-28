@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -17,10 +17,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { createProject, updateProject, fetchProject } from "@/lib/project-api"
 import { fetchClients, type Client } from "@/lib/client-api"
 import { fetchUnits, type Unit } from "@/lib/unit-api"
-import { ArrowLeftIcon, LoaderIcon, SaveIcon } from "lucide-react"
+import { ArrowLeftIcon, LoaderIcon, PlusIcon, SaveIcon, Trash2Icon } from "lucide-react"
+
+interface ProjectRow {
+  tempId: string
+  kode: string
+  nama: string
+  unitId: string
+  jumlah: string
+  nilaiKontrak: string
+}
+
+let tempIdCounter = 0
+
+function makeRow(): ProjectRow {
+  return {
+    tempId: `new-${++tempIdCounter}`,
+    kode: "",
+    nama: "",
+    unitId: "",
+    jumlah: "",
+    nilaiKontrak: "",
+  }
+}
 
 interface Props {
   projectId?: string
@@ -32,17 +62,16 @@ export function ProjectForm({ projectId }: Props) {
   const [loading, setLoading] = useState(isEdit)
   const [clients, setClients] = useState<Client[]>([])
   const [units, setUnits] = useState<Unit[]>([])
-  const [kode, setKode] = useState("")
-  const [nama, setNama] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const submitRef = useRef(false)
+
   const [clientId, setClientId] = useState("")
-  const [unitId, setUnitId] = useState("")
   const [deskripsi, setDeskripsi] = useState("")
-  const [nilaiKontrak, setNilaiKontrak] = useState("")
-  const [jumlah, setJumlah] = useState("")
   const [tanggalMulai, setTanggalMulai] = useState("")
   const [tanggalSelesai, setTanggalSelesai] = useState("")
   const [status, setStatus] = useState("aktif")
-  const [submitting, setSubmitting] = useState(false)
+
+  const [rows, setRows] = useState<ProjectRow[]>([makeRow()])
 
   const loadRefs = useCallback(async () => {
     try {
@@ -62,16 +91,19 @@ export function ProjectForm({ projectId }: Props) {
     setLoading(true)
     try {
       const project = await fetchProject(projectId)
-      setKode(project.kode)
-      setNama(project.nama)
       setClientId(project.client_id)
-      setUnitId(project.unit_id)
       setDeskripsi(project.deskripsi || "")
-      setNilaiKontrak(project.nilai_kontrak != null ? String(project.nilai_kontrak) : "")
-      setJumlah(project.jumlah != null ? String(project.jumlah) : "")
       setTanggalMulai(project.tanggal_mulai || "")
       setTanggalSelesai(project.tanggal_selesai || "")
       setStatus(project.status)
+      setRows([{
+        tempId: `existing-${project.id}`,
+        kode: project.kode,
+        nama: project.nama,
+        unitId: project.unit_id,
+        jumlah: project.jumlah != null ? String(project.jumlah) : "",
+        nilaiKontrak: project.nilai_kontrak != null ? String(project.nilai_kontrak) : "",
+      }])
     } catch {
       toast.error("Failed to load project")
       router.push("/project")
@@ -85,37 +117,110 @@ export function ProjectForm({ projectId }: Props) {
     if (isEdit) loadData()
   }, [isEdit, loadData, loadRefs])
 
+  function addRow() {
+    setRows((prev) => [...prev, makeRow()])
+  }
+
+  function removeRow(tempId: string) {
+    setRows((prev) => prev.filter((r) => r.tempId !== tempId))
+  }
+
+  function updateRow(tempId: string, field: keyof ProjectRow, value: string) {
+    setRows((prev) => prev.map((r) => r.tempId === tempId ? { ...r, [field]: value } : r))
+  }
+
+  const duplicateKodes = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const r of rows) {
+      const k = r.kode.trim().toUpperCase()
+      if (k) counts.set(k, (counts.get(k) || 0) + 1)
+    }
+    return new Set(
+      [...counts.entries()]
+        .filter(([, c]) => c > 1)
+        .map(([k]) => k)
+    )
+  }, [rows])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!kode || !nama || !clientId || !unitId) {
-      toast.error("Please fill all required fields")
+
+    if (submitRef.current) return
+    submitRef.current = true
+    setSubmitting(true)
+
+    if (!clientId) {
+      toast.error("Pilih client terlebih dahulu")
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
-    setSubmitting(true)
-    try {
-      const payload = {
-        kode: kode.trim(),
-        nama: nama.trim(),
-        client_id: clientId,
-        unit_id: unitId,
-        deskripsi: deskripsi.trim() || undefined,
-        nilai_kontrak: nilaiKontrak ? parseFloat(nilaiKontrak) : undefined,
-        jumlah: jumlah ? parseInt(jumlah, 10) : undefined,
-        tanggal_mulai: tanggalMulai || undefined,
-        tanggal_selesai: tanggalSelesai || undefined,
-        status,
+
+    for (const row of rows) {
+      if (!row.kode.trim() || !row.nama.trim()) {
+        toast.error("Semua baris harus memiliki Kode dan Nama project")
+        submitRef.current = false
+        setSubmitting(false)
+        return
       }
+    }
+
+    if (duplicateKodes.size > 0) {
+      toast.error(`Kode project duplikat: ${[...duplicateKodes].join(", ")}`)
+      submitRef.current = false
+      setSubmitting(false)
+      return
+    }
+    try {
       if (isEdit && projectId) {
-        await updateProject(projectId, payload)
+        const row = rows[0]
+        await updateProject(projectId, {
+          kode: row.kode.trim(),
+          nama: row.nama.trim(),
+          client_id: clientId,
+          unit_id: row.unitId,
+          deskripsi: deskripsi.trim() || undefined,
+          nilai_kontrak: row.nilaiKontrak ? parseFloat(row.nilaiKontrak) : undefined,
+          jumlah: row.jumlah ? parseInt(row.jumlah, 10) : undefined,
+          tanggal_mulai: tanggalMulai || undefined,
+          tanggal_selesai: tanggalSelesai || undefined,
+          status,
+        })
         toast.success("Project updated")
       } else {
-        await createProject(payload)
-        toast.success("Project created")
+        let created = 0
+        const errors: string[] = []
+        for (const row of rows) {
+          try {
+            await createProject({
+              kode: row.kode.trim(),
+              nama: row.nama.trim(),
+              client_id: clientId,
+              unit_id: row.unitId,
+              deskripsi: deskripsi.trim() || undefined,
+              nilai_kontrak: row.nilaiKontrak ? parseFloat(row.nilaiKontrak) : undefined,
+              jumlah: row.jumlah ? parseInt(row.jumlah, 10) : undefined,
+              tanggal_mulai: tanggalMulai || undefined,
+              tanggal_selesai: tanggalSelesai || undefined,
+              status,
+            })
+            created++
+          } catch {
+            errors.push(row.kode)
+          }
+        }
+        if (errors.length > 0) {
+          toast.error(`Gagal membuat: ${errors.join(", ")}`)
+          if (created > 0) toast.success(`${created} project berhasil dibuat`)
+        } else {
+          toast.success(`${created} project berhasil dibuat`)
+        }
       }
       router.push("/project")
     } catch {
-      toast.error(isEdit ? "Failed to update project" : "Failed to create project")
+      toast.error(isEdit ? "Failed to update project" : "Failed to create projects")
     } finally {
+      submitRef.current = false
       setSubmitting(false)
     }
   }
@@ -123,6 +228,8 @@ export function ProjectForm({ projectId }: Props) {
   if (loading) {
     return <div className="flex items-center justify-center py-20"><LoaderIcon className="size-6 animate-spin text-muted-foreground" /></div>
   }
+
+  const unitLabel = (id: string) => units.find((u) => u.id === id)?.nama || "-"
 
   return (
     <div className="space-y-6">
@@ -132,30 +239,16 @@ export function ProjectForm({ projectId }: Props) {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">{isEdit ? "Edit Project" : "Add Project"}</h1>
-          <p className="text-muted-foreground">{isEdit ? "Update project information" : "Create a new project"}</p>
+          <p className="text-muted-foreground">{isEdit ? "Update project information" : "Buat satu atau lebih project sekaligus"}</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader><CardTitle>Informasi Project</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="kode">Kode Project *</FieldLabel>
-                <FieldContent>
-                  <Input id="kode" value={kode} onChange={(e) => setKode(e.target.value)} placeholder="Kode unik project" required />
-                </FieldContent>
-                <FieldDescription>Kode identifikasi untuk project</FieldDescription>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="nama">Nama Project *</FieldLabel>
-                <FieldContent>
-                  <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Nama lengkap project" required />
-                </FieldContent>
-                <FieldDescription>Nama project yang akan dikerjakan</FieldDescription>
-              </Field>
-              <Field>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-4">
+              <Field className="min-w-[200px] flex-1">
                 <FieldLabel htmlFor="client_id">Client *</FieldLabel>
                 <FieldContent>
                   <Combobox
@@ -166,36 +259,13 @@ export function ProjectForm({ projectId }: Props) {
                     searchPlaceholder="Cari client..."
                   />
                 </FieldContent>
-                <FieldDescription>Client yang memiliki project ini</FieldDescription>
+                <FieldDescription>Client untuk semua project</FieldDescription>
               </Field>
-              <Field>
-                <FieldLabel htmlFor="unit_id">Unit *</FieldLabel>
-                <FieldContent>
-                  <Combobox
-                    options={units.map((u) => ({ value: u.id, label: u.nama }))}
-                    value={unitId}
-                    onValueChange={(v) => setUnitId(v)}
-                    placeholder="Pilih unit..."
-                    searchPlaceholder="Cari unit..."
-                  />
-                </FieldContent>
-                <FieldDescription>Unit divisi yang mengerjakan project</FieldDescription>
-              </Field>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>Detail Project</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field>
+              <Field className="min-w-[150px] flex-1">
                 <FieldLabel htmlFor="status">Status</FieldLabel>
                 <FieldContent>
                   <Select value={status} onValueChange={(v) => v && setStatus(v)}>
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Pilih status..." />
-                    </SelectTrigger>
+                    <SelectTrigger id="status"><SelectValue placeholder="Pilih status..." /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="aktif">Aktif</SelectItem>
                       <SelectItem value="selesai">Selesai</SelectItem>
@@ -204,51 +274,136 @@ export function ProjectForm({ projectId }: Props) {
                     </SelectContent>
                   </Select>
                 </FieldContent>
-                <FieldDescription>Status terkini dari project</FieldDescription>
+                <FieldDescription>Status untuk semua project</FieldDescription>
               </Field>
-              <Field>
-                <FieldLabel htmlFor="nilai_kontrak">Nilai Kontrak</FieldLabel>
-                <FieldContent>
-                  <Input id="nilai_kontrak" type="number" step="1" value={nilaiKontrak} onChange={(e) => setNilaiKontrak(e.target.value)} placeholder="0" />
-                </FieldContent>
-                <FieldDescription>Nilai kontrak project dalam Rupiah</FieldDescription>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="jumlah">Jumlah</FieldLabel>
-                <FieldContent>
-                  <Input id="jumlah" type="number" step="1" min="1" value={jumlah} onChange={(e) => setJumlah(e.target.value)} placeholder="1" />
-                </FieldContent>
-                <FieldDescription>Jumlah unit project</FieldDescription>
-              </Field>
-              <Field>
+              <Field className="min-w-[160px] flex-1">
                 <FieldLabel htmlFor="tanggal_mulai">Tanggal Mulai</FieldLabel>
                 <FieldContent>
                   <Input id="tanggal_mulai" type="date" value={tanggalMulai} onChange={(e) => setTanggalMulai(e.target.value)} />
                 </FieldContent>
-                <FieldDescription>Tanggal dimulainya project</FieldDescription>
+                <FieldDescription>Berlaku untuk semua project</FieldDescription>
               </Field>
-              <Field>
+              <Field className="min-w-[160px] flex-1">
                 <FieldLabel htmlFor="tanggal_selesai">Tanggal Selesai</FieldLabel>
                 <FieldContent>
                   <Input id="tanggal_selesai" type="date" value={tanggalSelesai} onChange={(e) => setTanggalSelesai(e.target.value)} />
                 </FieldContent>
-                <FieldDescription>Target tanggal selesai project</FieldDescription>
+                <FieldDescription>Berlaku untuk semua project</FieldDescription>
               </Field>
             </div>
-            <div className="mt-4">
-              <Field>
-                <FieldLabel htmlFor="deskripsi">Deskripsi</FieldLabel>
-                <FieldContent>
-                  <Textarea id="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} placeholder="Deskripsi dan ruang lingkup project" />
-                </FieldContent>
-                <FieldDescription>Informasi tambahan tentang project</FieldDescription>
-              </Field>
+            <Field>
+              <FieldLabel htmlFor="deskripsi">Deskripsi</FieldLabel>
+              <FieldContent>
+                <Textarea id="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} placeholder="Deskripsi dan ruang lingkup project" />
+              </FieldContent>
+              <FieldDescription>Berlaku untuk semua project</FieldDescription>
+            </Field>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Daftar Project</CardTitle>
+              <p className="text-sm text-muted-foreground">Kode project harus unik</p>
+            </div>
+            {!isEdit && (
+              <Button type="button" variant="outline" size="sm" onClick={addRow}>
+                <PlusIcon className="size-4" /> Tambah Baris
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-8">#</TableHead>
+                    <TableHead className="w-[150px]">Kode *</TableHead>
+                    <TableHead className="w-[400px]">Nama Project *</TableHead>
+                    <TableHead className="w-[80px]">Jumlah</TableHead>
+                    <TableHead className="w-[150px]">Unit</TableHead>
+                    <TableHead className="w-[200px]">Nilai Kontrak</TableHead>
+                    {!isEdit && <TableHead className="w-10" />}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((row, idx) => (
+                    <TableRow key={row.tempId}>
+                      <TableCell className="text-muted-foreground text-sm">{idx + 1}</TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.kode}
+                          onChange={(e) => updateRow(row.tempId, "kode", e.target.value)}
+                          placeholder="PRJ-001"
+                          className={duplicateKodes.has(row.kode.trim().toUpperCase()) ? "border-destructive" : ""}
+                        />
+                        {duplicateKodes.has(row.kode.trim().toUpperCase()) && (
+                          <p className="text-xs text-destructive mt-1">Duplikat</p>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.nama}
+                          onChange={(e) => updateRow(row.tempId, "nama", e.target.value)}
+                          placeholder="Nama project"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={row.jumlah}
+                          onChange={(e) => updateRow(row.tempId, "jumlah", e.target.value)}
+                          placeholder="1"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Combobox
+                          options={units.map((u) => ({ value: u.id, label: u.nama }))}
+                          value={row.unitId}
+                          onValueChange={(v) => updateRow(row.tempId, "unitId", v)}
+                          placeholder="Pilih unit..."
+                          searchPlaceholder="Cari unit..."
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          step="1"
+                          value={row.nilaiKontrak}
+                          onChange={(e) => updateRow(row.tempId, "nilaiKontrak", e.target.value)}
+                          placeholder="0"
+                        />
+                      </TableCell>
+                      {!isEdit && (
+                        <TableCell>
+                          {rows.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-destructive"
+                              onClick={() => removeRow(row.tempId)}
+                            >
+                              <Trash2Icon className="size-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
 
         <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/30 px-6 py-4">
-          <p className="text-sm text-muted-foreground">Pastikan semua data telah diisi dengan benar</p>
+          <p className="text-sm text-muted-foreground">
+            {isEdit ? "Pastikan data telah benar" : `${rows.length} project akan dibuat`}
+          </p>
           <div className="flex items-center gap-2">
             <Button type="button" variant="outline" onClick={() => router.push("/project")}>Batal</Button>
             <Button type="submit" disabled={submitting}>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -54,6 +54,7 @@ export function HargaUpdateWizard() {
   const router = useRouter()
   const [step, setStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+  const submitRef = useRef(false)
 
   const [vendors, setVendors] = useState<Vendor[]>([])
   const [barangs, setBarangs] = useState<Barang[]>([])
@@ -156,17 +157,24 @@ export function HargaUpdateWizard() {
   }
 
   async function handleSubmit() {
+    if (submitRef.current) return
+    submitRef.current = true
+    setSubmitting(true)
+
     if (!vendorId) {
       toast.error("Pilih vendor")
       setStep(0)
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
     if (items.length === 0) {
       toast.error("Tambahkan minimal satu barang")
       setStep(1)
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
-    setSubmitting(true)
     try {
       const hu = await createHargaUpdate({
         vendor_id: vendorId,
@@ -181,6 +189,7 @@ export function HargaUpdateWizard() {
     } catch {
       toast.error("Gagal menyimpan update harga")
     } finally {
+      submitRef.current = false
       setSubmitting(false)
     }
   }

@@ -13,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 function NotificationIcon({ type }: { type: string }) {
   const className = "size-4 shrink-0 mt-0.5"
@@ -64,7 +65,10 @@ export function NotificationBell() {
         <PopoverTrigger
           render={
             <Button variant="ghost" size="icon">
-              <Bell className="size-5" />
+              <Tooltip>
+                <TooltipTrigger render={<Bell className="size-5" />} />
+                <TooltipContent side="bottom">Notifikasi</TooltipContent>
+              </Tooltip>
             </Button>
           }
         />

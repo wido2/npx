@@ -17,6 +17,7 @@ class PurchaseOrder extends Model
         'vendor_id',
         'client_id',
         'project_id',
+        'permintaan_pembelian_id',
         'tanggal_po',
         'tanggal_kirim_expected',
         'status',
@@ -40,6 +41,9 @@ class PurchaseOrder extends Model
             'tanggal_kirim_expected' => 'date',
             'tanggal_disetujui' => 'datetime',
             'tanggal_diterima' => 'datetime',
+            'subtotal' => 'float',
+            'diskon' => 'float',
+            'total' => 'float',
         ];
     }
 

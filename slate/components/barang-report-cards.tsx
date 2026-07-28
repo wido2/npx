@@ -227,7 +227,7 @@ export function BarangReportCards() {
                       </TableCell>
                       <TableCell className="text-right text-red-600 font-medium">{item.stok}</TableCell>
                       <TableCell className="text-right">{item.stok_minimum}</TableCell>
-                      <TableCell>{item.unit_nama}</TableCell>
+                      <TableCell>{item.unit}</TableCell>
                     </TableRow>
                   ))
                 )}

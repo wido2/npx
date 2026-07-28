@@ -55,7 +55,13 @@ class InitSeeder extends Seeder
 
             'inventory.view', 'inventory.opname',
 
-            'settings.view', 'settings.update',
+            'settings.general.view', 'settings.general.update',
+            'settings.alamat.view', 'settings.alamat.update',
+            'settings.purchase_order.view', 'settings.purchase_order.update',
+            'settings.pengambilan_barang.view', 'settings.pengambilan_barang.update',
+            'settings.pembelian_langsung.view', 'settings.pembelian_langsung.update',
+            'settings.stok_opname.view', 'settings.stok_opname.update',
+            'settings.pdf.view', 'settings.pdf.update',
 
             'users.view', 'users.manage',
 
@@ -65,6 +71,7 @@ class InitSeeder extends Seeder
             'notification.po_overdue', 'notification.pb_created', 'notification.stock_minimum',
             'notification.stock_opname', 'notification.vendor_price_changed',
             'notification.project_created', 'notification.client_created',
+            'notification.pp_submitted', 'notification.pp_verified', 'notification.pp_rejected',
 
             'widget.chart_area_interactive',
             'widget.barang_overview', 'widget.po_overview',
@@ -79,7 +86,7 @@ class InitSeeder extends Seeder
         }
 
         $superAdmin = Role::findOrCreate('super_admin', 'web');
-        $superAdmin->syncPermissions($permissions);
+        $superAdmin->syncPermissions(Permission::all());
 
         $manager = Role::findOrCreate('manager', 'web');
         $manager->syncPermissions($permissions);
@@ -87,6 +94,7 @@ class InitSeeder extends Seeder
         $user = Role::findOrCreate('user', 'web');
         $user->syncPermissions([
             'po.create', 'po.view_own', 'po.edit', 'po.submit',
+            'pp.create', 'pp.view_all', 'pp.edit', 'pp.submit',
             'pl.create', 'pl.view_own',
             'pb.create', 'pb.view_own', 'pb.delete',
             'inventory.view',

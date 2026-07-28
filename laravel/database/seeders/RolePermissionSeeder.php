@@ -18,6 +18,9 @@ class RolePermissionSeeder extends Seeder
             'po.create', 'po.view_own', 'po.view_all', 'po.edit', 'po.delete',
             'po.submit', 'po.approve', 'po.receive', 'po.cancel',
 
+            'pp.create', 'pp.view_all', 'pp.edit', 'pp.submit', 'pp.verify', 'pp.cancel', 'pp.delete',
+            'pp.create_po',
+
             // Master Data
             'master.vendor.create', 'master.vendor.view', 'master.vendor.edit', 'master.vendor.delete',
             'master.barang.create', 'master.barang.view', 'master.barang.edit', 'master.barang.delete', 'master.barang.update_harga',
@@ -39,7 +42,13 @@ class RolePermissionSeeder extends Seeder
             'inventory.view', 'inventory.opname',
 
             // Settings
-            'settings.view', 'settings.update',
+            'settings.general.view', 'settings.general.update',
+            'settings.alamat.view', 'settings.alamat.update',
+            'settings.purchase_order.view', 'settings.purchase_order.update',
+            'settings.pengambilan_barang.view', 'settings.pengambilan_barang.update',
+            'settings.pembelian_langsung.view', 'settings.pembelian_langsung.update',
+            'settings.stok_opname.view', 'settings.stok_opname.update',
+            'settings.pdf.view', 'settings.pdf.update',
 
             // Users
             'users.view', 'users.manage',
@@ -58,6 +67,9 @@ class RolePermissionSeeder extends Seeder
             'notification.vendor_price_changed',
             'notification.project_created',
             'notification.client_created',
+            'notification.pp_submitted',
+            'notification.pp_verified',
+            'notification.pp_rejected',
 
             // Widget
             'widget.chart_area_interactive',
@@ -74,7 +86,7 @@ class RolePermissionSeeder extends Seeder
         }
 
         $superAdmin = Role::findOrCreate('super_admin', 'web');
-        $superAdmin->syncPermissions($permissions);
+        $superAdmin->syncPermissions(Permission::all());
 
         $manager = Role::findOrCreate('manager', 'web');
         $manager->syncPermissions([
@@ -94,7 +106,13 @@ class RolePermissionSeeder extends Seeder
             'pl.create', 'pl.view_own', 'pl.view_all', 'pl.edit', 'pl.delete',
             'pb.create', 'pb.view_own', 'pb.view_all', 'pb.delete',
             'inventory.view', 'inventory.opname',
-            'settings.view', 'settings.update',
+            'settings.general.view', 'settings.general.update',
+            'settings.alamat.view', 'settings.alamat.update',
+            'settings.purchase_order.view', 'settings.purchase_order.update',
+            'settings.pengambilan_barang.view', 'settings.pengambilan_barang.update',
+            'settings.pembelian_langsung.view', 'settings.pembelian_langsung.update',
+            'settings.stok_opname.view', 'settings.stok_opname.update',
+            'settings.pdf.view', 'settings.pdf.update',
             'users.view', 'users.manage',
 
             'reports.view',
@@ -109,6 +127,9 @@ class RolePermissionSeeder extends Seeder
             'notification.vendor_price_changed',
             'notification.project_created',
             'notification.client_created',
+            'notification.pp_submitted',
+            'notification.pp_verified',
+            'notification.pp_rejected',
 
             'widget.chart_area_interactive',
             'widget.barang_overview',
@@ -122,6 +143,7 @@ class RolePermissionSeeder extends Seeder
         $user = Role::findOrCreate('user', 'web');
         $user->syncPermissions([
             'po.create', 'po.view_own', 'po.edit', 'po.submit',
+            'pp.create', 'pp.view_all', 'pp.edit', 'pp.submit',
             'pl.create', 'pl.view_own',
             'pb.create', 'pb.view_own', 'pb.delete',
             'inventory.view',

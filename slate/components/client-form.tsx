@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -38,6 +38,7 @@ export function ClientForm({ clientId }: Props) {
   const [keterangan, setKeterangan] = useState("")
   const [aktif, setAktif] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const submitRef = useRef(false)
 
   const loadData = useCallback(async () => {
     if (!clientId) return
@@ -67,11 +68,16 @@ export function ClientForm({ clientId }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (submitRef.current) return
+    submitRef.current = true
+    setSubmitting(true)
+
     if (!kode || !nama) {
       toast.error("Please fill all required fields")
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
-    setSubmitting(true)
     try {
       const payload = {
         kode: kode.trim(),
@@ -95,6 +101,7 @@ export function ClientForm({ clientId }: Props) {
     } catch {
       toast.error(isEdit ? "Failed to update client" : "Failed to create client")
     } finally {
+      submitRef.current = false
       setSubmitting(false)
     }
   }

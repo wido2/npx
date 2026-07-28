@@ -39,6 +39,8 @@ class PurchaseOrderController extends Controller
         $status = $request->input('status', '');
         $dateFrom = $request->input('date_from', '');
         $dateTo = $request->input('date_to', '');
+        $clientId = $request->input('client_id', '');
+        $projectId = $request->input('project_id', '');
 
         $query = PurchaseOrder::with([
             'vendor:id,kode,nama',
@@ -68,6 +70,14 @@ class PurchaseOrderController extends Controller
 
         if ($dateTo !== '') {
             $query->whereDate('created_at', '<=', $dateTo);
+        }
+
+        if ($clientId !== '') {
+            $query->where('client_id', $clientId);
+        }
+
+        if ($projectId !== '') {
+            $query->where('project_id', $projectId);
         }
 
         $sortField = $request->input('sort_field', 'created_at');

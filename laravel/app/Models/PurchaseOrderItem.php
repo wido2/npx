@@ -26,6 +26,7 @@ class PurchaseOrderItem extends Model
         'nilai_pajak',
         'total_setelah_pajak',
         'keterangan',
+        'permintaan_pembelian_item_id',
     ];
 
     public function isSection(): bool
@@ -66,6 +67,11 @@ class PurchaseOrderItem extends Model
     public function receiptItems(): HasMany
     {
         return $this->hasMany(PurchaseOrderReceiptItem::class, 'purchase_order_item_id');
+    }
+
+    public function permintaanPembelianItem(): BelongsTo
+    {
+        return $this->belongsTo(PermintaanPembelianItem::class, 'permintaan_pembelian_item_id');
     }
 
     public function getJumlahDiterimaAttribute(): int

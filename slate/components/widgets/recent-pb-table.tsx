@@ -43,6 +43,7 @@ export function RecentPbTable() {
               <TableRow>
                 <TableHead>Kode</TableHead>
                 <TableHead>Tanggal</TableHead>
+                <TableHead>Oleh</TableHead>
                 <TableHead>Item</TableHead>
               </TableRow>
             </TableHeader>
@@ -51,6 +52,7 @@ export function RecentPbTable() {
                 <TableRow key={pb.id} className="cursor-pointer" onClick={() => router.push(`/pengambilan-barang/${pb.id}`)}>
                   <TableCell className="font-medium">{pb.kode || "—"}</TableCell>
                   <TableCell>{new Date(pb.tanggal_pengambilan).toLocaleDateString("id-ID")}</TableCell>
+                  <TableCell>{pb.karyawan?.nama || "—"}</TableCell>
                   <TableCell>{pb.items_count ?? "—"}</TableCell>
                 </TableRow>
               ))}

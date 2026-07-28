@@ -57,7 +57,7 @@ export function AktivitasTerbaru() {
             {data.map((n) => (
               <div key={n.id} className={`flex items-start gap-3 px-4 py-3 ${!n.read_at ? "bg-primary/5" : ""}`}>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{n.data.title || n.type}</p>
+                  <p className="text-sm font-medium truncate">{n.data.title || "Info"}</p>
                   <p className="text-xs text-muted-foreground truncate">{n.data.message}</p>
                   <p className="text-[11px] text-muted-foreground mt-1">
                     {new Date(n.created_at).toLocaleDateString("id-ID", {
@@ -66,7 +66,7 @@ export function AktivitasTerbaru() {
                   </p>
                 </div>
                 <Badge variant={(TYPE_COLORS[n.data.type || n.type] || "secondary") as any} className="shrink-0">
-                  {TYPE_LABELS[n.data.type || n.type] || n.type}
+                  {TYPE_LABELS[n.data.type || n.type] || "Info"}
                 </Badge>
               </div>
             ))}

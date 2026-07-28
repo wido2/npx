@@ -30,6 +30,8 @@ use App\Http\Controllers\VendorController;
 use App\Http\Controllers\HargaSupplierController;
 use App\Http\Controllers\HargaUpdateController;
 use App\Http\Controllers\PembelianLangsungController;
+use App\Http\Controllers\PermintaanPembelianController;
+use App\Http\Controllers\PermintaanPembelianItemController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -179,6 +181,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('purchase-order/{purchaseOrder}/revisions', [PurchaseOrderRevisionController::class, 'index']);
     Route::get('purchase-order/{purchaseOrder}/revisions/{revision}', [PurchaseOrderRevisionController::class, 'show']);
 
+    // ——— Permintaan Pembelian ———
+    Route::get('permintaan-pembelian', [PermintaanPembelianController::class, 'index']);
+    Route::post('permintaan-pembelian', [PermintaanPembelianController::class, 'store']);
+    Route::get('permintaan-pembelian/{permintaanPembelian}', [PermintaanPembelianController::class, 'show']);
+    Route::put('permintaan-pembelian/{permintaanPembelian}', [PermintaanPembelianController::class, 'update']);
+    Route::delete('permintaan-pembelian/{permintaanPembelian}', [PermintaanPembelianController::class, 'destroy']);
+    Route::post('permintaan-pembelian/bulk-delete', [PermintaanPembelianController::class, 'bulkDestroy']);
+    Route::put('permintaan-pembelian/{permintaanPembelian}/kirim', [PermintaanPembelianController::class, 'kirim']);
+    Route::put('permintaan-pembelian/{permintaanPembelian}/verifikasi', [PermintaanPembelianController::class, 'verifikasi']);
+    Route::put('permintaan-pembelian/{permintaanPembelian}/tolak', [PermintaanPembelianController::class, 'tolak']);
+    Route::put('permintaan-pembelian/{permintaanPembelian}/batalkan', [PermintaanPembelianController::class, 'batalkan']);
+    Route::post('permintaan-pembelian/{permintaanPembelian}/buat-po', [PermintaanPembelianController::class, 'buatPO']);
+
+    // ——— PP Items ———
+    Route::get('permintaan-pembelian/{permintaanPembelian}/items', [PermintaanPembelianItemController::class, 'index']);
+    Route::post('permintaan-pembelian/{permintaanPembelian}/items', [PermintaanPembelianItemController::class, 'store']);
+    Route::put('permintaan-pembelian/{permintaanPembelian}/items/{item}', [PermintaanPembelianItemController::class, 'update']);
+    Route::delete('permintaan-pembelian/{permintaanPembelian}/items/{item}', [PermintaanPembelianItemController::class, 'destroy']);
+
     // ——— Pengambilan Barang ———
     Route::get('pengambilan-barang', [PengambilanBarangController::class, 'index']);
     Route::post('pengambilan-barang', [PengambilanBarangController::class, 'store']);
@@ -205,6 +226,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('reports/purchase-order/per-hari', [ReportPurchaseOrderController::class, 'perHari']);
     Route::get('reports/purchase-order/per-status', [ReportPurchaseOrderController::class, 'perStatus']);
     Route::get('reports/purchase-order/top-items', [ReportPurchaseOrderController::class, 'topItems']);
+    Route::get('reports/purchase-order/per-project', [ReportPurchaseOrderController::class, 'perProject']);
+    Route::get('reports/purchase-order/per-client', [ReportPurchaseOrderController::class, 'perClient']);
 
     Route::get('reports/barang/summary', [ReportBarangController::class, 'summary']);
     Route::get('reports/barang/per-kategori', [ReportBarangController::class, 'perKategori']);

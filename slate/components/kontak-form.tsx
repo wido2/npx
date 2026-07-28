@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -33,6 +33,7 @@ export function KontakForm({ kontakId }: Props) {
   const isEdit = !!kontakId
   const [loading, setLoading] = useState(isEdit)
   const [submitting, setSubmitting] = useState(false)
+  const submitRef = useRef(false)
 
   const [nama, setNama] = useState("")
   const [jabatan, setJabatan] = useState("")
@@ -98,11 +99,16 @@ export function KontakForm({ kontakId }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (submitRef.current) return
+    submitRef.current = true
+    setSubmitting(true)
+
     if (!nama || !entityType || !entityId) {
       toast.error("Please fill all required fields")
+      submitRef.current = false
+      setSubmitting(false)
       return
     }
-    setSubmitting(true)
     try {
       const payload = {
         nama: nama.trim(),
@@ -126,6 +132,7 @@ export function KontakForm({ kontakId }: Props) {
     } catch {
       toast.error(isEdit ? "Failed to update kontak" : "Failed to create kontak")
     } finally {
+      submitRef.current = false
       setSubmitting(false)
     }
   }
